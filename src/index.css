@@ -1,0 +1,312 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Press+Start+2P&family=VT323&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-pixel: "VT323", monospace;
+  --font-retro: "Press Start 2P", monospace;
+  --font-ubuntu: "Ubuntu", sans-serif;
+  --font-ubuntu-mono: "Ubuntu Mono", monospace;
+  
+  --color-slate-950: #050507;
+  --color-slate-900: #08080f;
+  --color-slate-850: #0c0c16;
+  --color-slate-800: rgba(255, 255, 255, 0.08);
+  --color-slate-700: rgba(255, 255, 255, 0.15);
+  --color-slate-600: rgba(255, 255, 255, 0.2);
+  --color-slate-500: rgba(255, 255, 255, 0.3);
+  --color-slate-400: rgba(255, 255, 255, 0.6);
+  --color-slate-300: rgba(255, 255, 255, 0.8);
+  --color-slate-200: rgba(255, 255, 255, 0.95);
+
+  --color-surface: #0b1326;
+  --color-on-surface: #dae2fd;
+  --color-primary-accent: #cdbdff;
+  --color-secondary-accent: #00e3fd;
+  --color-tertiary-accent: #ffb1c1;
+  --color-surface-container: #171f33;
+  --color-surface-low: #131b2e;
+  --color-surface-high: #222a3d;
+  --color-sunset-start: #ff7e5f;
+  --color-sunset-mid: #feb47b;
+  --color-sunset-end: #86a8e7;
+  --color-violet-accent: #7c4dff;
+}
+
+/* Base modifications for fully immersive feel */
+html {
+  font-size: calc(var(--font-size-scale, 1) * 100%);
+}
+body {
+  background-color: #050507;
+  color: #e0e0e0;
+  font-family: "Inter", sans-serif;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Glass panel components matching Immersive UI */
+.immersive-glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.immersive-glass-hover {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.immersive-glass-hover:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Soft ambient glow utilities */
+.accent-glow-purple {
+  box-shadow: 0 0 50px -12px rgba(168, 85, 247, 0.3);
+}
+.accent-glow-cyan {
+  box-shadow: 0 0 50px -12px rgba(6, 182, 212, 0.3);
+}
+.accent-glow-orange {
+  box-shadow: 0 0 50px -12px rgba(249, 115, 22, 0.3);
+}
+.accent-glow-emerald {
+  box-shadow: 0 0 50px -12px rgba(16, 185, 129, 0.3);
+}
+
+/* Neo-Bento Grid Layout */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+@media (max-width: 1024px) {
+  .bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .bento-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bento-tile {
+  background: rgba(23, 31, 51, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+}
+.bento-tile:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+.span-2-2 { grid-column: span 2; grid-row: span 2; }
+.span-2-1 { grid-column: span 2; }
+.span-1-2 { grid-row: span 2; }
+
+@media (max-width: 1024px) {
+  .span-2-2, .span-2-1, .span-1-2 {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+}
+
+/* 3D Glassmorphic Icon Effects */
+.glass-3d-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+  box-shadow: 
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+    0 10px 20px -5px rgba(0, 0, 0, 0.3),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #cdbdff 0%, #00e3fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ambient-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  background: #0b1326;
+  overflow: hidden;
+}
+
+.sunset-glow {
+  position: absolute;
+  top: -10%;
+  right: -10%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, rgba(124, 77, 255, 0.15) 0%, rgba(124, 77, 255, 0) 70%);
+  filter: blur(80px);
+}
+
+/* 3D Avatar Stylized Mark */
+.avatar-3d {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 20px 40px -10px rgba(255, 126, 95, 0.4),
+    inset 0 -4px 10px rgba(0,0,0,0.2),
+    inset 0 4px 10px rgba(255,255,255,0.4);
+  position: relative;
+  transform: rotate(-4deg);
+}
+.avatar-3d::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+/* CSS Isolation Class for Generator CV / Portfolio OS */
+.cv-builder-scope {
+  --color-primary: #cdbdff;
+  --color-secondary: #00e3fd;
+  --color-tertiary: #ffb1c1;
+  background-color: transparent;
+}
+
+/* Ensure sliders and inputs inside scope are styled modernly without leaks */
+.cv-builder-scope input[type="range"] {
+  accent-color: #7c4dff;
+}
+
+/* Wiggle animation for desktop icons */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-1.5deg) translateY(0); }
+  50% { transform: rotate(1.5deg) translateY(-1px); }
+}
+.animate-wiggle {
+  animation: wiggle 0.25s ease-in-out infinite;
+}
+
+/* CRT monitor overlay */
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+  z-index: 99999;
+  opacity: 0.15;
+  animation: crt-flicker 0.15s infinite;
+}
+
+@keyframes crt-flicker {
+  0% { opacity: 0.14; }
+  50% { opacity: 0.16; }
+  100% { opacity: 0.14; }
+}
+
+/* Classic XP Balloon Pop-up animation */
+@keyframes xpBalloon {
+  0% { transform: scale(0.4) translate(50px, 50px); opacity: 0; }
+  70% { transform: scale(1.05) translate(-2px, -2px); opacity: 1; }
+  100% { transform: scale(1) translate(0, 0); }
+}
+.animate-xpBalloon {
+  animation: xpBalloon 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Pixel style overrides */
+.pixel-theme {
+  font-family: 'VT323', monospace !important;
+  font-size: 110%;
+}
+
+.pixel-theme h1, 
+.pixel-theme h2, 
+.pixel-theme h3, 
+.pixel-theme h4,
+.pixel-theme .font-display,
+.pixel-theme .font-sans {
+  font-family: 'VT323', monospace !important;
+}
+
+.pixel-theme .pixel-heading {
+  font-family: 'Press Start 2P', monospace !important;
+  font-size: 0.75rem !important;
+  line-height: 1.5;
+  text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+  letter-spacing: -0.05em;
+}
+
+.pixel-theme .window-box {
+  border-radius: 4px !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  image-rendering: pixelated;
+}
+
+.pixel-theme .desktop-icon-box {
+  border-radius: 4px !important;
+  border-style: dashed !important;
+  border-width: 1px !important;
+}
+
+/* Pixelated Cursor */
+body {
+  cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+Y5AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JknT8AAAAgSURBVHjaYvz//z8DKwAECMApAAG4lJBAwACAAIBAAABsIgE4t/fOAAAAAElFTkSuQmCC'), auto;
+}
+button, a, .cursor-pointer {
+  cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+Y5AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JknT8AAAAgSURBVHjaYvz//z8DKwAECMApAAG4lJBAwACAAIBAAABsIgE4t/fOAAAAAElFTkSuQmCC'), pointer;
+}
+.cursor-grabbing {
+  cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+Y5AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JknT8AAAAgSURBVHjaYvz//z8DKwAECMApAAG4lJBAwACAAIBAAABsIgE4t/fOAAAAAElFTkSuQmCC'), grabbing;
+}
+
+

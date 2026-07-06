@@ -1,0 +1,6 @@
+{
+  "name": "PortfolioOS",
+  "description": "Interactive and fully editable portfolio system styled as a premium glassmorphic desktop OS.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
