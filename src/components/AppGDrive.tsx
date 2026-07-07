@@ -313,7 +313,7 @@ export const AppGDrive: React.FC = () => {
   // Sign-In Screen (Official Google styling matched to Portfolio OS style)
   if (needsAuth) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-6 text-center select-none bg-slate-950/20 backdrop-blur-xl">
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center select-none bg-slate-950/20 backdrop-blur-md">
         <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 mb-6">
           <CloudLightning className="w-8 h-8 text-blue-400 animate-pulse" />
         </div>

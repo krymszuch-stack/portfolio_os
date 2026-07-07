@@ -4,7 +4,9 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { DesktopIcon, OSConfig } from '../types';
+import { initialDesktopIcons } from '../data';
 import * as Lucide from 'lucide-react';
 import { Edit2, Sparkles, X, Check } from 'lucide-react';
 import { playXpClick, playXpError, playXpBalloon } from '../lib/sounds';
@@ -70,6 +72,7 @@ interface DesktopProps {
   config: OSConfig;
   isKreatorMode?: boolean;
   setIsKreatorMode?: (val: boolean) => void;
+  isPublicView?: boolean;
 }
 
 export const Desktop: React.FC<DesktopProps> = ({
@@ -78,17 +81,61 @@ export const Desktop: React.FC<DesktopProps> = ({
   openApp,
   config,
   isKreatorMode = false,
-  setIsKreatorMode
+  setIsKreatorMode,
+  isPublicView = false
 }) => {
   // Track mobile state and heatmap toggle
   const [isMobile, setIsMobile] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
+  
+  const displayedIcons = isPublicView ? icons.filter(i => i.appId !== 'wizard') : icons;
+  
+  // Custom device UA and orientation help states
+  const [deviceUA, setDeviceUA] = useState('');
+  const [browserUA, setBrowserUA] = useState('');
+  const [showOrientationHint, setShowOrientationHint] = useState(() => {
+    return localStorage.getItem('adrianOrientationDismissed') !== 'true';
+  });
+  const [isPortrait, setIsPortrait] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const checkOrientation = () => {
+      setIsPortrait(window.innerHeight > window.innerWidth);
+    };
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    return () => window.removeEventListener('resize', checkOrientation);
+  }, []);
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    let dev = 'MIUI / ColorOS';
+    let brow = 'Mobile';
+    
+    if (/android/i.test(ua)) {
+      dev = 'MIUI v14 / ColorOS (Android)';
+      if (/chrome/i.test(ua)) brow = 'Chrome Mobile';
+      else if (/firefox/i.test(ua)) brow = 'Firefox';
+    } else if (/iphone|ipad|ipod/i.test(ua)) {
+      dev = 'iOS Device (iPhone)';
+      if (/safari/i.test(ua) && !/chrome/i.test(ua)) brow = 'Safari Mobile';
+      else if (/chrome/i.test(ua)) brow = 'Chrome Mobile';
+    } else if (/windows/i.test(ua)) {
+      dev = 'Windows Workstation';
+      brow = 'Edge/Chrome';
+    } else if (/linux/i.test(ua)) {
+      dev = 'Linux Kernel Workstation';
+      brow = 'Chromium';
+    }
+    setDeviceUA(dev);
+    setBrowserUA(brow);
   }, []);
 
   const [editingIcon, setEditingIcon] = useState<DesktopIcon | null>(null);
@@ -102,7 +149,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
   // Sync isWiggling state with isKreatorMode prop
   useEffect(() => {
-    if (config.viewerMode) {
+    if (config.viewerMode || isPublicView) {
       setIsWiggling(false);
     } else {
       setIsWiggling(isKreatorMode);
@@ -110,7 +157,7 @@ export const Desktop: React.FC<DesktopProps> = ({
   }, [isKreatorMode, config.viewerMode]);
 
   const toggleWiggling = (val: boolean) => {
-    if (config.viewerMode) return;
+    if (config.viewerMode || isPublicView) return;
     setIsWiggling(val);
     if (setIsKreatorMode) {
       setIsKreatorMode(val);
@@ -356,7 +403,7 @@ export const Desktop: React.FC<DesktopProps> = ({
       switch (variant) {
         case 'lumine-ubuntu-style':
           return {
-            container: 'bg-gradient-to-br from-[#E95420] via-[#b33e4f] to-[#77216F] border border-white/20 shadow-[0_4px_12px_rgba(233,84,32,0.25),inset_0_1px_1px_rgba(255,255,255,0.4)] rounded-[18px] text-white',
+            container: 'bg-gradient-to-br from-[#E95420] via-[#b33e4f] to-[#77216F] border-2 border-orange-500/80 shadow-[0_0_20px_rgba(233,84,32,0.45),0_4px_12px_rgba(233,84,32,0.35),inset_0_1px_2px_rgba(255,255,255,0.45)] rounded-[18px] text-white',
             icon: 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]',
             text: 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-sans font-medium text-[11px] mt-3.5'
           };
@@ -431,33 +478,46 @@ export const Desktop: React.FC<DesktopProps> = ({
   };
 
   // HTML5 Drag-and-Drop Handlers for Icon Movement
-  const handleDragStart = (e: React.DragEvent, iconId: string) => {
-    endPress();
-    e.dataTransfer.setData('text/plain', iconId);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = (e: React.DragEvent, targetX: number, targetY: number) => {
-    e.preventDefault();
-    const iconId = e.dataTransfer.getData('text/plain');
-    if (!iconId) return;
-
-    setIcons(prev => prev.map(icon => {
-      if (icon.id === iconId) {
-        return {
-          ...icon,
-          x: targetX,
-          y: targetY
-        };
+  
+  const handleDragEnd = (e: any, info: any, iconId: string) => {
+    if (isMobile) return;
+    const dropX = info.point.x;
+    const dropY = info.point.y;
+    
+    const cells = document.querySelectorAll('.desktop-grid-cell');
+    let targetR = -1;
+    let targetC = -1;
+    
+    cells.forEach(cell => {
+      const rect = cell.getBoundingClientRect();
+      if (dropX >= rect.left && dropX <= rect.right && dropY >= rect.top && dropY <= rect.bottom) {
+        targetR = parseInt(cell.getAttribute('data-grid-r') || '-1');
+        targetC = parseInt(cell.getAttribute('data-grid-c') || '-1');
       }
-      return icon;
-    }));
+    });
+
+    if (targetR !== -1 && targetC !== -1) {
+      setIcons(prev => {
+        const draggedIcon = prev.find(i => i.id === iconId);
+        if (!draggedIcon) return prev;
+        
+        if (draggedIcon.x === targetR && draggedIcon.y === targetC) return prev;
+
+        const targetIcon = prev.find(i => i.x === targetR && i.y === targetC);
+
+        if (targetIcon) {
+          return prev.map(icon => {
+            if (icon.id === draggedIcon.id) return { ...icon, x: targetR, y: targetC };
+            if (icon.id === targetIcon.id) return { ...icon, x: draggedIcon.x, y: draggedIcon.y };
+            return icon;
+          });
+        } else {
+          return prev.map(icon => icon.id === iconId ? { ...icon, x: targetR, y: targetC } : icon);
+        }
+      });
+    }
   };
+
 
   const handleOpenEdit = (icon: DesktopIcon, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -494,7 +554,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
   // Long press press-and-hold handlers
   const startPress = (iconId: string, e: React.PointerEvent) => {
-    if (e.button !== 0) return; // Left click/touch only
+    if (e.button !== 0 && e.pointerType === 'mouse') return; // Left click/touch only
     hasLongPressed.current = false;
     longPressTimer.current = setTimeout(() => {
       hasLongPressed.current = true;
@@ -505,7 +565,7 @@ export const Desktop: React.FC<DesktopProps> = ({
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
-    }, 1000);
+    }, 500);
   };
 
   const endPress = () => {
@@ -586,361 +646,55 @@ export const Desktop: React.FC<DesktopProps> = ({
 
   const mobilePriorityGroups = getMobileIconsByPriority();
 
-  // If mobile, render a thumb-ergonomically stacked list/grid with live heatmap visualization
+  // If mobile, render a pristine blank desktop with a single stunning setting gear button
   if (isMobile) {
-    const iconStyles = getIconStyleClasses();
     return (
       <div 
         onClick={() => toggleWiggling(false)}
-        className="absolute inset-0 pt-16 pb-24 px-4 overflow-y-auto select-none space-y-4 font-sans flex flex-col justify-between relative"
+        className="absolute inset-0 flex flex-col items-center justify-center select-none overflow-hidden font-sans relative"
       >
-        {/* Heatmap active background sweep glow visualizer */}
-        {showHeatmap && (
-          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden flex flex-col justify-between">
-            {/* Red glow at top (unreachable) */}
-            <div className="h-[25%] bg-red-500/10 w-full blur-2xl border-b border-red-500/10" />
-            {/* Yellow glow in middle */}
-            <div className="h-[25%] bg-amber-500/10 w-full blur-2xl border-y border-amber-500/10" />
-            {/* Green glow at bottom sweep zone */}
-            <div className="h-[50%] bg-emerald-500/20 w-full blur-2xl border-t border-emerald-500/20 relative">
-              <div className="absolute right-0 bottom-0 w-[280px] h-[280px] rounded-full border border-dashed border-emerald-400/30 bg-emerald-500/5 translate-x-10 translate-y-10 animate-pulse" />
-            </div>
+        {isPortrait && showOrientationHint && (
+          <div className="absolute top-10 left-4 right-4 bg-black/40 border border-white/10 text-white p-5 rounded-3xl backdrop-blur-md shadow-xl flex flex-col items-center text-center gap-3 animate-scaleIn z-50">
+             <Lucide.Smartphone className="w-8 h-8 animate-pulse text-white/70" />
+             <p className="text-sm font-medium">Najlepiej obrócić ekran poziomo w celu wygodniejszego przeglądania.</p>
+             <button 
+               onClick={() => {
+                 setShowOrientationHint(false);
+                 localStorage.setItem('adrianOrientationDismissed', 'true');
+               }}
+               className="mt-2 px-5 py-2 bg-white/10 hover:bg-white/20 border border-white/5 rounded-full text-xs font-bold transition-colors cursor-pointer"
+             >
+               Rozumiem
+             </button>
           </div>
         )}
 
-        {/* Top Header info area (Zone 3 - Hardest Reach) */}
-        <div className="z-10 flex items-center justify-between mt-1">
-          <div className="space-y-0.5">
-            <h4 className={`text-xs font-bold text-white/80 tracking-wide uppercase ${config.pixelTheme ? 'pixel-heading' : 'font-sans'}`}>
-              Pulpit Mobilny (ErgoUX)
-            </h4>
-            <p className="text-[10px] text-slate-400 font-mono">Dopasowano do fizjologii dłoni</p>
-          </div>
+        {/* Minimal Pristine Center Workspace Container */}
+        <div className="flex flex-col items-center justify-center text-center p-6 space-y-6 z-10">
           
-          {/* Heatmap toggler floating button */}
+          {/* Main settings trigger gear (Zębatka) */}
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setShowHeatmap(!showHeatmap);
+              openApp('settings');
               if (config.playSounds) {
-                playXpBalloon();
+                playXpClick();
               }
             }}
-            className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-lg cursor-pointer ${
-              showHeatmap 
-                ? 'bg-purple-600 border-purple-500 text-white shadow-purple-500/20' 
-                : 'bg-slate-900/80 border-white/10 text-slate-300 hover:bg-slate-800'
-            }`}
+            className="group relative w-24 h-24 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 hover:border-cyan-500/30 active:scale-95 transition-all duration-300 flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-md hover:shadow-cyan-500/10 cursor-pointer overflow-hidden animate-scaleIn"
+            title="Konfiguruj system"
           >
-            <Sparkles size={11} className={showHeatmap ? "animate-spin text-amber-300" : "text-purple-400"} />
-            {showHeatmap ? 'Ukryj Heatmapę' : 'Heatmapa Kciuka'}
+            {/* Ambient rotating soft background glow */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute -inset-1 rounded-full bg-cyan-400/10 opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-300 animate-pulse" />
+            
+            {/* Settings Gear with elegant slow spin */}
+            <Lucide.Settings 
+              size={40} 
+              className="text-slate-200 group-hover:text-cyan-400 transition-all duration-500 transform group-hover:rotate-90" 
+            />
           </button>
         </div>
-
-        {/* Wiggle mode edit overlay banner */}
-        {isWiggling && (
-          <div className="z-20 w-full bg-purple-500/20 border border-purple-500/30 backdrop-blur-md px-3 py-2 rounded-xl flex items-center gap-2 justify-center shadow-lg text-center animate-bounce">
-            <span className="text-[10px] text-purple-200 font-sans font-bold uppercase tracking-wider">Tryb edycji włączony. Tapnij wolne tło, by zapisać.</span>
-          </div>
-        )}
-
-        {/* STACK OF THREE HEATP-MAP REACHABILITY ZONES */}
-        <div className="space-y-3 z-10 flex-grow flex flex-col justify-end pb-2">
-          
-          {/* ZONE 3: Niski priorytet / Trudny zasięg (Top portion of stack) */}
-          <div className={`p-3 rounded-2xl border transition-all duration-300 ${
-            showHeatmap 
-              ? 'bg-red-950/20 border-red-500/30 ring-1 ring-red-500/20' 
-              : 'bg-slate-950/35 border-white/5 backdrop-blur-md'
-          }`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className={`text-[9px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded ${
-                showHeatmap ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-slate-400'
-              }`}>
-                {showHeatmap ? '🔴 Strefa 3: Trudny Zasięg (Niski priorytet)' : 'Ustawienia i narzędzia'}
-              </span>
-              {showHeatmap && <span className="text-[9px] text-red-400 font-mono font-semibold">CTR ~3%</span>}
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              {mobilePriorityGroups.low.map((icon) => (
-                <div
-                  key={icon.id}
-                  onPointerDown={(e) => startPress(icon.id, e)}
-                  onPointerUp={endPress}
-                  onPointerLeave={endPress}
-                  onContextMenu={(e) => handleContextMenu(e, icon)}
-                  onClick={(e) => handleIconClick(icon, e)}
-                  className={`relative flex flex-col items-center p-2 rounded-xl border border-transparent active:scale-95 active:bg-white/5 transition-all ${
-                    isWiggling ? 'animate-wiggle border-dashed border-purple-500/30' : ''
-                  }`}
-                >
-                  <div className={`w-11 h-11 flex items-center justify-center border shrink-0 ${iconStyles.container} !w-11 !h-11 !rounded-xl shadow`}>
-                    {renderIcon(icon.icon, `w-5 h-5 ${iconStyles.icon}`)}
-                  </div>
-                  <span className={`text-[9px] mt-1.5 truncate max-w-full select-none text-center ${iconStyles.text}`}>
-                    {icon.label}
-                  </span>
-                  {isWiggling && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteIcon(icon.id);
-                      }}
-                      className="absolute top-0.5 left-0.5 w-4.5 h-4.5 bg-rose-500 border border-white/25 rounded-full flex items-center justify-center text-white"
-                    >
-                      <X size={8} strokeWidth={3} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ZONE 2: Średni priorytet / Średni zasięg (Middle portion of stack) */}
-          <div className={`p-3 rounded-2xl border transition-all duration-300 ${
-            showHeatmap 
-              ? 'bg-amber-950/20 border-amber-500/30 ring-1 ring-amber-500/20' 
-              : 'bg-slate-950/35 border-white/5 backdrop-blur-md'
-          }`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className={`text-[9px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded ${
-                showHeatmap ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 text-slate-400'
-              }`}>
-                {showHeatmap ? '🟡 Strefa 2: Średni Zasięg (Średni priorytet)' : 'Rozwój i Certyfikaty'}
-              </span>
-              {showHeatmap && <span className="text-[9px] text-amber-400 font-mono font-semibold">CTR ~18%</span>}
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              {mobilePriorityGroups.medium.map((icon) => (
-                <div
-                  key={icon.id}
-                  onPointerDown={(e) => startPress(icon.id, e)}
-                  onPointerUp={endPress}
-                  onPointerLeave={endPress}
-                  onContextMenu={(e) => handleContextMenu(e, icon)}
-                  onClick={(e) => handleIconClick(icon, e)}
-                  className={`relative flex flex-col items-center p-2 rounded-xl border border-transparent active:scale-95 active:bg-white/5 transition-all ${
-                    isWiggling ? 'animate-wiggle border-dashed border-purple-500/30' : ''
-                  }`}
-                >
-                  <div className={`w-11 h-11 flex items-center justify-center border shrink-0 ${iconStyles.container} !w-11 !h-11 !rounded-xl shadow`}>
-                    {renderIcon(icon.icon, `w-5 h-5 ${iconStyles.icon}`)}
-                  </div>
-                  <span className={`text-[9px] mt-1.5 truncate max-w-full select-none text-center ${iconStyles.text}`}>
-                    {icon.label}
-                  </span>
-                  {isWiggling && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteIcon(icon.id);
-                      }}
-                      className="absolute top-0.5 left-0.5 w-4.5 h-4.5 bg-rose-500 border border-white/25 rounded-full flex items-center justify-center text-white"
-                    >
-                      <X size={8} strokeWidth={3} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ZONE 1: Najwyższy priorytet / Najłatwiejszy zasięg kciuka (Bottom sweep) */}
-          <div className={`p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
-            showHeatmap 
-              ? 'bg-emerald-950/20 border-emerald-500/40 ring-2 ring-emerald-500/30 shadow-[0_4px_25px_rgba(16,185,129,0.15)]' 
-              : 'bg-slate-900/50 border-white/10 backdrop-blur-xl shadow-lg'
-          }`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className={`text-[9px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded ${
-                showHeatmap ? 'bg-emerald-500/20 text-emerald-400' : 'bg-purple-500/20 text-purple-300'
-              }`}>
-                {showHeatmap ? '🟢 Strefa 1: Strefa Komfortu (Wysoki priorytet)' : 'Najważniejsze sekcje portfolio'}
-              </span>
-              {showHeatmap && <span className="text-[9px] text-emerald-400 font-mono font-semibold">CTR &gt; 80%</span>}
-            </div>
-
-            {/* Natural bottom-right curve alignment of high priority items */}
-            <div className="grid grid-cols-2 gap-3 relative z-10">
-              {mobilePriorityGroups.high.map((icon) => (
-                <div
-                  key={icon.id}
-                  onPointerDown={(e) => startPress(icon.id, e)}
-                  onPointerUp={endPress}
-                  onPointerLeave={endPress}
-                  onContextMenu={(e) => handleContextMenu(e, icon)}
-                  onClick={(e) => handleIconClick(icon, e)}
-                  className={`relative flex items-center gap-3 p-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl active:scale-95 transition-all ${
-                    isWiggling ? 'animate-wiggle border-dashed border-purple-500/30' : ''
-                  }`}
-                >
-                  <div className={`w-10 h-10 flex items-center justify-center shrink-0 ${iconStyles.container} !w-10 !h-10 !rounded-xl`}>
-                    {renderIcon(icon.icon, `w-4 h-4 ${iconStyles.icon}`)}
-                  </div>
-                  <div className="text-left overflow-hidden">
-                    <span className="text-[10px] font-bold text-white truncate block select-none">
-                      {icon.label}
-                    </span>
-                    <span className="text-[8px] text-slate-400 truncate block">Kliknij by otworzyć</span>
-                  </div>
-                  {isWiggling && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteIcon(icon.id);
-                      }}
-                      className="absolute -top-1 -left-1 w-5 h-5 bg-rose-500 border border-white/25 rounded-full flex items-center justify-center text-white"
-                    >
-                      <X size={10} strokeWidth={3} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-        {/* Context Menu Component */}
-        {contextMenu && (
-          <div 
-            style={{ 
-              position: 'fixed',
-              top: contextMenu.y, 
-              left: contextMenu.x,
-              zIndex: 999999
-            }}
-            className="bg-slate-950/90 backdrop-blur-xl border border-white/10 rounded-2xl py-2 w-48 shadow-2xl animate-scaleIn text-left select-none flex flex-col gap-0.5 p-1.5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-3 py-1.5 border-b border-white/5 mb-1">
-              <p className="text-[10px] font-mono font-bold text-white/40 uppercase tracking-widest leading-none">Opcje ikony</p>
-              <p className="text-xs font-semibold text-white truncate mt-1">{contextMenu.icon.label}</p>
-            </div>
-            <button
-              onClick={(e) => {
-                setContextMenu(null);
-                handleOpenEdit(contextMenu.icon);
-              }}
-              className="w-full px-3 py-2 text-xs text-left text-white/80 hover:text-white hover:bg-white/10 rounded-xl flex items-center gap-2 transition-all cursor-pointer font-sans"
-            >
-              <Edit2 size={13} className="text-purple-400" />
-              Zmień nazwę / edytuj
-            </button>
-            <button
-              onClick={() => {
-                handleDeleteIcon(contextMenu.icon.id);
-                setContextMenu(null);
-              }}
-              className="w-full px-3 py-2 text-xs text-left text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl flex items-center gap-2 transition-all cursor-pointer font-sans"
-            >
-              <X size={13} className="text-rose-400" />
-              Usuń ikonę
-            </button>
-          </div>
-        )}
-
-        {/* Inline Icon Customize Modal */}
-        {editingIcon && (
-          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-5 animate-scaleIn">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-sans font-bold text-white flex items-center gap-1.5">
-                  <Sparkles size={16} className="text-amber-400" />
-                  Dostosuj Wygląd Ikony: {editingIcon.label}
-                </h3>
-                <button
-                  onClick={() => setEditingIcon(null)}
-                  className="text-slate-400 hover:text-white rounded"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {/* Rename input */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono">Etykieta Ikony</label>
-                  <input
-                    type="text"
-                    value={editForm.label}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, label: e.target.value }))}
-                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                {/* Select lucide icon symbol */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono">Symbol wektorowy</label>
-                  <div className="grid grid-cols-6 gap-2">
-                    {['user', 'folder', 'flask', 'award', 'mail', 'settings', 'sparkles', 'heart', 'star', 'terminal', 'clock', 'globe'].map((sym) => (
-                      <button
-                        key={sym}
-                        id={`btn-select-sym-${sym}`}
-                        type="button"
-                        onClick={() => setEditForm(prev => ({ ...prev, icon: sym }))}
-                        className={`p-2 rounded-xl border flex items-center justify-center transition-all ${
-                          editForm.icon === sym
-                            ? 'bg-amber-500/10 border-amber-500 text-amber-400'
-                            : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
-                        {renderIcon(sym, "w-4 h-4")}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Select color gradient style */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono">Styl tła (Gradient poświatowy)</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { name: 'Fioletowy', value: 'from-purple-500/30 to-purple-500/10 border-purple-500/20' },
-                      { name: 'Morski', value: 'from-cyan-500/30 to-cyan-500/10 border-cyan-500/20' },
-                      { name: 'Ognisty', value: 'from-orange-500/30 to-orange-500/10 border-orange-500/20' },
-                      { name: 'Różowy', value: 'from-pink-500/30 to-pink-500/10 border-pink-500/20' },
-                      { name: 'Szmaragd', value: 'from-emerald-500/30 to-emerald-500/10 border-emerald-500/20' },
-                      { name: 'Złoty', value: 'from-amber-500/30 to-amber-500/10 border-amber-500/20' }
-                    ].map((grad, idx) => (
-                      <button
-                        key={idx}
-                        id={`btn-select-grad-${idx}`}
-                        type="button"
-                        onClick={() => setEditForm(prev => ({ ...prev, color: grad.value }))}
-                        className={`p-2 rounded-lg border text-[10px] font-sans font-medium transition-all text-center ${
-                          editForm.color === grad.value
-                            ? 'border-amber-500 text-amber-400 bg-slate-950/60'
-                            : 'border-slate-800 text-slate-300 bg-slate-950/20'
-                        }`}
-                      >
-                        {grad.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2 justify-end pt-2 border-t border-slate-800">
-                <button
-                  id="btn-save-icon-custom"
-                  onClick={handleSaveEdit}
-                  className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-xs font-sans font-bold flex items-center gap-1"
-                >
-                  <Check size={12} /> Zapisz zmiany
-                </button>
-                <button
-                  onClick={() => setEditingIcon(null)}
-                  className="px-4 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-xs"
-                >
-                  Anuluj
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -948,8 +702,8 @@ export const Desktop: React.FC<DesktopProps> = ({
   return (
     <div 
       onClick={() => toggleWiggling(false)}
-      className="absolute inset-0 pt-16 pb-28 px-4 overflow-hidden grid grid-cols-6 grid-rows-5 gap-3 p-4"
-      onDragOver={handleDragOver}
+      className={`absolute inset-0 pt-16 pb-28 px-4 ${isMobile ? 'overflow-y-auto flex flex-col gap-3 content-start' : 'overflow-hidden grid grid-cols-6 grid-rows-5 gap-3 p-4'}`}
+      
     >
       {/* Wiggle mode edit overlay banner */}
       {isWiggling && (
@@ -959,30 +713,52 @@ export const Desktop: React.FC<DesktopProps> = ({
         </div>
       )}
 
-      {/* 2D Grid Cells for Drop targeting */}
-      {gridCells.map(({ r, c }) => {
-        // Find icon in this grid cell
-        const icon = icons.find(i => i.x === r && i.y === c);
+      {/* Grid or Stack items */}
+      {(isMobile ? displayedIcons : gridCells).map((item, idx) => {
+        const isGridCell = !isMobile;
+        const r = isGridCell ? (item as any).r : 0;
+        const c = isGridCell ? (item as any).c : 0;
+        const icon = isGridCell ? displayedIcons.find(i => i.x === r && i.y === c) : (item as DesktopIcon);
+        
         const iconStyles = getIconStyleClasses();
+
+        // Empty cell for drop target on desktop
+        if (isGridCell && !icon) {
+          return (
+            <div
+              key={`${r}-${c}`}
+              data-grid-r={r}
+              data-grid-c={c}
+              className="flex items-center justify-center relative rounded-xl border border-transparent transition-all desktop-grid-cell"
+            />
+          );
+        }
 
         return (
           <div
-            key={`${r}-${c}`}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, r, c)}
-            className="flex items-center justify-center relative rounded-xl border border-transparent transition-all"
+            key={isGridCell ? `${r}-${c}` : icon.id}
+            data-grid-r={isGridCell ? r : undefined}
+            data-grid-c={isGridCell ? c : undefined}
+            className={`flex relative rounded-xl border border-transparent transition-all desktop-grid-cell ${isMobile ? 'w-full max-w-md mx-auto items-center justify-start h-auto' : 'items-center justify-center'}`}
           >
             {icon ? (
               icon.isWidget ? (
-                <div
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, icon.id)}
+                <motion.div
+                  layout
+                  layoutId={icon.id}
+                  drag={!isMobile}
+                  dragElastic={0.1}
+                  dragSnapToOrigin={true}
+                  whileDrag={{ scale: 1.08, boxShadow: '0 10px 25px rgba(0,0,0,0.5)', zIndex: 50 }}
+                  onDragEnd={(e, info) => handleDragEnd(e, info, icon.id)}
                   onPointerDown={(e) => startPress(icon.id, e)}
                   onPointerUp={endPress}
                   onPointerLeave={endPress}
-                  className={`group flex flex-col justify-between p-3.5 rounded-2xl w-40 h-28 text-left bg-slate-900/60 border border-white/10 hover:border-white/25 backdrop-blur-md shadow-xl transition-all duration-200 relative cursor-grab active:cursor-grabbing ${
+                  className={`group flex flex-col justify-between p-3.5 rounded-2xl w-40 h-28 text-left bg-slate-900/60 border border-white/10 hover:border-white/25 backdrop-blur-md shadow-xl transition-all duration-200 relative ${!isMobile ? 'cursor-grab active:cursor-grabbing' : 'w-full !w-full !h-32 mb-1'} ${
                     isWiggling ? 'animate-wiggle border-dashed border-purple-500/55' : ''
                   }`}
+                  animate={isWiggling ? { rotate: [-2, 2, -2] } : { rotate: 0 }}
+                  transition={isWiggling ? { repeat: Infinity, duration: 0.3 } : {}}
                 >
                   {/* Delete button inside wiggle mode */}
                   {isWiggling && (
@@ -1168,28 +944,34 @@ export const Desktop: React.FC<DesktopProps> = ({
                       </span>
                     </div>
                   )}
-                </div>
+                </motion.div>
               ) : (
-                <div
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, icon.id)}
+                <motion.div
+                  layout
+                  layoutId={icon.id}
+                  drag={!isMobile}
+                  dragElastic={0.1}
+                  dragSnapToOrigin={true}
+                  whileDrag={{ scale: 1.08, boxShadow: '0 10px 25px rgba(0,0,0,0.5)', zIndex: 50 }}
+                  onDragEnd={(e, info) => handleDragEnd(e, info, icon.id)}
                   onPointerDown={(e) => startPress(icon.id, e)}
                   onPointerUp={endPress}
                   onPointerLeave={endPress}
                   onContextMenu={(e) => handleContextMenu(e, icon)}
                   onClick={(e) => handleIconClick(icon, e)}
-                  className={`group flex flex-col items-center justify-center p-3 rounded-2xl w-28 h-28 text-center cursor-grab active:cursor-grabbing hover:bg-white/5 border border-transparent hover:border-white/5 hover:backdrop-blur-sm transition-all duration-200 relative ${
+                  className={`group flex ${isMobile ? 'flex-row items-center justify-start w-full gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 shadow-lg backdrop-blur-md' : 'flex-col items-center justify-center p-3 rounded-2xl w-28 h-28 text-center cursor-grab active:cursor-grabbing hover:bg-white/5 border border-transparent hover:border-white/5 hover:backdrop-blur-sm'} transition-all duration-200 relative ${
                     isWiggling ? 'animate-wiggle' : ''
                   }`}
+                  animate={isWiggling ? { rotate: [-2, 2, -2] } : { rotate: 0 }}
+                  transition={isWiggling ? { repeat: Infinity, duration: 0.3 } : {}}
                 >
                   {/* Dynamic Style variant wrapper container */}
                   <div className={`
-                    w-16 h-16 flex items-center justify-center
-                    group-hover:scale-105 group-hover:-translate-y-0.5
+                    ${isMobile ? 'w-12 h-12 shrink-0' : 'w-16 h-16 group-hover:scale-105 group-hover:-translate-y-0.5'} flex items-center justify-center
                     transition-all duration-300 relative
                     ${iconStyles.container}
                   `}>
-                    {renderIcon(icon.icon, `w-6 h-6 ${iconStyles.icon}`)}
+                    {renderIcon(icon.icon, `${isMobile ? 'w-5 h-5' : 'w-6 h-6'} ${iconStyles.icon}`)}
                     
                     {/* Subtle inner reflection dot - only for modern styles */}
                     {config.portfolioStyle !== 'retro' && (
@@ -1198,7 +980,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                   </div>
 
                   {/* Edit options trigger */}
-                  {!config.viewerMode && (
+                  {!config.viewerMode && !isMobile && (
                     <button
                       id={`btn-edit-icon-${icon.id}`}
                       onClick={(e) => handleOpenEdit(icon, e)}
@@ -1209,9 +991,14 @@ export const Desktop: React.FC<DesktopProps> = ({
                     </button>
                   )}
 
-                  <span className={`truncate max-w-full leading-tight select-none mt-1.5 ${iconStyles.text}`}>
-                    {icon.label}
-                  </span>
+                  <div className={`${isMobile ? 'flex flex-col text-left' : 'mt-1.5'}`}>
+                    <span className={`truncate max-w-[180px] leading-tight select-none ${isMobile ? 'font-bold text-[13px] text-white/90 drop-shadow-md' : iconStyles.text}`}>
+                      {icon.label}
+                    </span>
+                    {isMobile && (
+                      <span className="text-[10px] text-slate-400 font-mono mt-0.5">Stuknij, aby otworzyć</span>
+                    )}
+                  </div>
 
                   {/* Delete direct badge button in wiggle mode */}
                   {isWiggling && (
@@ -1220,13 +1007,13 @@ export const Desktop: React.FC<DesktopProps> = ({
                         e.stopPropagation();
                         handleDeleteIcon(icon.id);
                       }}
-                      className="absolute -top-1 -left-1 w-5 h-5 bg-rose-500 hover:bg-rose-600 border border-white/20 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 z-20 cursor-pointer animate-scaleIn"
+                      className={`absolute ${isMobile ? 'right-4 top-1/2 -translate-y-1/2' : '-top-1 -left-1'} w-6 h-6 bg-rose-500 hover:bg-rose-600 border border-white/20 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 z-20 cursor-pointer animate-scaleIn`}
                       title="Usuń"
                     >
-                      <X size={10} strokeWidth={3} />
+                      <X size={12} strokeWidth={3} />
                     </button>
                   )}
-                </div>
+                </motion.div>
               )
             ) : (
               isWiggling && (
@@ -1255,7 +1042,7 @@ export const Desktop: React.FC<DesktopProps> = ({
             left: contextMenu.x,
             zIndex: 999999
           }}
-          className="bg-slate-950/90 backdrop-blur-xl border border-white/10 rounded-2xl py-2 w-48 shadow-2xl animate-scaleIn text-left select-none flex flex-col gap-0.5 p-1.5"
+          className="bg-slate-950/90 backdrop-blur-md border border-white/10 rounded-2xl py-2 w-48 shadow-xl animate-scaleIn text-left select-none flex flex-col gap-0.5 p-1.5"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="px-3 py-1.5 border-b border-white/5 mb-1">
@@ -1288,7 +1075,7 @@ export const Desktop: React.FC<DesktopProps> = ({
       {/* Inline Icon Customize Modal */}
       {editingIcon && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-5 animate-scaleIn">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5 animate-scaleIn">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-sans font-bold text-white flex items-center gap-1.5">
                 <Sparkles size={16} className="text-amber-400" />
@@ -1388,7 +1175,7 @@ export const Desktop: React.FC<DesktopProps> = ({
       {/* Add Custom Element / Widget Modal */}
       {addingCell && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6 animate-scaleIn">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6 animate-scaleIn">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-purple-500/20 flex items-center justify-center border border-purple-500/30 text-purple-400">
@@ -1621,6 +1408,146 @@ export const Desktop: React.FC<DesktopProps> = ({
               <button
                 onClick={() => setAddingCell(null)}
                 className="px-5 py-2.5 bg-slate-800 text-slate-300 hover:bg-slate-750 hover:text-white rounded-xl text-xs font-sans cursor-pointer active:scale-95 transition-all"
+              >
+                Anuluj
+              </button>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Context Menu Component */}
+      {contextMenu && (
+        <div 
+          style={{ 
+            position: 'fixed',
+            top: contextMenu.y, 
+            left: contextMenu.x,
+            zIndex: 999999
+          }}
+          className="bg-slate-950/90 backdrop-blur-md border border-white/10 rounded-2xl py-2 w-48 shadow-xl animate-scaleIn text-left select-none flex flex-col gap-0.5 p-1.5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-3 py-1.5 border-b border-white/5 mb-1">
+            <p className="text-[10px] font-mono font-bold text-white/40 uppercase tracking-widest leading-none">Opcje ikony</p>
+            <p className="text-xs font-semibold text-white truncate mt-1">{contextMenu.icon.label}</p>
+          </div>
+          <button
+            onClick={(e) => {
+              setContextMenu(null);
+              handleOpenEdit(contextMenu.icon);
+            }}
+            className="w-full px-3 py-2 text-xs text-left text-white/80 hover:text-white hover:bg-white/10 rounded-xl flex items-center gap-2 transition-all cursor-pointer font-sans"
+          >
+            <Edit2 size={13} className="text-purple-400" />
+            Zmień nazwę / edytuj
+          </button>
+          <button
+            onClick={() => {
+              handleDeleteIcon(contextMenu.icon.id);
+              setContextMenu(null);
+            }}
+            className="w-full px-3 py-2 text-xs text-left text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl flex items-center gap-2 transition-all cursor-pointer font-sans"
+          >
+            <X size={13} className="text-rose-400" />
+            Usuń ikonę
+          </button>
+        </div>
+      )}
+
+      {/* Inline Icon Customize Modal */}
+      {editingIcon && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5 animate-scaleIn">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-sans font-bold text-white flex items-center gap-1.5">
+                <Sparkles size={16} className="text-amber-400" />
+                Dostosuj Wygląd Ikony: {editingIcon.label}
+              </h3>
+              <button
+                onClick={() => setEditingIcon(null)}
+                className="text-slate-400 hover:text-white rounded"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Rename input */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 uppercase font-mono">Etykieta Ikony</label>
+                <input
+                  type="text"
+                  value={editForm.label}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, label: e.target.value }))}
+                  className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              {/* Select lucide icon symbol */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 uppercase font-mono">Symbol wektorowy</label>
+                <div className="grid grid-cols-6 gap-2">
+                  {['user', 'folder', 'flask', 'award', 'mail', 'settings', 'sparkles', 'heart', 'star', 'terminal', 'clock', 'globe'].map((sym) => (
+                    <button
+                      key={sym}
+                      id={`btn-select-sym-${sym}`}
+                      type="button"
+                      onClick={() => setEditForm(prev => ({ ...prev, icon: sym }))}
+                      className={`p-2 rounded-xl border flex items-center justify-center transition-all ${
+                        editForm.icon === sym
+                          ? 'bg-amber-500/10 border-amber-500 text-amber-400'
+                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      {renderIcon(sym, "w-4 h-4")}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Select color gradient style */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] text-slate-400 uppercase font-mono">Styl tła (Gradient poświatowy)</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { name: 'Fioletowy', value: 'from-purple-500/30 to-purple-500/10 border-purple-500/20' },
+                    { name: 'Morski', value: 'from-cyan-500/30 to-cyan-500/10 border-cyan-500/20' },
+                    { name: 'Ognisty', value: 'from-orange-500/30 to-orange-500/10 border-orange-500/20' },
+                    { name: 'Różowy', value: 'from-pink-500/30 to-pink-500/10 border-pink-500/20' },
+                    { name: 'Szmaragd', value: 'from-emerald-500/30 to-emerald-500/10 border-emerald-500/20' },
+                    { name: 'Złoty', value: 'from-amber-500/30 to-amber-500/10 border-amber-500/20' }
+                  ].map((grad, idx) => (
+                    <button
+                      key={idx}
+                      id={`btn-select-grad-${idx}`}
+                      type="button"
+                      onClick={() => setEditForm(prev => ({ ...prev, color: grad.value }))}
+                      className={`p-2 rounded-lg border text-[10px] font-sans font-medium transition-all text-center ${
+                        editForm.color === grad.value
+                          ? 'border-amber-500 text-amber-400 bg-slate-950/60'
+                          : 'border-slate-800 text-slate-300 bg-slate-950/20'
+                      }`}
+                    >
+                      {grad.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-2 border-t border-slate-800">
+              <button
+                id="btn-save-icon-custom"
+                onClick={handleSaveEdit}
+                className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-xs font-sans font-bold flex items-center gap-1"
+              >
+                <Check size={12} /> Zapisz zmiany
+              </button>
+              <button
+                onClick={() => setEditingIcon(null)}
+                className="px-4 py-1.5 bg-slate-800 text-slate-300 rounded-lg text-xs"
               >
                 Anuluj
               </button>

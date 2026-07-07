@@ -1,12 +1,27 @@
 import React, { useState } from 'react';
-import { OSConfig } from '../types';
+import { OSConfig, DesktopIcon } from '../types';
 
 interface AppSettingsProps {
   config: OSConfig;
   onSave: (newConfig: OSConfig) => void;
+  icons?: DesktopIcon[];
+  setIcons?: React.Dispatch<React.SetStateAction<DesktopIcon[]>>;
 }
 
-export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave }) => {
+const DEFAULT_APPS_LIST = [
+  { appId: 'bio', label: 'O mnie (Bio)', icon: '👤', color: 'from-purple-500/30 to-purple-500/10 hover:shadow-purple-500/20 border-purple-500/20' },
+  { appId: 'projects', label: 'Moje Projekty', icon: '📁', color: 'from-cyan-500/30 to-cyan-500/10 hover:shadow-cyan-500/20 border-cyan-500/20' },
+  { appId: 'lab', label: 'Aktualne Projekty', icon: '🧪', color: 'from-orange-500/30 to-orange-500/10 hover:shadow-orange-500/20 border-orange-500/20' },
+  { appId: 'certificates', label: 'Certyfikaty', icon: '🏆', color: 'from-pink-500/30 to-pink-500/10 hover:shadow-pink-500/20 border-pink-500/20' },
+  { appId: 'contact', label: 'Napisz do mnie', icon: '✉️', color: 'from-emerald-500/30 to-emerald-500/10 hover:shadow-emerald-500/20 border-emerald-500/20' },
+  { appId: 'wizard', label: 'Generator Portfolio', icon: '✨', color: 'from-amber-500/30 to-amber-500/10 hover:shadow-amber-500/20 border-amber-500/20' },
+  { appId: 'gdrive', label: 'Google Drive', icon: '💾', color: 'from-blue-500/30 to-blue-500/10 hover:shadow-blue-500/20 border-blue-500/20' },
+  { appId: 'calendar', label: 'Kalendarz Google', icon: '📅', color: 'from-emerald-500/30 to-emerald-500/10 hover:shadow-emerald-500/20 border-emerald-500/20' },
+  { appId: 'planned', label: 'Planowane projekty', icon: '📞', color: 'from-rose-500/30 to-rose-500/10 hover:shadow-rose-500/20 border-rose-500/20' },
+];
+
+export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons, setIcons }) => {
+  const [showSavedMsg, setShowSavedMsg] = useState(false);
   const [localConfig, setLocalConfig] = useState<OSConfig>({
     ...config,
     systemTheme: config.systemTheme || 'terraria',
@@ -19,10 +34,13 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave }) => {
     fontSizeScale: config.fontSizeScale || 1.0,
     glassBlur: config.glassBlur || 'medium',
     borderStyle: config.borderStyle || 'thin',
+    systemFont: config.systemFont || 'apple'
   });
 
   const handleSave = () => {
     onSave(localConfig);
+    setShowSavedMsg(true);
+    setTimeout(() => setShowSavedMsg(false), 2500);
     // Custom audio confirmation
     try {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
@@ -60,19 +78,16 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave }) => {
           <h3 className="text-sm font-bold text-black border-l-4 border-blue-600 pl-2 uppercase">Główny Styl Portfolio</h3>
           <p className="text-[10px] text-gray-500 font-bold leading-tight uppercase mt-1">Zdecyduj jak inni zobaczą Twoje Portfolio (np. jako strona główna)</p>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2">
           {[
-            { id: 'modern', name: '🌌 Modern Glassmorphism', desc: 'Szkło, płynne blaski neonów, nowoczesny desktop' },
-            { id: 'retro', name: '🕹️ Retro 8-Bit Pixel', desc: 'Pikselowy świat RPG, spadające liście' }
+            { id: 'modern', name: '🌌 Modern Glassmorphism', desc: 'Szkło, płynne blaski neonów, nowoczesny desktop' }
           ].map((style) => (
             <button
               key={style.id}
               type="button"
               onClick={() => setLocalConfig({ 
                 ...localConfig, 
-                portfolioStyle: style.id as any,
-                // Automatically switch accompanying theme preset to make it look cohesive
-                pixelTheme: style.id === 'retro'
+                portfolioStyle: style.id as any
               })}
               className={`p-3 text-left border-2 border-black rounded transition-all flex flex-col justify-between ${
                 localConfig.portfolioStyle === style.id
@@ -88,7 +103,6 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave }) => {
 
         {/* 0.5. Icon Style Variants Selection based on chosen Portfolio Style */}
         <div className="border-t border-gray-200 pt-3 mt-1 space-y-2">
-          {localConfig.portfolioStyle === 'modern' ? (
             <>
               <h4 className="text-xs font-bold text-blue-900 uppercase">Wybierz wariant ikon dla stylu Modern (Lumine)</h4>
               <p className="text-[9px] text-gray-500 font-semibold uppercase leading-none mb-1">Dostępnych jest 10 ekskluzywnych stylów poświaty i kompozycji szklanej:</p>
@@ -122,40 +136,6 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave }) => {
                 ))}
               </div>
             </>
-          ) : (
-            <>
-              <h4 className="text-xs font-bold text-emerald-900 uppercase">Wybierz wariant ikon dla stylu Retro (8-bit)</h4>
-              <p className="text-[9px] text-gray-500 font-semibold uppercase leading-none mb-1">Dostępnych jest 10 unikalnych palet kolorów retro:</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[220px] overflow-y-auto pr-1 border border-gray-200 p-1.5 rounded bg-white">
-                {[
-                  { id: 'classic-windows-95', name: '💾 Classic Windows 95', desc: 'Dwuwymiarowa szarość z wyraźnym czarnym cieniem' },
-                  { id: 'gameboy-green', name: '🔋 GameBoy Green DMG', desc: 'Pikselowa matryca o klasycznym zielonkawym odcieniu' },
-                  { id: 'nes-retro-console', name: '🕹️ NES Retro Console', desc: 'Kultowa kombinacja ciemnego plastiku z czerwienią' },
-                  { id: 'arcade-cabinet', name: '👾 Arcade Cabinet Glow', desc: 'Czarne tło z wektorową, neonowo-fioletową ramką' },
-                  { id: 'c64-blue', name: '📼 C64 Classic Blue', desc: 'Niebieskie retro klocki z jasnobłękitnym obramowaniem' },
-                  { id: 'minecraft-brick', name: '🧱 Minecraft Brick Block', desc: 'Brązowo-błotniste piksele z glinianym wykończeniem' },
-                  { id: 'stealth-retro', name: '🛸 Stealth Retro Dark', desc: 'Bardzo ciemne piksele ze stonowanymi szarościami' },
-                  { id: 'candy-pixel', name: '🍬 Candy Pixel Burst', desc: 'Słodki, cukierkowy róż z malinowym cieniem' },
-                  { id: 'cyber-8bit', name: '🚧 Cyber-8bit Grid', desc: 'Czerń połączona z jaskrawym, ostrzegawczym żółtym' },
-                  { id: 'doom-crimson', name: '👹 Doom Crimson Hell', desc: 'Krwistoczerwona ramka z piekielnym, mrocznym wnętrzem' }
-                ].map((variant) => (
-                  <button
-                    key={variant.id}
-                    type="button"
-                    onClick={() => setLocalConfig({ ...localConfig, iconStyleRetro: variant.id })}
-                    className={`p-2 text-left border rounded transition-all text-xs flex flex-col justify-center leading-normal ${
-                      (localConfig.iconStyleRetro || 'classic-windows-95') === variant.id
-                        ? 'bg-emerald-50 border-emerald-600 text-emerald-900 font-bold shadow-[1px_1px_0px_black]'
-                        : 'bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-700'
-                    }`}
-                  >
-                    <span className="font-bold text-[10px]">{variant.name}</span>
-                    <span className="text-[8px] text-gray-500 mt-0.5 leading-none font-medium">{variant.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
         </div>
       </div>
 
@@ -298,7 +278,109 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave }) => {
             </select>
           </div>
         </div>
+
+        {/* Czcionka selection */}
+        <div className="space-y-1.5 pt-2 border-t border-gray-200">
+          <label className="text-[9px] text-gray-600 font-bold uppercase font-mono block">Czcionka Interfejsu (Font):</label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            {[
+              { id: 'apple', name: '🍏 Apple SF', desc: 'System-ui' },
+              { id: 'ubuntu', name: '🍥 Ubuntu', desc: 'Classic Linux' },
+              { id: 'inter', name: '🌌 Inter', desc: 'Modern Sans' },
+              { id: 'retro', name: '🕹️ 8-Bit', desc: 'Pixel Mono' }
+            ].map((font) => (
+              <button
+                key={font.id}
+                type="button"
+                onClick={() => setLocalConfig({ ...localConfig, systemFont: font.id as any })}
+                className={`p-1.5 text-center border rounded transition-all text-[10px] font-bold flex flex-col justify-center items-center leading-tight cursor-pointer ${
+                  localConfig.systemFont === font.id
+                    ? 'bg-blue-50 border-blue-600 text-blue-900 shadow-[1px_1px_0px_black]'
+                    : 'bg-white border-gray-300 hover:bg-gray-100 text-gray-700'
+                }`}
+              >
+                <span>{font.name}</span>
+                <span className="text-[7px] text-gray-400 font-normal">{font.desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
+
+      {/* 3.8. Zarządzanie Ikonami Pulpitu (Ilość ikon) */}
+      {icons && setIcons && (
+        <div className="space-y-3 bg-[#f3f9f3] p-3.5 border-2 border-black rounded shadow-[2px_2px_0px_rgba(0,0,0,0.15)]">
+          <div>
+            <h3 className="text-sm font-bold text-black border-l-4 border-green-600 pl-2 uppercase">3.8. Zarządzanie Ikonami Pulpitu</h3>
+            <p className="text-[10px] text-gray-500 font-bold leading-tight uppercase mt-1">
+              Włączaj lub wyłączaj ikony, aby uprościć pulpit (od pustego do pełnego zestawu)
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-white p-2 border border-gray-200 rounded max-h-[180px] overflow-y-auto">
+            {DEFAULT_APPS_LIST.map((app) => {
+              const isEnabled = icons.some((i) => i.appId === app.appId);
+              return (
+                <button
+                  key={app.appId}
+                  type="button"
+                  onClick={() => {
+                    if (isEnabled) {
+                      // Remove it
+                      setIcons(prev => prev.filter(i => i.appId !== app.appId));
+                    } else {
+                      // Add it
+                      let nextX = 0;
+                      let nextY = 0;
+                      const coords = new Set(icons.map(i => `${i.x},${i.y}`));
+                      let found = false;
+                      for (let y = 0; y < 6 && !found; y++) {
+                        for (let x = 0; x < 6 && !found; x++) {
+                          if (!coords.has(`${x},${y}`)) {
+                            nextX = x;
+                            nextY = y;
+                            found = true;
+                          }
+                        }
+                      }
+                      setIcons(prev => [
+                        ...prev,
+                        {
+                          id: `icon-${app.appId}`,
+                          label: app.label,
+                          appId: app.appId,
+                          icon: app.appId === 'gdrive' ? 'hardDrive' : app.appId === 'planned' ? 'phone' : app.appId === 'contact' ? 'mail' : app.appId === 'wizard' ? 'sparkles' : app.appId === 'certificates' ? 'award' : app.appId === 'lab' ? 'flask' : app.appId === 'projects' ? 'folder' : app.appId === 'bio' ? 'user' : app.appId,
+                          color: app.color,
+                          x: nextX,
+                          y: nextY
+                        }
+                      ]);
+                    }
+                  }}
+                  className={`flex items-center justify-between p-2 rounded border text-xs font-bold transition-all cursor-pointer ${
+                    isEnabled
+                      ? 'bg-green-50 border-green-600 text-green-900 shadow-[1px_1px_0px_black]'
+                      : 'bg-gray-50 border-gray-300 text-gray-500 hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm select-none">{app.icon}</span>
+                    <span className="font-mono">{app.label}</span>
+                  </div>
+                  <div className={`w-4 h-4 rounded border flex items-center justify-center font-sans ${
+                    isEnabled ? 'bg-green-600 border-green-600 text-white font-bold' : 'border-gray-400 bg-white'
+                  }`}>
+                    {isEnabled && '✓'}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[8px] text-gray-500 leading-normal uppercase font-semibold">
+            Ikona "Personalizacja" (Ustawienia) jest zawsze widoczna, aby zagwarantować stały dostęp do panelu konfiguracji.
+          </p>
+        </div>
+      )}
 
       {/* 4. Functional System Switches */}
       <div className="space-y-3">
@@ -352,7 +434,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave }) => {
           <div className="absolute inset-x-2 bottom-0 h-3 bg-black rounded" />
           {/* Main button block with beautiful depth */}
           <div className="absolute inset-x-2 bottom-2 top-0 bg-[#4caf50] border-2 border-black text-white font-bold text-sm tracking-widest flex items-center justify-center uppercase shadow-[inset_0_3px_0_rgba(255,255,255,0.4)] group-active:translate-y-[2px] group-active:shadow-none transition-all">
-            💾 ZAPISZ USTAWIENIA
+            {showSavedMsg ? '✅ ZAPISANO Pomyślnie' : '💾 ZAPISZ USTAWIENIA'}
           </div>
         </button>
       </div>

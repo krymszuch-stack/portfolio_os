@@ -57,7 +57,8 @@ export interface DesktopIcon {
 
 export interface OSConfig {
   glowIntensity: number; // 0 to 100
-  accentColor: 'purple' | 'cyan' | 'orange' | 'emerald';
+  accentColor: 'purple' | 'cyan' | 'orange' | 'emerald' | 'amber-retro' | 'mono-terminal';
+  themePack?: 'purple' | 'cyan' | 'orange' | 'emerald' | 'amber-retro' | 'mono-terminal';
   visualMode: 'deep-space' | 'aurora';
   wallpaper: string; // image ID or class name
   proMode: boolean; // Controls demo tier
@@ -88,6 +89,7 @@ export interface OSConfig {
   wizardManualProfessionId?: string;
   wizardAnswers?: { [key: string]: string };
   viewerMode?: boolean;
+  systemFont?: 'apple' | 'ubuntu' | 'inter' | 'retro';
 }
 
 export type ActiveAppId = 'bio' | 'projects' | 'lab' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'gdrive' | 'calendar' | 'planned' | null;

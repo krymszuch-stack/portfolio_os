@@ -353,7 +353,7 @@ export const AppPlanned: React.FC = () => {
         </form>
 
         {/* Interactive Smartphone Mockup */}
-        <div className="relative mx-auto w-56 h-[340px] bg-slate-950 border-[5px] border-slate-800 rounded-[32px] overflow-hidden shadow-2xl flex flex-col justify-between p-3 select-none">
+        <div className="relative mx-auto w-56 h-[340px] bg-slate-950 border-[5px] border-slate-800 rounded-[32px] overflow-hidden shadow-xl flex flex-col justify-between p-3 select-none">
           {/* Top Speaker Notch */}
           <div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-3.5 bg-slate-800 rounded-full flex items-center justify-center z-10">
             <div className="w-6 h-1 bg-black rounded-full" />

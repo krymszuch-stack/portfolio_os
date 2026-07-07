@@ -316,3 +316,28 @@ export const playXpClick = () => {
   osc.start(now);
   osc.stop(now + 0.04);
 };
+
+/**
+ * 8-Bit descending square wave click synth (Terraria pickup style)
+ */
+export const playPixelBeep = () => {
+  if (!isSoundEnabled) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  
+  // Classic 8-bit retro sound using square wave
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(800, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.1);
+  
+  // Quick decay envelope
+  gain.gain.setValueAtTime(0.1, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
+  
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.1);
+};

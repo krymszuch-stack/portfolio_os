@@ -328,7 +328,7 @@ export const AppCalendar: React.FC = () => {
   // Render sign in
   if (needsAuth) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-6 text-center select-none bg-slate-950/20 backdrop-blur-xl">
+      <div className="h-full flex flex-col items-center justify-center p-6 text-center select-none bg-slate-950/20 backdrop-blur-md">
         <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 mb-6">
           <CalendarDays className="w-8 h-8 text-emerald-400 animate-pulse" />
         </div>

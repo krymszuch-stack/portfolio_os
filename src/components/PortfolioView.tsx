@@ -16,18 +16,25 @@ interface PortfolioViewProps {
 
 // Custom 8-Bit falling / rising particle system (forest leaves, magic sparkles, bubble pop)
 const FallingParticles: React.FC<{ type: 'leaves' | 'sparkles' | 'bubbles' | 'none' }> = ({ type }) => {
-  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; size: number; color: string; speed: number; angle: number }>>([]);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (type === 'none') {
-      setParticles([]);
-      return;
-    }
+    if (type === 'none' || !canvasRef.current) return;
 
-    const initialParticles = Array.from({ length: 24 }).map((_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const updateSize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    updateSize();
+    window.addEventListener('resize', updateSize);
+
+    const particles = Array.from({ length: 24 }).map((_, i) => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
       size: Math.random() * 6 + 4,
       color: type === 'leaves' 
         ? ['#4caf50', '#81c784', '#e57373', '#ffb74d', '#a1887f'][Math.floor(Math.random() * 5)] 
@@ -37,54 +44,68 @@ const FallingParticles: React.FC<{ type: 'leaves' | 'sparkles' | 'bubbles' | 'no
       speed: Math.random() * 0.8 + 0.4,
       angle: Math.random() * 360
     }));
-    setParticles(initialParticles);
 
     let animationFrameId: number;
     const update = () => {
-      setParticles(prev => prev.map(p => {
-        let nextY = p.y + (type === 'bubbles' ? -p.speed * 0.6 : p.speed * 0.6);
-        let nextX = p.x + Math.sin(p.angle) * 0.15;
-        let nextAngle = p.angle + 0.04;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        
+        if (type === 'bubbles') {
+          p.y -= p.speed * 0.6;
+        } else {
+          p.y += p.speed * 0.6;
+        }
+        p.x += Math.sin(p.angle) * 0.5;
+        p.angle += 0.04;
 
-        if (nextY > 105 && type !== 'bubbles') {
-          nextY = -5;
-          nextX = Math.random() * 100;
-        } else if (nextY < -5 && type === 'bubbles') {
-          nextY = 105;
-          nextX = Math.random() * 100;
+        if (p.y > canvas.height + 5 && type !== 'bubbles') {
+          p.y = -5;
+          p.x = Math.random() * canvas.width;
+        } else if (p.y < -5 && type === 'bubbles') {
+          p.y = canvas.height + 5;
+          p.x = Math.random() * canvas.width;
         }
 
-        return { ...p, y: nextY, x: nextX, angle: nextAngle };
-      }));
+        ctx.fillStyle = p.color;
+        if (type === 'bubbles') {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+          ctx.stroke();
+        } else {
+          ctx.fillRect(p.x, p.y, p.size, p.size);
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+          ctx.strokeRect(p.x, p.y, p.size, p.size);
+          if (type === 'sparkles') {
+             ctx.shadowColor = '#fffb96';
+             ctx.shadowBlur = 6;
+          }
+        }
+      }
       animationFrameId = requestAnimationFrame(update);
     };
 
     animationFrameId = requestAnimationFrame(update);
-    return () => cancelAnimationFrame(animationFrameId);
+
+    return () => {
+      window.removeEventListener('resize', updateSize);
+      cancelAnimationFrame(animationFrameId);
+    };
   }, [type]);
 
   if (type === 'none') return null;
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
-      {particles.map(p => (
-        <div
-          key={p.id}
-          className="absolute transition-all duration-300 ease-out"
-          style={{
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            width: `${p.size}px`,
-            height: `${p.size}px`,
-            backgroundColor: p.color,
-            borderRadius: type === 'bubbles' ? '50%' : '0px',
-            border: '1px solid rgba(0,0,0,0.4)',
-            boxShadow: type === 'sparkles' ? '0 0 6px #fffb96' : 'none',
-            imageRendering: 'pixelated',
-          }}
-        />
-      ))}
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 pointer-events-none z-[1]"
+      style={{ imageRendering: 'pixelated' }}
+    />
   );
 };
 

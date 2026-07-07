@@ -44,6 +44,10 @@ import {
   BarChart,
   Info
 } from 'lucide-react';
+import { googleSignIn, auth } from '../lib/googleAuth';
+import { savePortfolioConfig } from '../lib/firestoreStore';
+import { Loader2 } from 'lucide-react';
+import { playXpClick, playXpStartup, playXpBalloon, playXpError, playPixelBeep } from '../lib/sounds';
 import { 
   classifyIndustry, 
   industryCategories, 
@@ -123,6 +127,7 @@ export const Wizard: React.FC<WizardProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationLogs, setGenerationLogs] = useState<string[]>([]);
   const [isFinished, setIsFinished] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'error' | 'success'>('idle');
 
   // Step 1 states
   const [tags, setTags] = useState<string[]>(() => config.wizardTags || []);
@@ -212,7 +217,8 @@ export const Wizard: React.FC<WizardProps> = ({
   const [selectedSections, setSelectedSections] = useState<{ [key: string]: boolean }>({});
 
   // Step 4 states: customization
-  const [accentColor, setAccentColor] = useState<'purple' | 'cyan' | 'orange' | 'emerald'>(() => config.accentColor || 'cyan');
+  const [themePack, setThemePack] = useState<any>(() => config.themePack || 'cyan');
+  const [accentColor, setAccentColor] = useState<any>(() => config.accentColor || 'cyan');
 
   // Auto-save Wizard state to parent config for editability/persistence
   useEffect(() => {
@@ -223,9 +229,10 @@ export const Wizard: React.FC<WizardProps> = ({
       wizardFocusInput: focusInput,
       wizardManualProfessionId: manualProfessionId,
       wizardAnswers: answers,
-      accentColor: accentColor
+      accentColor: accentColor,
+      themePack: themePack
     }));
-  }, [userName, tags, focusInput, manualProfessionId, answers, accentColor, setConfig]);
+  }, [userName, tags, focusInput, manualProfessionId, answers, accentColor, themePack, setConfig]);
 
   // Dynamically classify industry based on user input on "Na czym się skupiasz?"
   useEffect(() => {
@@ -291,13 +298,13 @@ export const Wizard: React.FC<WizardProps> = ({
 
   const triggerDynamicLogs = (callback: () => void) => {
     const logs = [
-      '🔍 Analizowanie słów kluczowych i preferencji...',
-      `🎯 Dopasowano optymalny profil: ${selectedCategory.name}`,
-      '📂 Przygotowywanie dedykowanego zestawu ikon i skrótów...',
-      '🛠️ Tworzenie struktury widżetów oraz podstron...',
-      '🎨 Kompilacja schematu graficznego z akcentem: ' + accentColor,
-      '💫 Generowanie responsywnej wersji demonstracyjnej...',
-      '✨ Sukces! Twój system portfolio jest gotowy do pracy.'
+      '🔍 Weryfikacja parametrów instalacji i zależności pakietów...',
+      `📦 Rozpakowywanie modułów systemowych dla profilu: ${selectedCategory.name}`,
+      '📂 Rejestrowanie komponentów interfejsu (GUI) i tworzenie skrótów...',
+      '⚙️ Konfigurowanie rdzenia systemu oraz usług działających w tle...',
+      '🎨 Kompilowanie zmiennych środowiskowych motywu: ' + accentColor,
+      '💫 Zapisywanie konfiguracji użytkownika do rejestru...',
+      '✅ Instalacja systemu zakończona pomyślnie. Inicjowanie środowiska pulpitu...'
     ];
 
     let currentLogIndex = 0;
@@ -347,11 +354,88 @@ export const Wizard: React.FC<WizardProps> = ({
     });
   };
 
-  const handleFinishAndExplore = () => {
-    onClose();
-    if (!isZeroState) {
-      openApp('bio');
+  const handleFinishAndExplore = async () => {
+    try {
+      setSaveStatus('saving');
+      
+      let currentUser = auth.currentUser;
+      if (!currentUser) {
+        const result = await googleSignIn();
+        if (result) currentUser = result.user;
+      }
+
+      if (currentUser) {
+        await savePortfolioConfig(
+          currentUser.uid,
+          config,
+          projects || [],
+          certificates || [],
+          timeline || [],
+          icons || []
+        );
+      }
+      
+      setSaveStatus('success');
+      onClose();
+      if (!isZeroState) {
+        openApp('bio');
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      setSaveStatus('error');
     }
+  };
+
+  const handleSkipWizard = () => {
+    setConfig({
+      glowIntensity: 100,
+      accentColor: 'orange',
+      themePack: 'orange',
+      visualMode: 'deep-space',
+      wallpaper: 'ubuntu-pixel',
+      proMode: true,
+      portfolioName: '',
+      portfolioBio: '',
+      isInitialized: true,
+      playSounds: true,
+      pixelTheme: false,
+      portfolioStyle: 'modern',
+      iconStyleModern: 'lumine-ubuntu-style',
+      iconStyleRetro: 'classic-windows-95',
+      fontSizeScale: 1.0,
+      glassBlur: 'medium',
+      borderStyle: 'thick',
+      systemFont: 'apple'
+    });
+
+    if (setIcons) {
+      setIcons([
+        {
+          id: 'icon-settings',
+          label: 'Personalizacja',
+          appId: 'settings',
+          icon: 'settings',
+          color: 'from-orange-500/30 to-orange-500/10 hover:shadow-orange-500/20 border-orange-500/20',
+          x: 0,
+          y: 0
+        }
+      ]);
+    }
+
+    onClose();
+  };
+
+  const handleResetWizard = () => {
+    setStep(1);
+    setTags([]);
+    setTagInput('');
+    setFocusInput('');
+    setUserName('');
+    setSelectedCategory(industryCategories[industryCategories.length - 1]);
+    setManualProfessionId('');
+    setAnswers({});
+    setSelectedSections({});
+    setAccentColor('cyan');
   };
 
   return (
@@ -401,10 +485,10 @@ export const Wizard: React.FC<WizardProps> = ({
 
           <div className="space-y-2">
             <h3 className="text-lg md:text-xl font-sans font-bold text-white">
-              Wizytówka Gotowa do Pracy!
+              Instalacja Zakończona Pomyślnie
             </h3>
             <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
-              Gratulacje! Twój nowy system wizytówkowy został wygenerowany z uwzględnieniem branży <strong className="text-amber-400">{selectedCategory.name}</strong>. Wszystkie widżety, skróty i bazy danych zostały skonfigurowane automatycznie.
+              Gratulacje! Twój system OS został pomyślnie zainstalowany i skonfigurowany dla profilu <strong className="text-amber-400">{selectedCategory.name}</strong>. Wszystkie pakiety systemowe, aplikacje i rejestry zostały wdrożone.
             </p>
           </div>
 
@@ -426,17 +510,21 @@ export const Wizard: React.FC<WizardProps> = ({
             </div>
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-400">Schemat kolorów:</span>
-              <span className="text-cyan-400 font-mono capitalize">{accentColor}</span>
+              <span className="text-cyan-400 font-mono capitalize">{themePack}</span>
             </div>
           </div>
 
           <button
             id="btn-finish-wizard"
             onClick={handleFinishAndExplore}
-            className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center gap-1.5 mx-auto shadow-lg shadow-amber-500/20 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+            disabled={saveStatus === 'saving'}
+            className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center gap-1.5 mx-auto shadow-lg shadow-amber-500/20 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Eye size={14} /> {isZeroState ? 'Uruchom Mój Pulpit OS' : 'Zapisz i Otwórz Profil'}
+            {saveStatus === 'saving' ? <><Loader2 className="animate-spin" size={14} /> Zapisywanie w chmurze...</> : <><Eye size={14} /> {isZeroState ? 'Uruchom System' : 'Przejdź do pulpitu'}</>}
           </button>
+          {saveStatus === 'error' && (
+            <p className="text-rose-400 text-[11px] mt-3 font-bold animate-pulse">Nie udało się zapisać konfiguracji, spróbuj ponownie.</p>
+          )}
         </div>
       ) : isGenerating ? (
         <div className="py-12 text-center space-y-6">
@@ -446,8 +534,8 @@ export const Wizard: React.FC<WizardProps> = ({
           </div>
           
           <div className="space-y-1">
-            <h4 className="text-sm font-sans font-bold text-white">Generowanie optymalnej struktury...</h4>
-            <p className="text-[11px] text-slate-400">Tworzenie spersonalizowanego środowiska pracy.</p>
+            <h4 className="text-sm font-sans font-bold text-white">Instalowanie komponentów systemowych...</h4>
+            <p className="text-[11px] text-slate-400">Konfigurowanie środowiska pracy i rejestrowanie aplikacji na pulpicie...</p>
           </div>
 
           {/* Scrolling output log terminal style */}
@@ -559,7 +647,7 @@ export const Wizard: React.FC<WizardProps> = ({
                         Dopasowane specjalizacje (kliknij jedną, aby wybrać profil):
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        {topMatches.map(({ profession, confidence }) => {
+                        {topMatches.map(({ profession, confidence, relativePercentage }) => {
                           const isSelected = selectedCategory.matchedProfession?.id === profession.id;
                           return (
                             <button
@@ -580,7 +668,7 @@ export const Wizard: React.FC<WizardProps> = ({
                                   {profession.title}
                                 </div>
                                 <div className="text-[9px] text-slate-500 font-mono mt-0.5">
-                                  Zgodność: {Math.round(confidence * 100)}%
+                                  Zgodność: {Math.round(confidence * 100)}% <span className="text-slate-400 font-sans font-bold">({relativePercentage}%)</span>
                                 </div>
                               </div>
                               {isSelected && (
@@ -590,6 +678,50 @@ export const Wizard: React.FC<WizardProps> = ({
                           );
                         })}
                       </div>
+
+                      {/* Wizualny podział prawdopodobieństwa */}
+                      {topMatches.length > 1 && (
+                        <div className="pt-2 border-t border-slate-900/40 space-y-2 animate-fadeIn">
+                          <span className="text-[9px] text-slate-400 font-sans font-medium uppercase tracking-wider block">
+                            Prawdopodobieństwo tematyczne (Podział branżowy):
+                          </span>
+                          <div className="h-2 w-full bg-slate-950/80 rounded-full overflow-hidden flex border border-slate-800/80">
+                            {topMatches.map(({ profession, relativePercentage }, idx) => {
+                              const colors = [
+                                'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]', 
+                                'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]', 
+                                'bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.5)]'
+                              ];
+                              const color = colors[idx % colors.length];
+                              if (relativePercentage === 0) return null;
+                              return (
+                                <div 
+                                  key={profession.id}
+                                  style={{ width: `${relativePercentage}%` }}
+                                  className={`${color} h-full transition-all duration-500`}
+                                  title={`${profession.title}: ${relativePercentage}%`}
+                                />
+                              );
+                            })}
+                          </div>
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[9px] font-mono text-slate-500">
+                            {topMatches.map(({ profession, relativePercentage }, idx) => {
+                              const textColors = ['text-amber-400', 'text-emerald-400', 'text-cyan-400'];
+                              const dots = ['bg-amber-500', 'bg-emerald-500', 'bg-cyan-500'];
+                              const color = textColors[idx % textColors.length];
+                              const dot = dots[idx % dots.length];
+                              if (relativePercentage === 0) return null;
+                              return (
+                                <div key={profession.id} className="flex items-center gap-1">
+                                  <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+                                  <span className="text-slate-400">{profession.title}:</span>
+                                  <span className={`${color} font-bold`}>{relativePercentage}%</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-xs text-slate-400 leading-relaxed py-1 animate-fadeIn">
@@ -795,34 +927,48 @@ export const Wizard: React.FC<WizardProps> = ({
           {step === 4 && (
             <div className="space-y-4 animate-fadeIn">
               <div className="space-y-1">
-                <h3 className="text-base font-sans font-semibold text-white">Wybierz Akcent Wizualny</h3>
-                <p className="text-xs text-slate-400">Zdecyduj o kolorze neonowej poświaty oraz elementów nawigacyjnych.</p>
+                <h3 className="text-base font-sans font-semibold text-white">Wybierz Motyw Systemowy</h3>
+                <p className="text-xs text-slate-400">Paczka motywu definiuje kolory, dźwięki systemowe oraz efekty cząsteczkowe w tle.</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
                 {[
-                  { id: 'purple', name: 'Lumina Deep Violet', glow: 'bg-purple-500', text: 'text-purple-400' },
-                  { id: 'cyan', name: 'Cyber Neon Cyan', glow: 'bg-cyan-500', text: 'text-cyan-400' },
-                  { id: 'orange', name: 'Sunset Amber Glow', glow: 'bg-orange-500', text: 'text-orange-400' },
-                  { id: 'emerald', name: 'Nordic Emerald Mint', glow: 'bg-emerald-500', text: 'text-emerald-400' }
+                  { id: 'purple', name: 'Lumina Deep Violet', glow: 'bg-purple-500', text: 'text-purple-400', sound: playXpStartup, variant: 'snow' },
+                  { id: 'cyan', name: 'Cyber Neon Cyan', glow: 'bg-cyan-500', text: 'text-cyan-400', sound: playXpBalloon, variant: 'snow' },
+                  { id: 'orange', name: 'Sunset Amber Glow', glow: 'bg-orange-500', text: 'text-orange-400', sound: playXpClick, variant: 'dust' },
+                  { id: 'emerald', name: 'Nordic Emerald Mint', glow: 'bg-emerald-500', text: 'text-emerald-400', sound: playXpClick, variant: 'matrix-rain' },
+                  { id: 'amber-retro', name: 'Terminal Retro Gold', glow: 'bg-yellow-500', text: 'text-yellow-400', sound: playPixelBeep, variant: 'dust' },
+                  { id: 'mono-terminal', name: 'Hacker Green Mono', glow: 'bg-green-500', text: 'text-green-400', sound: playXpError, variant: 'matrix-rain' }
                 ].map((preset) => (
                   <button
                     key={preset.id}
                     type="button"
-                    onClick={() => setAccentColor(preset.id as any)}
-                    className={`p-4 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                      accentColor === preset.id
-                        ? 'border-amber-500 bg-slate-900/60 shadow-lg'
-                        : 'border-slate-800 bg-slate-950/20 hover:border-slate-700'
+                    onMouseEnter={() => {
+                      if (config.playSounds) preset.sound();
+                    }}
+                    onClick={() => {
+                      setThemePack(preset.id);
+                      setAccentColor(preset.id);
+                      if (config.playSounds) preset.sound();
+                    }}
+                    className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer h-24 ${
+                      themePack === preset.id
+                        ? 'border-amber-500 bg-slate-900/60 shadow-lg scale-[1.02]'
+                        : 'border-slate-800 bg-slate-950/20 hover:border-slate-700 hover:bg-slate-900/40'
                     }`}
                   >
-                    <div className="flex items-center space-x-3">
-                      <span className={`w-3.5 h-3.5 rounded-full ${preset.glow} shrink-0`} />
-                      <span className="text-xs font-sans font-semibold text-slate-200">
+                    <div className="flex items-center justify-between w-full">
+                      <span className={`w-3.5 h-3.5 rounded-full ${preset.glow} shrink-0 shadow-[0_0_10px_currentColor] ${preset.text}`} />
+                      {themePack === preset.id && <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="block text-xs font-sans font-semibold text-slate-200 leading-tight">
                         {preset.name}
                       </span>
+                      <span className="block text-[9px] font-mono text-slate-500">
+                        {preset.variant.toUpperCase()}
+                      </span>
                     </div>
-                    {accentColor === preset.id && <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
                   </button>
                 ))}
               </div>
@@ -832,14 +978,29 @@ export const Wizard: React.FC<WizardProps> = ({
           {/* Controls Footer buttons */}
           <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
             {step > 1 ? (
-              <button
-                onClick={handleBack}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer"
-              >
-                <ArrowLeft size={13} /> Wstecz
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleBack}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer"
+                >
+                  <ArrowLeft size={13} /> Wstecz
+                </button>
+                <button
+                  onClick={handleResetWizard}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400 hover:text-red-300 transition-colors font-medium cursor-pointer border border-red-500/10 rounded-lg hover:bg-red-500/5"
+                  title="Wyczyść wszystkie pola i wróć do kroku 1"
+                >
+                  🔄 Wyczyść kreator
+                </button>
+              </div>
             ) : (
-              <div />
+              <button
+                type="button"
+                onClick={handleSkipWizard}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs text-amber-500 hover:text-amber-400 transition-colors font-bold cursor-pointer bg-amber-500/10 border border-amber-500/20 rounded-lg"
+              >
+                🚫 Pomiń kreator (pusty pulpit)
+              </button>
             )}
 
             {step < 4 ? (

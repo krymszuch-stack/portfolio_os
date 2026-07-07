@@ -21,6 +21,8 @@ import { PortfolioView } from './components/PortfolioView';
 import { Wizard } from './components/Wizard';
 import { Dock } from './components/Dock';
 import { SpotlightSearch } from './components/SpotlightSearch';
+import { SystemClock } from './components/SystemClock';
+import { SystemGreeting } from './components/SystemGreeting';
 import { 
   initialProjects, 
   initialCertificates, 
@@ -33,6 +35,8 @@ import {
 import { ActiveAppId, OSConfig, DesktopIcon } from './types';
 import { Sparkles, RefreshCw, Clock, HelpCircle, Monitor, Search, ArrowLeft } from 'lucide-react';
 import * as Lucide from 'lucide-react';
+import { initAuth } from './lib/googleAuth';
+import { loadPortfolioConfig, loadPortfolioBySlug } from './lib/firestoreStore';
 import { playXpStartup, playXpShutdown, playXpError, playXpBalloon, playXpClick, setSoundsEnabled } from './lib/sounds';
 
 export default function App() {
@@ -58,6 +62,46 @@ export default function App() {
     localStorage.setItem('adrianOSConfig', JSON.stringify(config));
   }, [config]);
 
+  
+  useEffect(() => {
+    const path = window.location.pathname;
+    const match = path.match(/^\/p\/(.+)$/);
+    
+    if (match) {
+      const slug = match[1];
+      setIsPublicView(true);
+      setConfig(prev => ({ ...prev, viewerMode: true, isInitialized: true }));
+      
+      loadPortfolioBySlug(slug).then(cloudData => {
+        if (cloudData) {
+          if (cloudData.config) setConfig(cloudData.config);
+          if (cloudData.projects) setProjects(cloudData.projects);
+          if (cloudData.certificates) setCertificates(cloudData.certificates);
+          if (cloudData.timeline) setTimeline(cloudData.timeline);
+          if (cloudData.icons) setIcons(cloudData.icons);
+        }
+      }).catch(err => console.error(err));
+    } else {
+      const unsubscribe = initAuth(async (user) => {
+        try {
+          const cloudData = await loadPortfolioConfig(user.uid);
+          if (cloudData) {
+            if (cloudData.config) setConfig(cloudData.config);
+            if (cloudData.projects) setProjects(cloudData.projects);
+            if (cloudData.certificates) setCertificates(cloudData.certificates);
+            if (cloudData.timeline) setTimeline(cloudData.timeline);
+            if (cloudData.icons) setIcons(cloudData.icons);
+          }
+        } catch (err) {
+          console.error("Failed to load cloud config", err);
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, []);
+
+  const fontClass = config.systemFont ? `system-font-${config.systemFont}` : 'system-font-apple';
+
   // Set global HTML scale for font accessibility scaling
   useEffect(() => {
     const scale = config.fontSizeScale || 1.0;
@@ -67,13 +111,11 @@ export default function App() {
   const [currentView, setCurrentView] = useState<'portfolio' | 'generator'>('portfolio');
   const [activeApp, setActiveApp] = useState<ActiveAppId>(null);
   const [openApps, setOpenApps] = useState<{ [key: string]: boolean }>({});
+  const [minimizedApps, setMinimizedApps] = useState<{ [key: string]: boolean }>({});
   const [showSpotlight, setShowSpotlight] = useState(false);
   const [isKreatorMode, setIsKreatorMode] = useState(false);
+  const [isPublicView, setIsPublicView] = useState(false);
   
-  // Real-time dynamic clock state
-  const [timeStr, setTimeStr] = useState('');
-  const [greeting, setGreeting] = useState('');
-
   // Customizable dataset states
   const [projects, setProjects] = useState(initialProjects);
   const [certificates, setCertificates] = useState(initialCertificates);
@@ -109,39 +151,6 @@ export default function App() {
     calendar: 10,
     planned: 10
   });
-
-  // Tick the system clock
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      
-      // Formatting clock (e.g. 14:32:05)
-      const formattedTime = now.toLocaleTimeString('pl-PL', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-      
-      // Formatting date (e.g. Pon., 5 Lipca)
-      const formattedDate = now.toLocaleDateString('pl-PL', {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short'
-      });
-
-      setTimeStr(`${formattedDate} • ${formattedTime}`);
-
-      // Set greeting based on active system hour
-      const hour = now.getHours();
-      if (hour >= 5 && hour < 12) setGreeting('Dzień dobry');
-      else if (hour >= 12 && hour < 18) setGreeting('Witaj na pulpicie');
-      else setGreeting('Dobry wieczór');
-    };
-
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Listen for global Ctrl+K / Cmd+K shortcut to open Spotlight
   useEffect(() => {
@@ -275,6 +284,19 @@ export default function App() {
   // Ref for launching retro pixel sparks
   const triggerSparksRef = useRef<((x: number, y: number, count?: number) => void) | null>(null);
 
+  const getParticleVariant = () => {
+    switch(config.themePack || config.accentColor) {
+      case 'mono-terminal': return 'matrix-rain';
+      case 'amber-retro': return 'dust';
+      case 'emerald': return 'matrix-rain';
+      case 'orange': return 'dust';
+      case 'cyan': return 'snow';
+      case 'purple': return 'snow';
+      default: return 'none';
+    }
+  };
+
+
   // Expose spark trigger globally on mount
   useEffect(() => {
     (window as any).triggerSparks = (x: number, y: number, count?: number) => {
@@ -299,8 +321,14 @@ export default function App() {
   }, [currentView]);
 
   // System actions
+  const handleMinimizeApp = (appId: string) => {
+    setMinimizedApps(prev => ({ ...prev, [appId]: true }));
+    if (activeApp === appId) setActiveApp(null);
+  };
+
   const handleOpenApp = (appId: 'bio' | 'projects' | 'lab' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'gdrive' | 'calendar' | 'planned') => {
     setOpenApps(prev => ({ ...prev, [appId]: true }));
+    setMinimizedApps(prev => ({ ...prev, [appId]: false }));
     handleFocusApp(appId);
     if (config.playSounds) {
       playXpBalloon();
@@ -309,6 +337,7 @@ export default function App() {
 
   const handleCloseApp = (appId: string) => {
     setOpenApps(prev => ({ ...prev, [appId]: false }));
+    setMinimizedApps(prev => ({ ...prev, [appId]: false }));
     if (activeApp === appId) {
       setActiveApp(null);
     }
@@ -400,22 +429,22 @@ export default function App() {
   if (!config.isInitialized) {
     return (
       <div 
-        className="relative w-screen h-screen overflow-y-auto bg-[#050507] text-[#e0e0e0] font-sans flex flex-col items-center justify-center p-4 md:p-8"
+        className={`relative w-screen h-screen overflow-y-auto bg-[#050507] text-[#e0e0e0] flex flex-col items-center justify-center p-4 md:p-8 ${fontClass}`}
         style={{ background: 'radial-gradient(circle at 50% 50%, rgba(124, 77, 255, 0.12) 0%, transparent 60%), #050507' }}
       >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
         {config.pixelTheme && <div className="crt-overlay" />}
         
-        <div className="w-full max-w-2xl bg-slate-950/40 border border-white/5 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 space-y-6 relative z-10">
+        <div className="w-full max-w-2xl bg-slate-950/40 border border-white/5 backdrop-blur-md rounded-3xl shadow-xl p-6 md:p-8 space-y-6 relative z-10">
           <div className="text-center space-y-2">
             <div className="inline-flex p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 mb-2">
               <Sparkles size={26} className="animate-pulse" />
             </div>
             <h1 className="text-lg md:text-xl font-sans font-bold text-white tracking-tight">
-              Kreator Osobistego Systemu Wizytówki
+              Instalator Systemu Portfolio
             </h1>
             <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-              Witaj! Odpowiedz na kilka prostych pytań sformułowanych przyjaznym językiem, a nasz system natychmiast wygeneruje gotowy interaktywny pulpit do prezentacji Twojej działalności.
+              Witaj w asystencie konfiguracji! Odpowiedz na kilka pytań, a Instalator Systemu automatycznie skonfiguruje spersonalizowane środowisko pracy i przygotuje Twój pulpit.
             </p>
           </div>
 
@@ -463,7 +492,7 @@ export default function App() {
 
   return (
     <div 
-      className={`cv-builder-scope relative w-screen h-screen overflow-hidden text-[#e0e0e0] transition-all duration-500 ease-in-out font-sans ${config.pixelTheme ? 'pixel-theme' : ''}`}
+      className={`cv-builder-scope relative w-screen h-screen overflow-hidden text-[#e0e0e0] transition-all duration-500 ease-in-out ${fontClass} ${config.pixelTheme ? 'pixel-theme' : ''}`}
       style={{ background: activeWallpaper.value }}
     >
       {/* CRT Scanline Nostalgic effect */}
@@ -479,13 +508,17 @@ export default function App() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
 
       {/* Top Utility System Menu Bar */}
-      <header className="fixed top-0 left-0 right-0 h-12 bg-black/20 border-b border-white/5 backdrop-blur-md z-[999] px-6 flex items-center justify-between select-none">
+      <header className="hidden md:flex fixed top-0 left-0 right-0 h-12 bg-black/20 border-b border-white/5 backdrop-blur-md z-[999] px-4 md:px-6 items-center justify-between select-none">
         
         {/* Brand logo & Account mode indicator */}
-        <div className="flex items-center space-x-4">
-          {config.viewerMode ? (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-sans text-xs font-semibold tracking-wide cursor-default mr-2">
-              <Lucide.Eye size={12} className="text-emerald-400 animate-pulse" /> Tryb widza (Tylko do odczytu)
+        <div className="flex items-center space-x-2 md:space-x-4">
+          {isPublicView ? (
+            <div className="flex items-center gap-1 px-2 md:px-3 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-sans text-[10px] md:text-xs font-semibold tracking-wide cursor-default">
+              <Lucide.Globe size={12} className="text-indigo-400 animate-pulse" /> <span className="hidden sm:inline">Wersja Publiczna</span><span className="inline sm:hidden">Publiczny</span>
+            </div>
+          ) : config.viewerMode ? (
+            <div className="flex items-center gap-1 px-2 md:px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-sans text-[10px] md:text-xs font-semibold tracking-wide cursor-default">
+              <Lucide.Eye size={12} className="text-emerald-400 animate-pulse" /> <span className="hidden sm:inline">Tryb widza</span><span className="inline sm:hidden">Widz</span>
             </div>
           ) : currentView === 'generator' ? (
             <button
@@ -496,10 +529,10 @@ export default function App() {
                 setCurrentView('portfolio');
                 setIsKreatorMode(false);
               }}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white font-sans text-xs font-semibold tracking-wide transition-all uppercase duration-200 cursor-pointer mr-2 hover:border-purple-500/50"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white font-sans text-[10px] md:text-xs font-semibold tracking-wide transition-all uppercase duration-200 cursor-pointer hover:border-purple-500/50"
               title="Wróć do głównego portfolio"
             >
-              <ArrowLeft size={12} className="text-purple-400" /> Podgląd Portfolio
+              <ArrowLeft size={12} className="text-purple-400" /> <span className="hidden sm:inline">Podgląd Portfolio</span><span className="inline sm:hidden">Portfolio</span>
             </button>
           ) : (
             <button
@@ -511,21 +544,22 @@ export default function App() {
                 setIsKreatorMode(true);
                 handleOpenApp('wizard'); // Open generator wizard automatically!
               }}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/35 border border-yellow-500/30 text-yellow-400 font-sans text-xs font-bold tracking-wider transition-all uppercase duration-200 cursor-pointer mr-2 animate-pulse hover:border-yellow-400"
-              title="Uruchom kreator i edytuj swoje portfolio"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/35 border border-yellow-500/30 text-yellow-400 font-sans text-[10px] md:text-xs font-bold tracking-wider transition-all uppercase duration-200 cursor-pointer animate-pulse hover:border-yellow-400"
+              title="Zarządzaj konfiguracją i edytuj system"
             >
-              <Sparkles size={12} className="text-yellow-400" /> Zarządzanie / Edycja OS
+              <Sparkles size={12} className="text-yellow-400" /> <span className="hidden sm:inline">Zarządzanie / Edycja OS</span><span className="inline sm:hidden">System</span>
             </button>
           )}
-          <span className="text-white/10">|</span>
+          
+          <span className="text-white/10 hidden md:inline">|</span>
 
-          <div className="flex items-center space-x-2">
+          <div className="hidden md:flex items-center space-x-2">
             <div className="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
             <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50"></div>
             <div className="w-2.5 h-2.5 rounded-full bg-green-500/50"></div>
           </div>
           
-          <div className="flex items-center space-x-2.5 cursor-default">
+          <div className="hidden md:flex items-center space-x-2.5 cursor-default">
             <Monitor size={14} className="text-[#e0e0e0]/60" />
             <span className="font-sans font-semibold tracking-widest text-xs uppercase opacity-80 text-white">
               PortfolioOS v1.0.4
@@ -536,11 +570,11 @@ export default function App() {
           </div>
         </div>
 
-        {/* Dynamic dynamic clocks and greetings */}
-        <div className="flex items-center space-x-2 text-[11px] font-sans font-medium text-white/60 tracking-wider uppercase">
-          <Clock size={12} className="text-white/40" />
-          <span className="font-light">{greeting}, gość •</span>
-          <span className="text-[#e0e0e0] font-semibold">{timeStr}</span>
+        {/* Dynamic clocks and greetings */}
+        <div className="flex items-center space-x-1.5 text-[11px] font-sans font-medium text-white/60 tracking-wider uppercase">
+          <Clock size={12} className="text-white/40 hidden sm:inline" />
+          <SystemGreeting className="font-light hidden sm:inline" />
+          <SystemClock className="text-[#e0e0e0] font-semibold text-xs sm:text-xs tracking-widest bg-white/5 sm:bg-transparent px-2.5 py-0.5 sm:p-0 rounded-full border border-white/5 sm:border-transparent" />
         </div>
 
         {/* Action quick links */}
@@ -587,7 +621,7 @@ export default function App() {
 
           <span className="text-white/10">|</span>
           
-          {config.viewerMode ? (
+          {isPublicView ? null : config.viewerMode ? (
             <>
               <button
                 id="btn-exit-viewer"
@@ -630,7 +664,7 @@ export default function App() {
                 }}
                 className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-amber-400 hover:text-amber-300 transition-colors uppercase tracking-widest cursor-pointer"
               >
-                <Sparkles size={11} /> Kreator
+                <Sparkles size={11} /> Ustawienia
               </button>
               
               <span className="text-white/10">|</span>
@@ -657,6 +691,7 @@ export default function App() {
           config={config}
           isKreatorMode={isKreatorMode}
           setIsKreatorMode={setIsKreatorMode}
+          isPublicView={isPublicView}
         />
 
         {/* Floating Interactive Glass Windows */}
@@ -666,6 +701,8 @@ export default function App() {
           {openApps['bio'] && (
             <WindowFrame
               id="bio"
+              isMinimized={minimizedApps['bio'] || false}
+              onMinimize={() => handleMinimizeApp('bio')}
               title={getAppTitle('bio', 'O mnie - Kwalifikacje i Osiągnięcia')}
               isOpen={true}
               onClose={() => handleCloseApp('bio')}
@@ -688,6 +725,8 @@ export default function App() {
           {openApps['projects'] && (
             <WindowFrame
               id="projects"
+              isMinimized={minimizedApps['projects'] || false}
+              onMinimize={() => handleMinimizeApp('projects')}
               title={getAppTitle('projects', 'Moje Projekty & Integracja GitHub')}
               isOpen={true}
               onClose={() => handleCloseApp('projects')}
@@ -708,6 +747,8 @@ export default function App() {
           {openApps['lab'] && (
             <WindowFrame
               id="lab"
+              isMinimized={minimizedApps['lab'] || false}
+              onMinimize={() => handleMinimizeApp('lab')}
               title={getAppTitle('lab', 'Aktualne Sprinty & Lab deweloperski')}
               isOpen={true}
               onClose={() => handleCloseApp('lab')}
@@ -728,6 +769,8 @@ export default function App() {
           {openApps['certificates'] && (
             <WindowFrame
               id="certificates"
+              isMinimized={minimizedApps['certificates'] || false}
+              onMinimize={() => handleMinimizeApp('certificates')}
               title={getAppTitle('certificates', 'Zweryfikowane Certyfikaty')}
               isOpen={true}
               onClose={() => handleCloseApp('certificates')}
@@ -748,6 +791,8 @@ export default function App() {
           {openApps['settings'] && (
             <WindowFrame
               id="settings"
+              isMinimized={minimizedApps['settings'] || false}
+              onMinimize={() => handleMinimizeApp('settings')}
               title="Ustawienia systemowe & Personalizacja"
               isOpen={true}
               onClose={() => handleCloseApp('settings')}
@@ -758,6 +803,8 @@ export default function App() {
               <AppSettings
                 config={config}
                 onSave={setConfig}
+                icons={icons}
+                setIcons={setIcons}
               />
             </WindowFrame>
           )}
@@ -768,6 +815,8 @@ export default function App() {
           {openApps['contact'] && (
             <WindowFrame
               id="contact"
+              isMinimized={minimizedApps['contact'] || false}
+              onMinimize={() => handleMinimizeApp('contact')}
               title="Napisz do mnie - Formularz kontaktowy"
               isOpen={true}
               onClose={() => handleCloseApp('contact')}
@@ -785,7 +834,9 @@ export default function App() {
           {openApps['wizard'] && (
             <WindowFrame
               id="wizard"
-              title="Kreator Portfolio - Wygeneruj Własny Szablon"
+              isMinimized={minimizedApps['wizard'] || false}
+              onMinimize={() => handleMinimizeApp('wizard')}
+              title="Instalator Systemu Portfolio"
               isOpen={true}
               onClose={() => handleCloseApp('wizard')}
               onFocus={() => handleFocusApp('wizard')}
@@ -815,6 +866,8 @@ export default function App() {
           {openApps['gdrive'] && (
             <WindowFrame
               id="gdrive"
+              isMinimized={minimizedApps['gdrive'] || false}
+              onMinimize={() => handleMinimizeApp('gdrive')}
               title="Google Drive - Przeglądarka Plików"
               isOpen={true}
               onClose={() => handleCloseApp('gdrive')}
@@ -832,6 +885,8 @@ export default function App() {
           {openApps['calendar'] && (
             <WindowFrame
               id="calendar"
+              isMinimized={minimizedApps['calendar'] || false}
+              onMinimize={() => handleMinimizeApp('calendar')}
               title="Kalendarz Google - Agenda & Harmonogram"
               isOpen={true}
               onClose={() => handleCloseApp('calendar')}
@@ -849,6 +904,8 @@ export default function App() {
           {openApps['planned'] && (
             <WindowFrame
               id="planned"
+              isMinimized={minimizedApps['planned'] || false}
+              onMinimize={() => handleMinimizeApp('planned')}
               title="Planowane projekty - Scam Identifier"
               isOpen={true}
               onClose={() => handleCloseApp('planned')}
@@ -867,15 +924,16 @@ export default function App() {
         activeApp={activeApp}
         openApp={handleOpenApp}
         openAppsList={openApps}
+        minimizedApps={minimizedApps}
         config={config}
       />
 
       {/* Terraria-like retro pixel sparks rendering canvas */}
-      <ParticleOverlay triggerRef={triggerSparksRef} />
+      <ParticleOverlay triggerRef={triggerSparksRef} variant={getParticleVariant()} />
 
       {/* Free watermark and helper banner at desktop base */}
       {!config.proMode && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 pointer-events-none select-none text-center bg-slate-950/45 px-3 py-1.5 rounded-full border border-slate-800/40 backdrop-blur-sm">
+        <div className="hidden md:block fixed bottom-24 left-1/2 -translate-x-1/2 pointer-events-none select-none text-center bg-slate-950/45 px-3 py-1.5 rounded-full border border-slate-800/40 backdrop-blur-sm">
           <p className="text-[10px] text-slate-400 font-sans tracking-wide flex items-center gap-1.5">
             <HelpCircle size={11} className="text-amber-400" />
             Zasilane przez <strong>PortfolioOS</strong> • Kliknij dwukrotnie w ikonę <strong>Generatora</strong> lub ikonę w doku aby stworzyć własną stronę.

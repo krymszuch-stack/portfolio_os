@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, useDragControls, useMotionValue, animate } from 'motion/react';
 import { Minus, Square, X, RotateCcw } from 'lucide-react';
 import { OSConfig } from '../types';
 
@@ -17,6 +17,8 @@ interface WindowFrameProps {
   zIndex: number;
   config: OSConfig;
   children: React.ReactNode;
+  isMinimized?: boolean;
+  onMinimize?: () => void;
 }
 
 export const WindowFrame: React.FC<WindowFrameProps> = ({
@@ -27,9 +29,39 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   onFocus,
   zIndex,
   config,
-  children
+  children,
+  isMinimized,
+  onMinimize
 }) => {
-  const [isMaximized, setIsMaximized] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<'floating' | 'full' | 'left-half' | 'right-half'>('floating');
+  const [showLayoutMenu, setShowLayoutMenu] = useState(false);
+  const hoverTimer = React.useRef<NodeJS.Timeout | null>(null);
+  const dragControls = useDragControls();
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const handleMinimize = (e: React.MouseEvent) => {
+    if (onMinimize) onMinimize();
+    handleControlClick(e);
+  };
+  
+  const handleSnap = (mode: 'floating' | 'full' | 'left-half' | 'right-half') => {
+    setLayoutMode(mode);
+    animate(x, 0, { type: 'spring', stiffness: 300, damping: 30 });
+    animate(y, 0, { type: 'spring', stiffness: 300, damping: 30 });
+    setShowLayoutMenu(false);
+  };
+
+  const handleDragEnd = (e: any, info: any) => {
+    const { x: pointerX, y: pointerY } = info.point;
+    const screenW = window.innerWidth;
+    
+    if (pointerX < 30) handleSnap('left-half');
+    else if (pointerX > screenW - 30) handleSnap('right-half');
+    else if (pointerY < 30) handleSnap('full');
+    else setLayoutMode('floating');
+  };
+  
 
   if (!isOpen) return null;
 
@@ -58,6 +90,18 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       glow: 'shadow-[0_0_25px_rgba(16,185,129,0.15)]',
       text: 'text-emerald-400',
       bgGlow: 'bg-emerald-500/10'
+    },
+    'amber-retro': {
+      border: 'border-yellow-500/40',
+      text: 'text-yellow-400',
+      bgHeader: 'bg-yellow-950/40',
+      bgGlow: 'bg-yellow-500/10'
+    },
+    'mono-terminal': {
+      border: 'border-green-500/40',
+      text: 'text-green-400',
+      bgHeader: 'bg-green-950/40',
+      bgGlow: 'bg-green-500/10'
     }
   }[config.accentColor || 'purple'];
 
@@ -68,6 +112,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           config.accentColor === 'purple' ? 'rgba(168,85,247,0.2)' :
           config.accentColor === 'cyan' ? 'rgba(6,182,212,0.2)' :
           config.accentColor === 'orange' ? 'rgba(249,115,22,0.2)' :
+          config.accentColor === 'amber-retro' ? 'rgba(234,179,8,0.2)' :
+          config.accentColor === 'mono-terminal' ? 'rgba(34,197,94,0.2)' :
           'rgba(16,185,129,0.2)'
         }` 
       : 'none'
@@ -76,16 +122,21 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   const windowVariants = {
     initial: {
       opacity: 0,
-      scale: 0.95,
-      y: 15,
+      scale: 0.92,
+      y: 30,
       x: 0
     },
     animate: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
+      opacity: isMinimized ? 0 : 1,
+      scale: isMinimized ? 0.4 : 1,
+      y: isMinimized ? window.innerHeight / 2 : 0,
       x: 0,
-      transition: { duration: 0.25, ease: 'easeOut' }
+      pointerEvents: isMinimized ? "none" : "auto" as any,
+      transition: { 
+        type: 'spring',
+        damping: 24,
+        stiffness: 240
+      }
     },
     exit: () => {
       const dockBtn = document.getElementById(`dock-btn-${id}`);
@@ -116,8 +167,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       }
       return {
         opacity: 0,
-        scale: 0.95,
-        y: 15,
+        scale: 0.92,
+        y: 30,
         transition: { duration: 0.25 }
       };
     }
@@ -133,8 +184,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   const blurClass = {
     none: 'backdrop-blur-none bg-black/65',
     low: 'backdrop-blur-md bg-black/45',
-    medium: 'backdrop-blur-3xl bg-black/30',
-    high: 'backdrop-blur-[50px] saturate-150 bg-black/25'
+    medium: 'backdrop-blur-md bg-black/30',
+    high: 'backdrop-blur-lg saturate-150 bg-black/25'
   }[config.glassBlur || 'medium'];
 
   // Dynamic border styling
@@ -152,16 +203,23 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       initial="initial"
       animate="animate"
       exit="exit"
-      style={{ zIndex, ...glowStyle }}
+      style={{ zIndex, x, y, ...glowStyle }}
+      drag={layoutMode === "floating"}
+      dragControls={dragControls}
+      dragListener={false}
+      dragMomentum={false}
+      onDragEnd={handleDragEnd}
       onClick={onFocus}
       className={`
-        absolute
-        ${isMaximized 
-          ? 'top-16 left-4 right-4 bottom-24 md:bottom-22' 
-          : 'top-[12%] left-[5%] md:left-[15%] w-[90%] md:w-[70%] max-w-4xl h-[70vh]'
+        fixed
+        top-12 left-0 right-0 bottom-0 rounded-t-[28px] rounded-b-none border-t border-x border-white/10 border-b-0
+        ${
+          layoutMode === 'full' ? 'sm:absolute sm:top-4 sm:left-4 sm:right-4 sm:bottom-16 sm:rounded-2xl sm:border-b sm:w-auto sm:h-auto sm:max-w-none' :
+          layoutMode === 'left-half' ? 'sm:absolute sm:top-4 sm:left-4 sm:right-1/2 sm:bottom-16 sm:rounded-2xl sm:border-b sm:w-auto sm:h-auto sm:max-w-none mr-2' :
+          layoutMode === 'right-half' ? 'sm:absolute sm:top-4 sm:left-1/2 sm:right-4 sm:bottom-16 sm:rounded-2xl sm:border-b sm:w-auto sm:h-auto sm:max-w-none ml-2' :
+          'sm:absolute sm:top-[12%] sm:left-[15%] sm:w-[70%] sm:h-[70vh] sm:max-w-4xl sm:rounded-2xl sm:border-b'
         }
         flex flex-col
-        rounded-2xl
         ${borderClass}
         ${blurClass}
         overflow-hidden
@@ -174,8 +232,9 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 
       {/* Title Bar */}
       <div 
-        className="flex items-center justify-between px-4 py-3 bg-black/25 border-b border-white/5 select-none cursor-default"
-        onDoubleClick={() => setIsMaximized(!isMaximized)}
+        className="flex items-center justify-between px-4 py-3 bg-black/25 border-b border-white/5 select-none cursor-grab active:cursor-grabbing"
+        onPointerDown={(e) => { if (layoutMode === "floating") dragControls.start(e); }}
+        onDoubleClick={() => handleSnap(layoutMode === "full" ? "floating" : "full")}
       >
         <div className="flex items-center space-x-2">
           {/* Active indicator dot */}
@@ -183,6 +242,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
             config.accentColor === 'purple' ? 'bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.6)]' :
             config.accentColor === 'cyan' ? 'bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]' :
             config.accentColor === 'orange' ? 'bg-orange-400 shadow-[0_0_8px_rgba(249,115,22,0.6)]' :
+            config.accentColor === 'amber-retro' ? 'bg-yellow-400 shadow-[0_0_8px_rgba(234,179,8,0.6)]' :
+            config.accentColor === 'mono-terminal' ? 'bg-green-400 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
             'bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]'
           }`} />
           <span className={config.pixelTheme ? 'pixel-heading text-slate-300 uppercase' : 'font-sans font-medium text-xs tracking-wide text-slate-300'}>
@@ -191,14 +252,11 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         </div>
 
         {/* Windows Control Actions */}
-        <div className="flex items-center space-x-2.5">
+        <div className="flex items-center space-x-2">
           <button
             id={`btn-minimize-${id}`}
-            onClick={(e) => {
-              handleControlClick(e);
-              onClose();
-            }}
-            className="p-1 rounded hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
+            onClick={handleMinimize}
+            className="p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors hidden sm:inline-flex"
             title="Minimalizuj"
           >
             <Minus size={14} />
@@ -207,12 +265,31 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
             id={`btn-maximize-${id}`}
             onClick={(e) => {
               handleControlClick(e);
-              setIsMaximized(!isMaximized);
+              handleSnap(layoutMode === 'full' ? 'floating' : 'full');
             }}
-            className="p-1 rounded hover:bg-white/5 text-slate-400 hover:text-white transition-colors"
-            title={isMaximized ? "Przywróć" : "Maksymalizuj"}
+            onMouseEnter={() => { hoverTimer.current = setTimeout(() => setShowLayoutMenu(true), 400); }}
+            onMouseLeave={() => { if (hoverTimer.current) clearTimeout(hoverTimer.current); setShowLayoutMenu(false); }}
+            className="p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors hidden sm:inline-flex relative"
+            title={layoutMode === 'full' ? "Przywróć" : "Maksymalizuj"}
+
           >
-            {isMaximized ? <RotateCcw size={14} /> : <Square size={13} />}
+            {layoutMode === 'full' ? <RotateCcw size={14} /> : <Square size={13} />}
+            {showLayoutMenu && (
+              <div className="absolute top-full right-0 mt-2 p-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl flex gap-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                <div 
+                  onClick={(e) => { e.stopPropagation(); handleSnap('left-half'); }}
+                  className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer flex"
+                ><div className="w-1/2 h-full bg-white/20"></div></div>
+                <div 
+                  onClick={(e) => { e.stopPropagation(); handleSnap('full'); }}
+                  className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer bg-white/20"
+                ></div>
+                <div 
+                  onClick={(e) => { e.stopPropagation(); handleSnap('right-half'); }}
+                  className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer flex justify-end"
+                ><div className="w-1/2 h-full bg-white/20"></div></div>
+              </div>
+            )}
           </button>
           <button
             id={`btn-close-${id}`}
@@ -220,10 +297,10 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
               handleControlClick(e);
               onClose();
             }}
-            className="p-1 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors"
+            className="p-1.5 sm:p-1 rounded-full bg-white/5 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-white/10 sm:border-transparent transition-all flex items-center justify-center"
             title="Zamknij"
           >
-            <X size={14} />
+            <X size={14} className="sm:w-3.5 sm:h-3.5" />
           </button>
         </div>
       </div>

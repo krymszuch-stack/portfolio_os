@@ -941,6 +941,50 @@ export const professionalDictionary: DictionaryProfession[] = [
         description: 'Prowadzenie ksiąg rachunkowych, KPiR, rozliczenia VAT, reprezentowanie klientów przed Urzędami Skarbowymi i ZUS.'
       }
     ]
+  },
+  {
+    id: 'chef',
+    title: 'Kucharz / Szef Kuchni / Catering',
+    categoryId: 'craft',
+    emoji: '👨‍🍳',
+    requiredAll: ['gotowanie'],
+    anyOf: ['kuchnia', 'jedzenie', 'kucharz', 'catering', 'przepisy', 'potrawy', 'restauracja', 'smaki', 'menu', 'wypieki', 'szef kuchni', 'pieczenie', 'gotowanie'],
+    bioTemplate: (name, answers) => `Profesjonalny szef kuchni i kreator smaków. Oferuję kompleksowe usługi cateringowe, warsztaty kulinarne oraz doradztwo gastronomiczne. Główne specjalizacje: ${answers.priceRange || 'catering eventowy, kolacje prywatne i nowoczesne menu'}. Dostępność: ${answers.workingHours || 'Zlecenia całoroczne, elastyczne godziny pracy'}.`,
+    projects: [
+      {
+        id: 'proj-chef-1',
+        title: 'Catering premium dla bankietu biznesowego',
+        description: 'Zaprojektowanie, przygotowanie i serwowanie spersonalizowanego menu finger food oraz dań gorących dla 120 gości.',
+        tags: ['Catering', 'Finger Food', 'Biznes'],
+        type: 'manual'
+      },
+      {
+        id: 'proj-chef-2',
+        title: 'Autorskie warsztaty kulinarne: Kuchnia Śródziemnomorska',
+        description: 'Przeprowadzenie serii praktycznych szkoleń z przygotowywania świeżych owoców morza, domowego makaronu i deserów.',
+        tags: ['Warsztaty', 'Edukacja', 'Kuchnia Włoska'],
+        type: 'manual'
+      }
+    ],
+    certificates: [
+      {
+        id: 'cert-chef-1',
+        title: 'Certyfikat Mistrza Sztuki Kulinarnej',
+        issuer: 'Międzynarodowe Stowarzyszenie Gastronomiczne',
+        date: '2024',
+        description: 'Potwierdzenie najwyższych kwalifikacji w zakresie tradycyjnych i nowoczesnych technik kulinarnych oraz HACCP.',
+        verified: true
+      }
+    ],
+    timeline: [
+      {
+        id: 'time-chef-1',
+        period: '2021 - Obecnie',
+        role: 'Prywatny Szef Kuchni & Konsultant',
+        company: `${name} Culinary Solutions`,
+        description: 'Tworzenie unikalnych menu dla restauracji, obsługa przyjęć prywatnych oraz prowadzenie doradztwa produktowego.'
+      }
+    ]
   }
 ];
 
@@ -997,16 +1041,17 @@ export function findBestProfession(inputText: string): DictionaryProfession | un
 export interface MatchedProfessionResult {
   profession: DictionaryProfession;
   confidence: number;
+  relativePercentage: number;
 }
 
 /**
- * Searches the professional dictionary and evaluates keywords to find the top 3 matches with confidence scores.
+ * Searches the professional dictionary and evaluates keywords to find the top 3 matches with confidence scores and relative probabilities.
  */
 export function findTopMatchedProfessions(inputText: string): MatchedProfessionResult[] {
   if (!inputText || inputText.trim() === '') return [];
   
   const normalizedInput = normalizeText(inputText);
-  const results: MatchedProfessionResult[] = [];
+  const results: { profession: DictionaryProfession; confidence: number; score: number }[] = [];
   
   for (const prof of professionalDictionary) {
     let score = 0;
@@ -1042,15 +1087,28 @@ export function findTopMatchedProfessions(inputText: string): MatchedProfessionR
       const confidence = Math.min(score / 50, 1.0);
       results.push({
         profession: prof,
-        confidence
+        confidence,
+        score
       });
     }
   }
   
-  // Sort descending by confidence
-  results.sort((a, b) => b.confidence - a.confidence);
+  // Sort descending by score
+  results.sort((a, b) => b.score - a.score);
   
-  return results.slice(0, 3);
+  const topThree = results.slice(0, 3);
+  const totalScore = topThree.reduce((sum, item) => sum + item.score, 0);
+  
+  return topThree.map(item => {
+    const relativePercentage = totalScore > 0 
+      ? Math.round((item.score / totalScore) * 100) 
+      : 100;
+    return {
+      profession: item.profession,
+      confidence: item.confidence,
+      relativePercentage
+    };
+  });
 }
 
 /**
@@ -1111,7 +1169,7 @@ export function getSeedDataForCategory(
   categoryId: IndustryCategory['id'],
   answers: { [key: string]: string },
   name: string,
-  accentColor: 'purple' | 'cyan' | 'orange' | 'emerald',
+  accentColor: string,
   focusInput?: string, // Exposes user's free text for detailed sub-profession matches
   customProfessionId?: string // Supports manual override selection
 ): {
@@ -1537,7 +1595,7 @@ function getDesktopIconsForCategory(categoryId: IndustryCategory['id'], accentCo
     },
     {
       id: 'icon-wizard',
-      label: 'Kreator Branżowy',
+      label: 'Ustawienia Systemowe',
       appId: 'wizard',
       icon: 'sparkles',
       color: `from-amber-500/30 to-amber-500/10 hover:shadow-amber-500/20 border-amber-500/20`,

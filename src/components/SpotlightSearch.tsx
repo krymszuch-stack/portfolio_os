@@ -224,7 +224,7 @@ export const SpotlightSearch: React.FC<SpotlightSearchProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: -10 }}
         transition={{ duration: 0.15 }}
-        className="w-full max-w-xl bg-[#090d16]/95 border border-slate-800/80 shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[60vh]"
+        className="w-full max-w-xl bg-[#090d16]/95 border border-slate-800/80 shadow-xl rounded-2xl overflow-hidden flex flex-col max-h-[60vh]"
       >
         {/* Search Input Area */}
         <div className="flex items-center space-x-3 p-4 border-b border-slate-800/80 bg-slate-950/40">

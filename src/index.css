@@ -243,7 +243,7 @@ body {
   background-size: 100% 4px;
   z-index: 99999;
   opacity: 0.15;
-  animation: crt-flicker 0.15s infinite;
+  animation: none;
 }
 
 @keyframes crt-flicker {
@@ -307,6 +307,20 @@ button, a, .cursor-pointer {
 }
 .cursor-grabbing {
   cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAYAAABy6+Y5AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JknT8AAAAgSURBVHjaYvz//z8DKwAECMApAAG4lJBAwACAAIBAAABsIgE4t/fOAAAAAElFTkSuQmCC'), grabbing;
+}
+
+/* Custom System Fonts override classes */
+.system-font-apple {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif, ui-sans-serif, system-ui !important;
+}
+.system-font-ubuntu {
+  font-family: "Ubuntu", sans-serif !important;
+}
+.system-font-inter {
+  font-family: "Inter", sans-serif !important;
+}
+.system-font-retro {
+  font-family: "VT323", monospace !important;
 }
 
 

@@ -225,7 +225,7 @@ export const defaultOSConfig: OSConfig = {
   glowIntensity: 85,
   accentColor: 'cyan',
   visualMode: 'deep-space',
-  wallpaper: 'space-nebula',
+  wallpaper: 'ubuntu-pixel',
   proMode: true,
   portfolioName: '',
   portfolioBio: '',
@@ -237,7 +237,8 @@ export const defaultOSConfig: OSConfig = {
   iconStyleRetro: 'classic-windows-95',
   fontSizeScale: 1.0,
   glassBlur: 'medium',
-  borderStyle: 'thin'
+  borderStyle: 'thin',
+  systemFont: 'apple'
 };
 
 export const wallpaperOptions = [
