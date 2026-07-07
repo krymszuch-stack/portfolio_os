@@ -102,10 +102,15 @@ export const Desktop: React.FC<DesktopProps> = ({
 
   // Sync isWiggling state with isKreatorMode prop
   useEffect(() => {
-    setIsWiggling(isKreatorMode);
-  }, [isKreatorMode]);
+    if (config.viewerMode) {
+      setIsWiggling(false);
+    } else {
+      setIsWiggling(isKreatorMode);
+    }
+  }, [isKreatorMode, config.viewerMode]);
 
   const toggleWiggling = (val: boolean) => {
+    if (config.viewerMode) return;
     setIsWiggling(val);
     if (setIsKreatorMode) {
       setIsKreatorMode(val);
@@ -349,6 +354,12 @@ export const Desktop: React.FC<DesktopProps> = ({
     } else {
       const variant = config.iconStyleModern || 'lumine-minimalist-glass';
       switch (variant) {
+        case 'lumine-ubuntu-style':
+          return {
+            container: 'bg-gradient-to-br from-[#E95420] via-[#b33e4f] to-[#77216F] border border-white/20 shadow-[0_4px_12px_rgba(233,84,32,0.25),inset_0_1px_1px_rgba(255,255,255,0.4)] rounded-[18px] text-white',
+            icon: 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]',
+            text: 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-sans font-medium text-[11px] mt-3.5'
+          };
         case 'lumine-minimalist-glass':
           return {
             container: 'bg-white/5 backdrop-blur-md border border-white/10 shadow-xl rounded-[22px] text-[#e0e0e0]',
@@ -1187,14 +1198,16 @@ export const Desktop: React.FC<DesktopProps> = ({
                   </div>
 
                   {/* Edit options trigger */}
-                  <button
-                    id={`btn-edit-icon-${icon.id}`}
-                    onClick={(e) => handleOpenEdit(icon, e)}
-                    className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 bg-black/60 rounded-md border border-white/10 text-slate-400 hover:text-white transition-all duration-200"
-                    title="Edytuj wygląd ikony"
-                  >
-                    <Edit2 size={10} />
-                  </button>
+                  {!config.viewerMode && (
+                    <button
+                      id={`btn-edit-icon-${icon.id}`}
+                      onClick={(e) => handleOpenEdit(icon, e)}
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 bg-black/60 rounded-md border border-white/10 text-slate-400 hover:text-white transition-all duration-200"
+                      title="Edytuj wygląd ikony"
+                    >
+                      <Edit2 size={10} />
+                    </button>
+                  )}
 
                   <span className={`truncate max-w-full leading-tight select-none mt-1.5 ${iconStyles.text}`}>
                     {icon.label}

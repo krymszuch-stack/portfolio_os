@@ -94,6 +94,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave }) => {
               <p className="text-[9px] text-gray-500 font-semibold uppercase leading-none mb-1">Dostępnych jest 10 ekskluzywnych stylów poświaty i kompozycji szklanej:</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[220px] overflow-y-auto pr-1 border border-gray-200 p-1.5 rounded bg-white">
                 {[
+                  { id: 'lumine-ubuntu-style', name: '🍥 Ubuntu Classic Style', desc: 'Ciepły, gładki gradient pomarańczu i oberżyny w stylu systemu Ubuntu' },
                   { id: 'lumine-minimalist-glass', name: '🌌 Minimalist Glass', desc: 'Czyste szkło, wysoki biały półcień i lekka poświata' },
                   { id: 'lumine-neon-glow', name: '🧪 Neon Glow', desc: 'Głęboka czerń otoczona laserową poświatą Cyan' },
                   { id: 'lumine-cyberpunk-gold', name: '🪙 Cyberpunk Gold', desc: 'Pajęczyna złotych mikropatternów z bursztynowym blaskiem' },

@@ -63,6 +63,10 @@ export interface OSConfig {
   proMode: boolean; // Controls demo tier
   portfolioName: string;
   portfolioBio: string;
+  portfolioCategory?: 'tech' | 'craft' | 'agriculture' | 'gardening' | 'creative' | 'business' | 'general';
+  isInitialized?: boolean;
+  phone?: string;
+  address?: string;
   githubUsername?: string;
   instagramUsername?: string;
   linkedinUsername?: string;
@@ -79,6 +83,11 @@ export interface OSConfig {
   fontSizeScale?: number;
   glassBlur?: 'none' | 'low' | 'medium' | 'high';
   borderStyle?: 'none' | 'thin' | 'thick' | 'double';
+  wizardTags?: string[];
+  wizardFocusInput?: string;
+  wizardManualProfessionId?: string;
+  wizardAnswers?: { [key: string]: string };
+  viewerMode?: boolean;
 }
 
 export type ActiveAppId = 'bio' | 'projects' | 'lab' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'gdrive' | 'calendar' | 'planned' | null;

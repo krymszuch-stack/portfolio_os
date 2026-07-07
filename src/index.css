@@ -2,8 +2,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif, "Inter", ui-sans-serif, system-ui;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif, "Space Grotesk";
   --font-mono: "JetBrains Mono", monospace;
   --font-pixel: "VT323", monospace;
   --font-retro: "Press Start 2P", monospace;
@@ -42,7 +42,7 @@ html {
 body {
   background-color: #050507;
   color: #e0e0e0;
-  font-family: "Inter", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif, "Inter", sans-serif;
 }
 
 /* Custom Scrollbar */

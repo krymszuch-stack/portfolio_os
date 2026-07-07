@@ -356,6 +356,94 @@ export default function App() {
   // Get active wallpaper object
   const activeWallpaper = wallpaperOptions.find(w => w.id === config.wallpaper) || wallpaperOptions[0];
 
+  const getAppTitle = (appId: string, defaultTitle: string) => {
+    const category = config.portfolioCategory || 'general';
+    switch (appId) {
+      case 'bio':
+        if (category === 'tech') return 'O mnie - Kwalifikacje i Stos';
+        if (category === 'craft') return 'O firmie - Moja Specjalizacja';
+        if (category === 'agriculture') return 'O Gospodarstwie - Nasza Tradycja';
+        if (category === 'gardening') return 'O Ogrodnictwie - Pasja do Zieleni';
+        if (category === 'creative') return 'O mnie - Manifest Artystyczny';
+        if (category === 'business') return 'O mnie - Doświadczenie Biznesowe';
+        return 'O mnie - Wizytówka Osobista';
+      case 'projects':
+        if (category === 'tech') return 'Moje Projekty & Integracja GitHub';
+        if (category === 'craft') return 'Galeria Prac - Zrealizowane Zlecenia';
+        if (category === 'agriculture') return 'Nasze Plony - Naturalna Oferta';
+        if (category === 'gardening') return 'Realizacje Ogrodów - Moje Portfolio';
+        if (category === 'creative') return 'Moje Portfolio - Wybrane Prace';
+        if (category === 'business') return 'Case Studies - Projekty i Efekty';
+        return 'Moje Projekty i Realizacje';
+      case 'certificates':
+        if (category === 'tech') return 'Zweryfikowane Certyfikaty IT';
+        if (category === 'craft') return 'Uprawnienia i Kwalifikacje Zawodowe';
+        if (category === 'agriculture') return 'Certyfikaty Jakości i Eko-atesty';
+        if (category === 'gardening') return 'Uprawnienia i Certyfikaty Ogrodnicze';
+        if (category === 'creative') return 'Wyróżnienia, Dyplomy i Nagrody';
+        if (category === 'business') return 'Certyfikaty i Akredytacje Biznesowe';
+        return 'Moje Certyfikaty i Osiągnięcia';
+      case 'lab':
+        if (category === 'tech') return 'Aktualne Sprinty & Lab deweloperski';
+        if (category === 'craft') return 'Zlecenia w toku & Plany rozwojowe';
+        if (category === 'agriculture') return 'Terminarz zbiorów i plany rozwoju';
+        if (category === 'gardening') return 'Harmonogram Prac & Rośliny w Hodowli';
+        if (category === 'creative') return 'Prace w toku & Inspiracje';
+        if (category === 'business') return 'Metodologia pracy & Cele strategiczne';
+        return 'Aktualne i Planowane Zadania';
+      default:
+        return defaultTitle;
+    }
+  };
+
+  // Zero-state onboarding wizard screen
+  if (!config.isInitialized) {
+    return (
+      <div 
+        className="relative w-screen h-screen overflow-y-auto bg-[#050507] text-[#e0e0e0] font-sans flex flex-col items-center justify-center p-4 md:p-8"
+        style={{ background: 'radial-gradient(circle at 50% 50%, rgba(124, 77, 255, 0.12) 0%, transparent 60%), #050507' }}
+      >
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
+        {config.pixelTheme && <div className="crt-overlay" />}
+        
+        <div className="w-full max-w-2xl bg-slate-950/40 border border-white/5 backdrop-blur-xl rounded-3xl shadow-2xl p-6 md:p-8 space-y-6 relative z-10">
+          <div className="text-center space-y-2">
+            <div className="inline-flex p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 mb-2">
+              <Sparkles size={26} className="animate-pulse" />
+            </div>
+            <h1 className="text-lg md:text-xl font-sans font-bold text-white tracking-tight">
+              Kreator Osobistego Systemu Wizytówki
+            </h1>
+            <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+              Witaj! Odpowiedz na kilka prostych pytań sformułowanych przyjaznym językiem, a nasz system natychmiast wygeneruje gotowy interaktywny pulpit do prezentacji Twojej działalności.
+            </p>
+          </div>
+
+          <Wizard
+            config={config}
+            setConfig={setConfig}
+            projects={projects}
+            setProjects={setProjects}
+            certificates={certificates}
+            setCertificates={setCertificates}
+            timeline={timeline}
+            setTimeline={setTimeline}
+            icons={icons}
+            setIcons={setIcons}
+            onClose={() => {
+              setConfig(prev => ({ ...prev, isInitialized: true }));
+              if (config.playSounds) {
+                playXpStartup();
+              }
+            }}
+            openApp={handleOpenApp}
+            isZeroState={true}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (currentView === 'portfolio' && config.portfolioStyle === 'retro') {
     return (
       <PortfolioView
@@ -395,7 +483,11 @@ export default function App() {
         
         {/* Brand logo & Account mode indicator */}
         <div className="flex items-center space-x-4">
-          {currentView === 'generator' ? (
+          {config.viewerMode ? (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-sans text-xs font-semibold tracking-wide cursor-default mr-2">
+              <Lucide.Eye size={12} className="text-emerald-400 animate-pulse" /> Tryb widza (Tylko do odczytu)
+            </div>
+          ) : currentView === 'generator' ? (
             <button
               onClick={() => {
                 if (config.playSounds) {
@@ -495,27 +587,64 @@ export default function App() {
 
           <span className="text-white/10">|</span>
           
-          <button
-            id="btn-quick-wizard"
-            onClick={() => {
-              handleOpenApp('wizard');
-              setIsKreatorMode(true);
-            }}
-            className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-amber-400 hover:text-amber-300 transition-colors uppercase tracking-widest cursor-pointer"
-          >
-            <Sparkles size={11} /> Kreator
-          </button>
-          
-          <span className="text-white/10">|</span>
-          
-          <button
-            id="btn-system-reset"
-            onClick={handleSystemReset}
-            className="flex items-center gap-1.5 text-[11px] font-sans text-white/40 hover:text-rose-400 transition-colors uppercase tracking-widest cursor-pointer"
-            title="Reset danych demonstracyjnych"
-          >
-            <RefreshCw size={11} /> Reset
-          </button>
+          {config.viewerMode ? (
+            <>
+              <button
+                id="btn-exit-viewer"
+                onClick={() => {
+                  setConfig(prev => ({ ...prev, viewerMode: false }));
+                  if (config.playSounds) {
+                    playXpStartup();
+                  }
+                }}
+                className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-amber-400 hover:text-amber-300 transition-colors uppercase tracking-widest cursor-pointer"
+                title="Przełącz z powrotem w tryb edycji administratora"
+              >
+                <Lucide.Unlock size={11} /> Przejdź do Edycji
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                id="btn-save-lock"
+                onClick={() => {
+                  setConfig(prev => ({ ...prev, viewerMode: true }));
+                  if (config.playSounds) {
+                    playXpStartup();
+                  }
+                  alert("Portfolio zostało pomyślnie zapisane i zablokowane w trybie widza (tylko do wglądu)! Kreator i resetowanie zostały ukryte.");
+                }}
+                className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase tracking-widest cursor-pointer"
+                title="Zapisz obecny stan portfolio i zablokuj jako widok tylko dla widza/obserwatora"
+              >
+                <Lucide.Save size={11} /> Zapisz (Tryb Widza)
+              </button>
+              
+              <span className="text-white/10">|</span>
+
+              <button
+                id="btn-quick-wizard"
+                onClick={() => {
+                  handleOpenApp('wizard');
+                  setIsKreatorMode(true);
+                }}
+                className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-amber-400 hover:text-amber-300 transition-colors uppercase tracking-widest cursor-pointer"
+              >
+                <Sparkles size={11} /> Kreator
+              </button>
+              
+              <span className="text-white/10">|</span>
+              
+              <button
+                id="btn-system-reset"
+                onClick={handleSystemReset}
+                className="flex items-center gap-1.5 text-[11px] font-sans text-white/40 hover:text-rose-400 transition-colors uppercase tracking-widest cursor-pointer"
+                title="Reset danych demonstracyjnych"
+              >
+                <RefreshCw size={11} /> Reset
+              </button>
+            </>
+          )}
         </div>
       </header>
 
@@ -537,7 +666,7 @@ export default function App() {
           {openApps['bio'] && (
             <WindowFrame
               id="bio"
-              title="O mnie - Kwalifikacje i Osiągnięcia"
+              title={getAppTitle('bio', 'O mnie - Kwalifikacje i Osiągnięcia')}
               isOpen={true}
               onClose={() => handleCloseApp('bio')}
               onFocus={() => handleFocusApp('bio')}
@@ -559,7 +688,7 @@ export default function App() {
           {openApps['projects'] && (
             <WindowFrame
               id="projects"
-              title="Moje Projekty & Integracja GitHub"
+              title={getAppTitle('projects', 'Moje Projekty & Integracja GitHub')}
               isOpen={true}
               onClose={() => handleCloseApp('projects')}
               onFocus={() => handleFocusApp('projects')}
@@ -579,7 +708,7 @@ export default function App() {
           {openApps['lab'] && (
             <WindowFrame
               id="lab"
-              title="Aktualne Sprinty & Lab deweloperski"
+              title={getAppTitle('lab', 'Aktualne Sprinty & Lab deweloperski')}
               isOpen={true}
               onClose={() => handleCloseApp('lab')}
               onFocus={() => handleFocusApp('lab')}
@@ -599,7 +728,7 @@ export default function App() {
           {openApps['certificates'] && (
             <WindowFrame
               id="certificates"
-              title="Zweryfikowane Certyfikaty"
+              title={getAppTitle('certificates', 'Zweryfikowane Certyfikaty')}
               isOpen={true}
               onClose={() => handleCloseApp('certificates')}
               onFocus={() => handleFocusApp('certificates')}
@@ -666,6 +795,14 @@ export default function App() {
               <Wizard
                 config={config}
                 setConfig={setConfig}
+                projects={projects}
+                setProjects={setProjects}
+                certificates={certificates}
+                setCertificates={setCertificates}
+                timeline={timeline}
+                setTimeline={setTimeline}
+                icons={icons}
+                setIcons={setIcons}
                 onClose={() => handleCloseApp('wizard')}
                 openApp={handleOpenApp}
               />
