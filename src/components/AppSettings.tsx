@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import { OSConfig, DesktopIcon } from '../types';
+import { useMsal } from '@azure/msal-react';
+import { loginRequest } from '../lib/microsoftAuth';
+import { googleSignIn, logout as logoutGoogle } from '../lib/googleAuth';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 interface AppSettingsProps {
   config: OSConfig;
@@ -36,6 +40,84 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
     borderStyle: config.borderStyle || 'thin',
     systemFont: config.systemFont || 'apple'
   });
+
+  const { instance, accounts } = useMsal();
+  const [googleUser, setGoogleUser] = useState<{ displayName: string | null; email: string | null } | null>(null);
+
+  React.useEffect(() => {
+    const auth = getAuth();
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setGoogleUser({
+          displayName: user.displayName,
+          email: user.email
+        });
+      } else {
+        setGoogleUser(null);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const handleConnectMicrosoft = async () => {
+    try {
+      const response = await instance.loginPopup(loginRequest);
+      if (response && response.account) {
+        setLocalConfig(prev => ({
+          ...prev,
+          emailProvider: 'microsoft'
+        }));
+      }
+    } catch (err) {
+      console.error("Microsoft login failed:", err);
+    }
+  };
+
+  const handleDisconnectMicrosoft = async () => {
+    try {
+      const currentAccount = accounts[0] || instance.getAllAccounts()[0];
+      if (currentAccount) {
+        await instance.logoutPopup({
+          account: currentAccount,
+          postLogoutRedirectUri: window.location.origin,
+        });
+      }
+      setLocalConfig(prev => ({
+        ...prev,
+        emailProvider: 'smtp'
+      }));
+    } catch (err) {
+      console.error("Microsoft logout failed:", err);
+      // Fallback: clear local states
+      setLocalConfig(prev => ({ ...prev, emailProvider: 'smtp' }));
+    }
+  };
+
+  const handleConnectGoogle = async () => {
+    try {
+      const response = await googleSignIn();
+      if (response) {
+        setLocalConfig(prev => ({
+          ...prev,
+          emailProvider: 'google'
+        }));
+      }
+    } catch (err) {
+      console.error("Google sign in failed:", err);
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    try {
+      await logoutGoogle();
+      setLocalConfig(prev => ({
+        ...prev,
+        emailProvider: 'smtp'
+      }));
+    } catch (err) {
+      console.error("Google sign out failed:", err);
+    }
+  };
 
   const handleSave = () => {
     onSave(localConfig);
@@ -455,6 +537,107 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
               ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 4.5. Integracje Chmurowe i Konta (Google & Microsoft) */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-bold text-black border-l-4 border-blue-600 pl-2 uppercase">4.5. Integracje Chmurowe i Konta</h3>
+        <p className="text-[0.7rem] text-gray-500 font-bold uppercase leading-relaxed">
+          Połącz i autoryzuj swoje konta chmurowe, aby umożliwić integrację z Google Drive, Kalendarzem lub bezpiecznym dostarczaniem maili (Gmail/Outlook).
+        </p>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#F5F5F5] p-3 border-2 border-black rounded">
+          {/* Połączenie Google */}
+          <div className="p-2.5 bg-white border border-gray-300 rounded flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-sm">🔵</span>
+                <span className="text-xs font-bold text-gray-800 uppercase">Google Workspace</span>
+              </div>
+              <p className="text-[0.65rem] text-gray-500 font-medium leading-normal mb-2 uppercase font-semibold">
+                Wymagane do działania Kalendarza, Dysku Google (Drive) i wysyłki e-maili przez Gmail API.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-gray-150 flex items-center justify-between">
+              {googleUser ? (
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-[0.65rem] font-bold text-emerald-600 truncate max-w-[120px]" title={googleUser.email || ''}>
+                    ● {googleUser.displayName || googleUser.email}
+                  </span>
+                  <button
+                    onClick={handleDisconnectGoogle}
+                    className="text-[0.65rem] font-bold text-red-600 hover:underline cursor-pointer"
+                  >
+                    Rozłącz
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleConnectGoogle}
+                  className="w-full py-1 text-center bg-blue-600 hover:bg-blue-700 text-[0.65rem] font-bold text-white rounded cursor-pointer transition-colors uppercase"
+                >
+                  Połącz z Google
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Połączenie Microsoft */}
+          <div className="p-2.5 bg-white border border-gray-300 rounded flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-sm">🔷</span>
+                <span className="text-xs font-bold text-gray-800 uppercase">Microsoft Live AD</span>
+              </div>
+              <p className="text-[0.65rem] text-gray-500 font-medium leading-normal mb-2 uppercase font-semibold">
+                Umożliwia pełną integrację konta Microsoft, wysyłanie e-maili przez Microsoft Graph API i synchronizację.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-gray-150 flex items-center justify-between">
+              {accounts.length > 0 ? (
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-[0.65rem] font-bold text-emerald-600 truncate max-w-[120px]" title={accounts[0].username}>
+                    ● {accounts[0].name || accounts[0].username}
+                  </span>
+                  <button
+                    onClick={handleDisconnectMicrosoft}
+                    className="text-[0.65rem] font-bold text-red-600 hover:underline cursor-pointer"
+                  >
+                    Rozłącz
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleConnectMicrosoft}
+                  className="w-full py-1 text-center bg-sky-600 hover:bg-sky-700 text-[0.65rem] font-bold text-white rounded cursor-pointer transition-colors uppercase"
+                >
+                  Połącz z Microsoft
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Wybór domyślnego dostawcy poczty */}
+        <div className="p-2.5 bg-[#F5F5F5] border-2 border-black rounded flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-bold text-blue-900 uppercase">Dostawca Poczty Formularza:</span>
+            <p className="text-[0.65rem] text-gray-500 font-semibold uppercase leading-tight">
+              Wybierz, który protokół ma obsługiwać Twój formularz kontaktowy.
+            </p>
+          </div>
+          <select
+            value={localConfig.emailProvider || 'smtp'}
+            onChange={(e) => setLocalConfig({ ...localConfig, emailProvider: e.target.value as any })}
+            className="p-1.5 bg-white border-2 border-black rounded text-xs font-bold focus:outline-none cursor-pointer"
+          >
+            <option value="smtp">Symulowany SMTP (Bramka Demo)</option>
+            <option value="google" disabled={!googleUser}>Gmail API (Google) {!googleUser ? '(Zablokowane)' : ''}</option>
+            <option value="microsoft" disabled={accounts.length === 0}>Outlook Graph (Microsoft) {accounts.length === 0 ? '(Zablokowane)' : ''}</option>
+          </select>
         </div>
       </div>
 

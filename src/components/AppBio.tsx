@@ -55,11 +55,12 @@ export const AppBio: React.FC<AppBioProps> = ({
   });
 
   const handleSaveProfile = () => {
+    if (!profileForm.name.trim() || !profileForm.role.trim()) return;
     setConfig(prev => ({
       ...prev,
-      portfolioName: profileForm.name,
-      portfolioBio: profileForm.bio,
-      professionalRole: profileForm.role
+      portfolioName: profileForm.name.trim(),
+      portfolioBio: profileForm.bio.slice(0, 500),
+      professionalRole: profileForm.role.trim()
     }));
     setIsEditingProfile(false);
   };
@@ -73,9 +74,13 @@ export const AppBio: React.FC<AppBioProps> = ({
   };
 
   const handleSaveSocial = (type: 'github' | 'instagram' | 'linkedin') => {
+    let finalInput = socialInput.trim();
+    if (finalInput && !finalInput.startsWith('http://') && !finalInput.startsWith('https://')) {
+      finalInput = 'https://' + finalInput;
+    }
     setConfig(prev => ({
       ...prev,
-      [`${type}Username`]: socialInput.trim() || undefined
+      [`${type}Username`]: finalInput || undefined
     }));
     setEditingSocial(null);
   };
@@ -219,22 +224,32 @@ export const AppBio: React.FC<AppBioProps> = ({
               {isEditingProfile ? (
                 <div className="space-y-2 max-w-sm">
                   <div>
-                    <label className="text-[9px] font-mono text-purple-400 uppercase tracking-widest block mb-0.5">Imię i Nazwisko</label>
+                    <label className="text-[9px] font-mono text-purple-400 uppercase tracking-widest block mb-0.5">
+                      Imię i Nazwisko <span className="text-rose-500 font-bold">*</span>
+                    </label>
                     <input
                       type="text"
                       value={profileForm.name}
                       onChange={(e) => setProfileForm(p => ({ ...p, name: e.target.value }))}
-                      className="w-full bg-slate-950/80 border border-slate-700 rounded px-2.5 py-1 text-sm text-white focus:outline-none focus:border-purple-500"
+                      className={`w-full bg-slate-950/80 border ${!profileForm.name.trim() ? 'border-rose-500 focus:border-rose-500' : 'border-slate-700 focus:border-purple-500'} rounded px-2.5 py-1 text-sm text-white focus:outline-none`}
                     />
+                    {!profileForm.name.trim() && (
+                      <span className="text-[9px] text-rose-500 font-mono mt-0.5 block">✦ Imię i nazwisko nie może być puste!</span>
+                    )}
                   </div>
                   <div>
-                    <label className="text-[9px] font-mono text-purple-400 uppercase tracking-widest block mb-0.5">Rola Zawodowa</label>
+                    <label className="text-[9px] font-mono text-purple-400 uppercase tracking-widest block mb-0.5">
+                      Rola Zawodowa <span className="text-rose-500 font-bold">*</span>
+                    </label>
                     <input
                       type="text"
                       value={profileForm.role}
                       onChange={(e) => setProfileForm(p => ({ ...p, role: e.target.value }))}
-                      className="w-full bg-slate-950/80 border border-slate-700 rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-purple-500 block"
+                      className={`w-full bg-slate-950/80 border ${!profileForm.role.trim() ? 'border-rose-500 focus:border-rose-500' : 'border-slate-700 focus:border-purple-500'} rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none block`}
                     />
+                    {!profileForm.role.trim() && (
+                      <span className="text-[9px] text-rose-500 font-mono mt-0.5 block">✦ Rola zawodowa nie może być pusta!</span>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -279,7 +294,8 @@ export const AppBio: React.FC<AppBioProps> = ({
               <button
                 id="btn-save-profile"
                 onClick={handleSaveProfile}
-                className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg transition-colors font-sans font-semibold shadow-[0_0_15px_rgba(245,158,11,0.25)] cursor-pointer"
+                disabled={!profileForm.name.trim() || !profileForm.role.trim() || profileForm.bio.length > 500}
+                className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs bg-amber-500 hover:bg-amber-600 disabled:bg-slate-800 text-slate-950 disabled:text-slate-500 rounded-lg transition-colors font-sans font-semibold shadow-[0_0_15px_rgba(245,158,11,0.25)] cursor-pointer disabled:cursor-not-allowed"
               >
                 <Check size={14} /> Zapisz
               </button>
@@ -306,10 +322,16 @@ export const AppBio: React.FC<AppBioProps> = ({
         <div className="mt-5 pt-5 border-t border-slate-800/50">
           {isEditingProfile ? (
             <div className="space-y-1.5">
-              <label className="text-[10px] font-mono text-purple-400 uppercase tracking-widest block">O Mnie / Biografia</label>
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-mono text-purple-400 uppercase tracking-widest block">O Mnie / Biografia</label>
+                <span className={`text-[10px] font-mono ${profileForm.bio.length > 500 ? 'text-rose-500 font-bold animate-pulse' : 'text-slate-400'}`}>
+                  {profileForm.bio.length} / 500
+                </span>
+              </div>
               <textarea
                 value={profileForm.bio}
-                onChange={(e) => setProfileForm(p => ({ ...p, bio: e.target.value }))}
+                onChange={(e) => setProfileForm(p => ({ ...p, bio: e.target.value.slice(0, 500) }))}
+                maxLength={500}
                 rows={3}
                 placeholder="Napisz kilka zdań o swoim profesjonalnym doświadczeniu..."
                 className="w-full bg-slate-950/80 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500"
@@ -455,33 +477,53 @@ export const AppBio: React.FC<AppBioProps> = ({
                           onChange={(e) => setMilestoneForm(f => ({ ...f, period: e.target.value }))}
                           className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white"
                         />
+                        <div>
+                          <input
+                            type="text"
+                            value={milestoneForm.company}
+                            placeholder="Firma *"
+                            onChange={(e) => setMilestoneForm(f => ({ ...f, company: e.target.value }))}
+                            className={`bg-slate-900 border ${!milestoneForm.company.trim() ? 'border-rose-500' : 'border-slate-700'} rounded px-2 py-1 text-xs text-white w-full`}
+                          />
+                          {!milestoneForm.company.trim() && (
+                            <span className="text-[8px] text-rose-500 font-mono mt-0.5 block">Firma jest wymagana!</span>
+                          )}
+                        </div>
+                      </div>
+                      <div>
                         <input
                           type="text"
-                          value={milestoneForm.company}
-                          placeholder="Firma"
-                          onChange={(e) => setMilestoneForm(f => ({ ...f, company: e.target.value }))}
-                          className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white"
+                          value={milestoneForm.role}
+                          placeholder="Rola zawodowa *"
+                          onChange={(e) => setMilestoneForm(f => ({ ...f, role: e.target.value }))}
+                          className={`bg-slate-900 border ${!milestoneForm.role.trim() ? 'border-rose-500' : 'border-slate-700'} rounded px-2 py-1 text-xs text-white w-full`}
+                        />
+                        {!milestoneForm.role.trim() && (
+                          <span className="text-[8px] text-rose-500 font-mono mt-0.5 block">Rola jest wymagana!</span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex justify-between items-center text-[9px] text-slate-400 font-mono mb-0.5">
+                          <span>Opis obowiązków</span>
+                          <span className={milestoneForm.description.length > 500 ? 'text-rose-500 font-bold' : ''}>
+                            {milestoneForm.description.length} / 500
+                          </span>
+                        </div>
+                        <textarea
+                          value={milestoneForm.description}
+                          placeholder="Opis obowiązków..."
+                          rows={2}
+                          maxLength={500}
+                          onChange={(e) => setMilestoneForm(f => ({ ...f, description: e.target.value.slice(0, 500) }))}
+                          className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 w-full"
                         />
                       </div>
-                      <input
-                        type="text"
-                        value={milestoneForm.role}
-                        placeholder="Rola zawodowa"
-                        onChange={(e) => setMilestoneForm(f => ({ ...f, role: e.target.value }))}
-                        className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white w-full"
-                      />
-                      <textarea
-                        value={milestoneForm.description}
-                        placeholder="Opis obowiązków..."
-                        rows={2}
-                        onChange={(e) => setMilestoneForm(f => ({ ...f, description: e.target.value }))}
-                        className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 w-full"
-                      />
                       <div className="flex gap-2 justify-end">
                         <button
                           id={`btn-save-milestone-${item.id}`}
                           onClick={() => handleSaveMilestone(item.id)}
-                          className="px-2.5 py-1 text-[11px] bg-emerald-500 text-white rounded font-medium"
+                          disabled={!milestoneForm.company.trim() || !milestoneForm.role.trim() || milestoneForm.description.length > 500}
+                          className="px-2.5 py-1 text-[11px] bg-emerald-500 disabled:bg-slate-800 text-white disabled:text-slate-500 rounded font-medium disabled:cursor-not-allowed"
                         >
                           Zapisz
                         </button>

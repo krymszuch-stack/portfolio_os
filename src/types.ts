@@ -101,6 +101,7 @@ export interface OSConfig {
   systemFont?: 'apple' | 'ubuntu' | 'inter' | 'retro';
   avatarUrl?: string;
   professionalRole?: string;
+  emailProvider?: 'google' | 'microsoft' | 'smtp';
 }
 
 export type ActiveAppId = 'bio' | 'projects' | 'lab' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'gdrive' | 'calendar' | 'planned' | null;

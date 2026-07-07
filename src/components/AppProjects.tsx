@@ -141,13 +141,18 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
   const handleCreateProject = () => {
     if (!newProject.title.trim()) return;
 
+    let projectLink = newProject.link?.trim() || '';
+    if (projectLink && !projectLink.startsWith('http://') && !projectLink.startsWith('https://')) {
+      projectLink = 'https://' + projectLink;
+    }
+
     const created: Project = {
       id: `proj-${Date.now()}`,
-      title: newProject.title,
-      description: newProject.description || 'Brak opisu projektu.',
+      title: newProject.title.trim(),
+      description: newProject.description?.slice(0, 500) || 'Brak opisu projektu.',
       tags: newProject.tags ? newProject.tags.split(',').map(t => t.trim()) : ['Inne'],
       type: newProject.type,
-      link: newProject.link || undefined,
+      link: projectLink || undefined,
       stars: newProject.type === 'github' ? Number(newProject.stars) || 0 : undefined,
       lastSync: newProject.type === 'github' ? 'Przed chwilą' : undefined
     };
@@ -319,14 +324,19 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Tytuł projektu</label>
+              <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">
+                Tytuł projektu <span className="text-rose-500 font-bold">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="np. lumina-ui"
                 value={newProject.title}
                 onChange={(e) => setNewProject(p => ({ ...p, title: e.target.value }))}
-                className="w-full px-3 py-1.5 bg-slate-950/60 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-cyan-500"
+                className={`w-full px-3 py-1.5 bg-slate-950/60 border ${!newProject.title.trim() ? 'border-rose-500/80 focus:border-rose-500' : 'border-slate-800 focus:border-cyan-500'} rounded-lg text-xs text-white focus:outline-none`}
               />
+              {!newProject.title.trim() && (
+                <span className="text-[9px] text-rose-500 font-mono mt-0.5 block">✦ Tytuł projektu jest wymagany!</span>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -342,13 +352,19 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
             </div>
 
             <div className="space-y-1.5 md:col-span-2">
-              <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Opis</label>
+              <div className="flex justify-between items-center">
+                <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Opis</label>
+                <span className={`text-[10px] font-mono ${(newProject.description || '').length > 500 ? 'text-rose-500 font-bold animate-pulse' : 'text-slate-400'}`}>
+                  {(newProject.description || '').length} / 500
+                </span>
+              </div>
               <input
                 type="text"
                 placeholder="Krótki opis technologii i przeznaczenia..."
                 value={newProject.description}
-                onChange={(e) => setNewProject(p => ({ ...p, description: e.target.value }))}
-                className="w-full px-3 py-1.5 bg-slate-950/60 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-cyan-500"
+                maxLength={500}
+                onChange={(e) => setNewProject(p => ({ ...p, description: e.target.value.slice(0, 500) }))}
+                className={`w-full px-3 py-1.5 bg-slate-950/60 border ${(newProject.description || '').length > 500 ? 'border-rose-500/80' : 'border-slate-800 focus:border-cyan-500'} rounded-lg text-xs text-white focus:outline-none`}
               />
             </div>
 
@@ -392,13 +408,14 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
             <button
               id="btn-save-new-project"
               onClick={handleCreateProject}
-              className="px-3 py-1.5 bg-cyan-500 text-slate-950 hover:bg-cyan-600 rounded-lg text-xs font-sans font-semibold"
+              disabled={!newProject.title.trim() || (newProject.description || '').length > 500}
+              className="px-3 py-1.5 bg-cyan-500 disabled:bg-slate-800 text-slate-950 disabled:text-slate-500 rounded-lg text-xs font-sans font-semibold disabled:cursor-not-allowed transition-colors"
             >
               Stwórz projekt
             </button>
             <button
               onClick={() => setIsAddingProject(false)}
-              className="px-3 py-1.5 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-lg text-xs"
+              className="px-3 py-1.5 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-lg text-xs cursor-pointer"
             >
               Anuluj
             </button>

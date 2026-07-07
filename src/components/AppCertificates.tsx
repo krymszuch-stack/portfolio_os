@@ -30,10 +30,10 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
 
     const created: Certificate = {
       id: `cert-${Date.now()}`,
-      title: newCert.title,
-      issuer: newCert.issuer || 'Inny Wystawca',
-      date: newCert.date || '2026',
-      description: newCert.description || 'Opis i zakres zweryfikowanych umiejętności.',
+      title: newCert.title.trim(),
+      issuer: newCert.issuer.trim() || 'Inny Wystawca',
+      date: newCert.date.trim() || '2026',
+      description: newCert.description.slice(0, 500) || 'Opis i zakres zweryfikowanych umiejętności.',
       verified: newCert.verified
     };
 
@@ -90,14 +90,19 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1 col-span-2">
-              <label className="text-[10px] text-slate-400 uppercase font-mono">Nazwa certyfikatu</label>
+              <label className="text-[10px] text-slate-400 uppercase font-mono">
+                Nazwa certyfikatu <span className="text-rose-500 font-bold">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="np. Certified Kubernetes Administrator (CKA)"
                 value={newCert.title}
                 onChange={(e) => setNewCert(c => ({ ...c, title: e.target.value }))}
-                className="w-full px-2.5 py-1.5 bg-slate-950/60 border border-slate-800 rounded-lg text-xs text-white"
+                className={`w-full px-2.5 py-1.5 bg-slate-950/60 border ${!newCert.title.trim() ? 'border-rose-500/80 focus:border-rose-500' : 'border-slate-800 focus:border-pink-500'} rounded-lg text-xs text-white focus:outline-none`}
               />
+              {!newCert.title.trim() && (
+                <span className="text-[9px] text-rose-500 font-mono mt-0.5 block">✦ Nazwa certyfikatu jest wymagana!</span>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -107,7 +112,7 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
                 placeholder="np. Linux Foundation / Google / Meta"
                 value={newCert.issuer}
                 onChange={(e) => setNewCert(c => ({ ...c, issuer: e.target.value }))}
-                className="w-full px-2.5 py-1.5 bg-slate-950/60 border border-slate-800 rounded-lg text-xs text-white"
+                className="w-full px-2.5 py-1.5 bg-slate-950/60 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-pink-500"
               />
             </div>
 
@@ -118,18 +123,24 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
                 placeholder="np. Styczeń 2026"
                 value={newCert.date}
                 onChange={(e) => setNewCert(c => ({ ...c, date: e.target.value }))}
-                className="w-full px-2.5 py-1.5 bg-slate-950/60 border border-slate-800 rounded-lg text-xs text-white"
+                className="w-full px-2.5 py-1.5 bg-slate-950/60 border border-slate-800 rounded-lg text-xs text-white focus:outline-none focus:border-pink-500"
               />
             </div>
 
             <div className="space-y-1 col-span-2">
-              <label className="text-[10px] text-slate-400 uppercase font-mono">Krótki opis</label>
+              <div className="flex justify-between items-center mb-0.5">
+                <label className="text-[10px] text-slate-400 uppercase font-mono">Krótki opis</label>
+                <span className={`text-[10px] font-mono ${newCert.description.length > 500 ? 'text-rose-500 font-bold animate-pulse' : 'text-slate-400'}`}>
+                  {newCert.description.length} / 500
+                </span>
+              </div>
               <textarea
                 placeholder="Zagadnienia objęte certyfikacją..."
                 value={newCert.description}
                 rows={2}
-                onChange={(e) => setNewCert(c => ({ ...c, description: e.target.value }))}
-                className="w-full px-2.5 py-1.5 bg-slate-950/60 border border-slate-800 rounded-lg text-xs text-slate-200"
+                maxLength={500}
+                onChange={(e) => setNewCert(c => ({ ...c, description: e.target.value.slice(0, 500) }))}
+                className="w-full px-2.5 py-1.5 bg-slate-950/60 border border-slate-800 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-pink-500"
               />
             </div>
 
@@ -149,13 +160,14 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
             <button
               id="btn-save-new-cert"
               onClick={handleCreate}
-              className="px-3 py-1 bg-pink-500 hover:bg-pink-600 text-slate-950 text-xs font-semibold rounded"
+              disabled={!newCert.title.trim() || newCert.description.length > 500}
+              className="px-3 py-1 bg-pink-500 hover:bg-pink-600 disabled:bg-slate-800 text-slate-950 disabled:text-slate-500 text-xs font-semibold rounded disabled:cursor-not-allowed transition-colors"
             >
               Stwórz wpis
             </button>
             <button
               onClick={() => setIsAdding(false)}
-              className="px-3 py-1 bg-slate-800 text-slate-300 text-xs rounded"
+              className="px-3 py-1 bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs rounded cursor-pointer"
             >
               Anuluj
             </button>

@@ -3,14 +3,39 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Send, Linkedin, Github, MessageSquare, Check, Sparkles, Plus, X, Edit2 } from 'lucide-react';
 import { OSConfig } from '../types';
+import { initAuth as initGoogleAuth, googleSignIn, logout as logoutGoogle } from '../lib/googleAuth';
+import { getMsalInstance, loginMicrosoft, logout as logoutMicrosoft, getGraphAccessToken } from '../lib/microsoftAuth';
 
 interface AppContactProps {
   config?: OSConfig;
   setConfig?: React.Dispatch<React.SetStateAction<OSConfig>>;
 }
+
+// Base64URL encoder helper for Gmail API
+const makeRawEmail = (to: string, from: string, subject: string, message: string) => {
+  const str = [
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    `Content-Type: text/plain; charset="UTF-8"`,
+    `Content-Transfer-Encoding: 8bit`,
+    '',
+    message
+  ].join('\r\n');
+  
+  const utf8 = new TextEncoder().encode(str);
+  let binString = '';
+  for (let i = 0; i < utf8.length; i++) {
+    binString += String.fromCharCode(utf8[i]);
+  }
+  
+  return btoa(binString)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+};
 
 export const AppContact: React.FC<AppContactProps> = ({
   config,
@@ -30,19 +55,248 @@ export const AppContact: React.FC<AppContactProps> = ({
   const [editingPlatform, setEditingPlatform] = useState<string | null>(null);
   const [socialInputVal, setSocialInputVal] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Google & Microsoft auth states
+  const [googleUser, setGoogleUser] = useState<{ displayName: string | null; email: string | null } | null>(null);
+  const [googleToken, setGoogleToken] = useState<string | null>(null);
+  const [msUser, setMsUser] = useState<{ displayName: string | null; email: string | null } | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Load auth states on mount
+  useEffect(() => {
+    // 1. Google/Firebase Auth
+    const unsubscribe = initGoogleAuth(
+      (user, cachedToken) => {
+        setGoogleUser({
+          displayName: user.displayName,
+          email: user.email
+        });
+        setGoogleToken(cachedToken);
+      },
+      () => {
+        setGoogleUser(null);
+        setGoogleToken(null);
+      }
+    );
+
+    // 2. Microsoft MSAL Auth
+    getMsalInstance().then(msal => {
+      const accounts = msal.getAllAccounts();
+      if (accounts.length > 0) {
+        setMsUser({
+          displayName: accounts[0].name || accounts[0].username,
+          email: accounts[0].username
+        });
+      }
+    }).catch(err => {
+      console.error('Error initializing MSAL:', err);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleConnectGoogle = async () => {
+    setAuthError(null);
+    try {
+      const result = await googleSignIn();
+      if (result) {
+        setGoogleUser({
+          displayName: result.user.displayName,
+          email: result.user.email
+        });
+        setGoogleToken(result.accessToken);
+        if (setConfig) {
+          setConfig(prev => ({ ...prev, emailProvider: 'google' }));
+        }
+      }
+    } catch (err: any) {
+      console.error('Google login error:', err);
+      setAuthError('Błąd połączenia z Google. Spróbuj ponownie.');
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    setAuthError(null);
+    try {
+      await logoutGoogle();
+      setGoogleUser(null);
+      setGoogleToken(null);
+      if (config?.emailProvider === 'google' && setConfig) {
+        setConfig(prev => ({ ...prev, emailProvider: 'smtp' }));
+      }
+    } catch (err: any) {
+      console.error('Google logout error:', err);
+    }
+  };
+
+  const handleConnectMicrosoft = async () => {
+    setAuthError(null);
+    try {
+      const result = await loginMicrosoft();
+      if (result) {
+        setMsUser({
+          displayName: result.user.displayName,
+          email: result.user.email
+        });
+        if (setConfig) {
+          setConfig(prev => ({ ...prev, emailProvider: 'microsoft' }));
+        }
+      }
+    } catch (err: any) {
+      console.error('Microsoft login error:', err);
+      setAuthError('Błąd połączenia z Microsoft. Upewnij się, że zezwalasz na wyskakujące okienka.');
+    }
+  };
+
+  const handleDisconnectMicrosoft = async () => {
+    setAuthError(null);
+    try {
+      await logoutMicrosoft();
+      setMsUser(null);
+      if (config?.emailProvider === 'microsoft' && setConfig) {
+        setConfig(prev => ({ ...prev, emailProvider: 'smtp' }));
+      }
+    } catch (err: any) {
+      console.error('Microsoft logout error:', err);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email || !formData.message) return;
 
     setIsSending(true);
-    setTimeout(() => {
-      setIsSending(false);
-      setIsSent(true);
-      setFormData({ name: '', email: '', subject: '', message: '' });
+    setAuthError(null);
+
+    const provider = config?.emailProvider || 'smtp';
+
+    if (provider === 'google') {
+      if (!googleUser || !googleToken) {
+        setAuthError('Twoja sesja Google wygasła. Połącz się ponownie.');
+        setIsSending(false);
+        return;
+      }
+
+      try {
+        const mailContent = `Otrzymałeś nową wiadomość z formularza kontaktowego PortfolioOS!
+
+Od: ${formData.name || 'Anonimowy gość'} <${formData.email}>
+Temat: ${formData.subject || '(brak tematu)'}
+
+Treść wiadomości:
+--------------------------------------------------
+${formData.message}
+--------------------------------------------------`;
+
+        const raw = makeRawEmail(
+          googleUser.email || formData.email,
+          googleUser.email || '',
+          `[PortfolioOS Contact] ${formData.subject || 'Wiadomość z formularza'}`,
+          mailContent
+        );
+
+        const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${googleToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ raw })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || 'Błąd wysyłania e-maila przez Gmail API');
+        }
+
+        setIsSending(false);
+        setIsSent(true);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        setTimeout(() => setIsSent(false), 5000);
+
+      } catch (error: any) {
+        console.error('Error sending via Gmail:', error);
+        setAuthError(`Błąd Gmail API: ${error.message || 'Nieznany błąd'}`);
+        setIsSending(false);
+      }
+
+    } else if (provider === 'microsoft') {
+      if (!msUser) {
+        setAuthError('Twoja sesja Microsoft wygasła. Połącz się ponownie.');
+        setIsSending(false);
+        return;
+      }
+
+      try {
+        const token = await getGraphAccessToken();
+        if (!token) {
+          throw new Error('Nie udało się pobrać tokenu dostępu Microsoft Graph API');
+        }
+
+        const mailContent = `Otrzymałeś nową wiadomość z formularza kontaktowego PortfolioOS!
+
+Od: ${formData.name || 'Anonimowy gość'} <${formData.email}>
+Temat: ${formData.subject || '(brak tematu)'}
+
+Treść wiadomości:
+--------------------------------------------------
+${formData.message}
+--------------------------------------------------`;
+
+        const recipientEmail = msUser.email || '';
+
+        const graphMailBody = {
+          message: {
+            subject: `[PortfolioOS Contact] ${formData.subject || 'Wiadomość z formularza'}`,
+            body: {
+              contentType: 'Text',
+              content: mailContent
+            },
+            toRecipients: [
+              {
+                emailAddress: {
+                  address: recipientEmail
+                }
+              }
+            ]
+          },
+          saveToSentItems: 'true'
+        };
+
+        const response = await fetch('https://graph.microsoft.com/v1.0/me/sendMail', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(graphMailBody)
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || 'Błąd wysyłania e-maila przez Microsoft Graph API');
+        }
+
+        setIsSending(false);
+        setIsSent(true);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        setTimeout(() => setIsSent(false), 5000);
+
+      } catch (error: any) {
+        console.error('Error sending via Microsoft Graph:', error);
+        setAuthError(`Błąd Microsoft Graph: ${error.message || 'Nieznany błąd'}`);
+        setIsSending(false);
+      }
+
+    } else {
       setTimeout(() => {
-        setIsSent(false);
-      }, 5000);
-    }, 1500);
+        setIsSending(false);
+        setIsSent(true);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        setTimeout(() => {
+          setIsSent(false);
+        }, 5000);
+      }, 1500);
+    }
   };
 
   const handleOpenEditor = (platformKey: string, currentVal: string) => {
@@ -50,11 +304,28 @@ export const AppContact: React.FC<AppContactProps> = ({
     setSocialInputVal(currentVal || '');
   };
 
+  const getPlatformLink = (username: string | undefined, domainPrefix: string) => {
+    if (!username) return '#';
+    const trimmed = username.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      const relative = trimmed.replace(/^https?:\/\//, '');
+      if (relative.includes('.') || relative.includes('/')) {
+        return trimmed;
+      }
+      return `${domainPrefix}${relative}`;
+    }
+    return `${domainPrefix}${trimmed}`;
+  };
+
   const handleSaveSocial = (platformKey: string) => {
     if (!setConfig) return;
+    let finalInput = socialInputVal.trim();
+    if (finalInput && !finalInput.startsWith('http://') && !finalInput.startsWith('https://')) {
+      finalInput = 'https://' + finalInput;
+    }
     setConfig(prev => ({
       ...prev,
-      [platformKey]: socialInputVal.trim() || undefined
+      [platformKey]: finalInput || undefined
     }));
     setEditingPlatform(null);
   };
@@ -70,8 +341,159 @@ export const AppContact: React.FC<AppContactProps> = ({
             Napisz bezpośrednio lub połącz się społecznościowo
           </h4>
           <p className="text-xs text-slate-400 leading-normal">
-            Skorzystaj z formularza poniżej, aby wysłać bezpośrednią wiadomość (zasymulowano pełną wysyłkę z zabezpieczeniami i loaderem SMTP), bądź napisz na mediach społecznościowych.
+            Skorzystaj z formularza poniżej, aby wysłać bezpośrednią wiadomość (obsługujemy wysyłkę przez Microsoft Graph, Google Gmail API lub bezpieczną bramkę demonstracyjną), bądź napisz na mediach społecznościowych.
           </p>
+        </div>
+      </div>
+
+      {/* Integracja Pocztowa Panel */}
+      <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="space-y-0.5">
+            <span className="text-[9px] text-amber-400 font-mono uppercase tracking-widest font-bold">USTAWIENIA INTEGRACJI POCZTOWEJ</span>
+            <h4 className="text-xs font-sans font-bold text-slate-200">Metoda dostarczania wiadomości z portfolio</h4>
+          </div>
+          <span className="self-start sm:self-auto px-2 py-0.5 text-[8px] font-mono rounded bg-slate-900 text-slate-300 uppercase tracking-widest">
+            STATUS: {config?.emailProvider === 'google' ? 'GOOGLE API' : config?.emailProvider === 'microsoft' ? 'MS GRAPH API' : 'SIMULATED SMTP'}
+          </span>
+        </div>
+
+        <p className="text-[11px] text-slate-400 leading-normal">
+          Umożliwia wysyłanie wiadomości wpisanych w formularz poniżej bezpośrednio na Twoją skrzynkę e-mail. 
+          Wybierz dostawcę i zaloguj się, aby połączyć integrację:
+        </p>
+
+        {authError && (
+          <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px] font-mono">
+            ✦ {authError}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Option 1: Simulated SMTP */}
+          <button
+            onClick={() => {
+              if (setConfig) setConfig(prev => ({ ...prev, emailProvider: 'smtp' }));
+            }}
+            className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all duration-300 cursor-pointer ${
+              (config?.emailProvider || 'smtp') === 'smtp'
+                ? 'bg-amber-500/10 border-amber-500/80 text-white shadow-[0_0_12px_rgba(245,158,11,0.15)]'
+                : 'bg-slate-900/40 border-slate-800 hover:border-slate-700 text-slate-400'
+            }`}
+          >
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-xs">🤖</span>
+                <span className="text-xs font-sans font-bold">Bramka SMTP (MOCK)</span>
+              </div>
+              <p className="text-[10px] text-slate-400 leading-normal">
+                Symulacja wysyłki SMTP z animowanym statusem. Brak wymagań logowania.
+              </p>
+            </div>
+            <span className="mt-2 text-[8px] font-mono uppercase text-amber-400 font-bold">Domyślna (Demo)</span>
+          </button>
+
+          {/* Option 2: Google Gmail API */}
+          <div
+            className={`p-3 rounded-xl border flex flex-col justify-between transition-all duration-300 ${
+              config?.emailProvider === 'google'
+                ? 'bg-blue-500/10 border-blue-500/80 text-white shadow-[0_0_12px_rgba(59,130,246,0.15)]'
+                : 'bg-slate-900/40 border-slate-800 text-slate-400'
+            }`}
+          >
+            <div>
+              <button
+                onClick={() => {
+                  if (setConfig) setConfig(prev => ({ ...prev, emailProvider: 'google' }));
+                }}
+                className="w-full text-left cursor-pointer focus:outline-none"
+              >
+                <div className="flex items-center gap-1.5 mb-1">
+                  <svg className="w-3.5 h-3.5 fill-current text-blue-400" viewBox="0 0 24 24">
+                    <path d="M12.24 10.285V13.4h6.887C18.2 15.614 15.645 18 12.24 18c-3.86 0-7-3.14-7-7s3.14-7 7-7c1.71 0 3.275.614 4.5 1.737l2.4-2.4C17.385 1.578 14.97-.035 12.24-.035c-6.075 0-11 4.925-11 11s4.925 11 11 11c5.83 0 10.51-4.14 10.51-11 0-.675-.075-1.35-.225-1.995h-10.29z"/>
+                  </svg>
+                  <span className="text-xs font-sans font-bold ml-1">Google Gmail API</span>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-normal">
+                  Wysyła prawdziwą wiadomość przez Google API na Twój adres Gmail.
+                </p>
+              </button>
+            </div>
+
+            <div className="mt-2 pt-2 border-t border-slate-850 flex justify-between items-center">
+              {googleUser ? (
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-[9px] text-emerald-400 truncate max-w-[100px] font-mono animate-pulse" title={googleUser.email || ''}>
+                    ● {googleUser.displayName || googleUser.email}
+                  </span>
+                  <button
+                    onClick={handleDisconnectGoogle}
+                    className="text-[9px] text-rose-400 hover:text-rose-300 font-mono underline cursor-pointer"
+                  >
+                    Rozłącz
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleConnectGoogle}
+                  className="w-full py-1 text-center bg-blue-600 hover:bg-blue-700 text-[10px] font-sans font-bold text-white rounded cursor-pointer transition-colors"
+                >
+                  Połącz z Google
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Option 3: Microsoft Graph API */}
+          <div
+            className={`p-3 rounded-xl border flex flex-col justify-between transition-all duration-300 ${
+              config?.emailProvider === 'microsoft'
+                ? 'bg-sky-500/10 border-sky-500/80 text-white shadow-[0_0_12px_rgba(14,165,233,0.15)]'
+                : 'bg-slate-900/40 border-slate-800 text-slate-400'
+            }`}
+          >
+            <div>
+              <button
+                onClick={() => {
+                  if (setConfig) setConfig(prev => ({ ...prev, emailProvider: 'microsoft' }));
+                }}
+                className="w-full text-left cursor-pointer focus:outline-none"
+              >
+                <div className="flex items-center gap-1.5 mb-1">
+                  <svg className="w-3.5 h-3.5 fill-current text-sky-400" viewBox="0 0 23 23">
+                    <path d="M11.5 0H0v11.5h11.5V0zm11.5 0H11.5v11.5H23V0zM11.5 11.5H0V23h11.5V11.5zm11.5 0H11.5V23H23V11.5z"/>
+                  </svg>
+                  <span className="text-xs font-sans font-bold ml-1">Microsoft Graph API</span>
+                </div>
+                <p className="text-[10px] text-slate-400 leading-normal">
+                  Wysyła prawdziwą wiadomość przez Outlook na Twój adres Microsoft.
+                </p>
+              </button>
+            </div>
+
+            <div className="mt-2 pt-2 border-t border-slate-850 flex justify-between items-center">
+              {msUser ? (
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-[9px] text-emerald-400 truncate max-w-[100px] font-mono animate-pulse" title={msUser.email || ''}>
+                    ● {msUser.displayName || msUser.email}
+                  </span>
+                  <button
+                    onClick={handleDisconnectMicrosoft}
+                    className="text-[9px] text-rose-400 hover:text-rose-300 font-mono underline cursor-pointer"
+                  >
+                    Rozłącz
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleConnectMicrosoft}
+                  className="w-full py-1 text-center bg-sky-600 hover:bg-sky-700 text-[10px] font-sans font-bold text-white rounded cursor-pointer transition-colors"
+                >
+                  Połącz z Microsoft
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -134,7 +556,7 @@ export const AppContact: React.FC<AppContactProps> = ({
               <div className="space-y-1.5">
                 <h3 className="text-base font-sans font-bold text-white">Wiadomość wysłana pomyślnie!</h3>
                 <p className="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
-                  Dziękuję za kontakt. Formularz zasymulował połączenie z API bramki pocztowej. Odpiszę na podany adres e-mail w ciągu 24 godzin.
+                  Dziękuję za kontakt. Wiadomość została dostarczona pomyślnie przy użyciu wybranego protokołu wysyłki. Odpiszę na podany adres e-mail tak szybko, jak to możliwe.
                 </p>
               </div>
               <button
@@ -228,7 +650,7 @@ export const AppContact: React.FC<AppContactProps> = ({
             {config?.githubUsername ? (
               <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
                 <a
-                  href={`https://github.com/${config.githubUsername}`}
+                  href={getPlatformLink(config.githubUsername, 'https://github.com/')}
                   target="_blank"
                   rel="noreferrer"
                   className="flex flex-col items-center justify-center w-full"
@@ -266,7 +688,7 @@ export const AppContact: React.FC<AppContactProps> = ({
             {config?.gitlabUsername ? (
               <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
                 <a
-                  href={`https://gitlab.com/${config.gitlabUsername}`}
+                  href={getPlatformLink(config.gitlabUsername, 'https://gitlab.com/')}
                   target="_blank"
                   rel="noreferrer"
                   className="flex flex-col items-center justify-center w-full"
@@ -304,7 +726,7 @@ export const AppContact: React.FC<AppContactProps> = ({
             {config?.linkedinUsername ? (
               <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
                 <a
-                  href={`https://linkedin.com/in/${config.linkedinUsername}`}
+                  href={getPlatformLink(config.linkedinUsername, 'https://linkedin.com/in/')}
                   target="_blank"
                   rel="noreferrer"
                   className="flex flex-col items-center justify-center w-full"
@@ -342,7 +764,7 @@ export const AppContact: React.FC<AppContactProps> = ({
             {config?.instagramUsername ? (
               <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
                 <a
-                  href={`https://instagram.com/${config.instagramUsername}`}
+                  href={getPlatformLink(config.instagramUsername, 'https://instagram.com/')}
                   target="_blank"
                   rel="noreferrer"
                   className="flex flex-col items-center justify-center w-full"
@@ -380,7 +802,7 @@ export const AppContact: React.FC<AppContactProps> = ({
             {config?.facebookUsername ? (
               <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
                 <a
-                  href={`https://facebook.com/${config.facebookUsername}`}
+                  href={getPlatformLink(config.facebookUsername, 'https://facebook.com/')}
                   target="_blank"
                   rel="noreferrer"
                   className="flex flex-col items-center justify-center w-full"
@@ -418,7 +840,7 @@ export const AppContact: React.FC<AppContactProps> = ({
             {config?.messengerUsername ? (
               <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
                 <a
-                  href={`https://m.me/${config.messengerUsername}`}
+                  href={getPlatformLink(config.messengerUsername, 'https://m.me/')}
                   target="_blank"
                   rel="noreferrer"
                   className="flex flex-col items-center justify-center w-full"
@@ -456,7 +878,7 @@ export const AppContact: React.FC<AppContactProps> = ({
             {config?.telegramUsername ? (
               <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
                 <a
-                  href={`https://t.me/${config.telegramUsername}`}
+                  href={getPlatformLink(config.telegramUsername, 'https://t.me/')}
                   target="_blank"
                   rel="noreferrer"
                   className="flex flex-col items-center justify-center w-full"
@@ -494,7 +916,7 @@ export const AppContact: React.FC<AppContactProps> = ({
             {config?.whatsappPhone ? (
               <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
                 <a
-                  href={`https://wa.me/${config.whatsappPhone}`}
+                  href={getPlatformLink(config.whatsappPhone, 'https://wa.me/')}
                   target="_blank"
                   rel="noreferrer"
                   className="flex flex-col items-center justify-center w-full"
@@ -562,7 +984,7 @@ export const AppContact: React.FC<AppContactProps> = ({
                       Zmień
                     </button>
                     <a
-                      href={`https://steamcommunity.com/id/${config.steamId}`}
+                      href={getPlatformLink(config.steamId, 'https://steamcommunity.com/id/')}
                       target="_blank"
                       rel="noreferrer"
                       className="text-[9px] text-[#00adee] font-mono font-bold"

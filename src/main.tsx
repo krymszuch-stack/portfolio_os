@@ -2,12 +2,26 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { MsalProvider } from '@azure/msal-react';
+import { msalInstance } from './lib/microsoftAuth';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+msalInstance.initialize().then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <MsalProvider instance={msalInstance}>
+        <App />
+      </MsalProvider>
+    </StrictMode>,
+  );
+}).catch((err) => {
+  console.error("Failed to initialize MSAL Instance", err);
+  // Rezerwowe renderowanie na wypadek problemów z MSAL
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+});
 
 // Rejestracja Service Workera dla wsparcia PWA
 if ('serviceWorker' in navigator) {
