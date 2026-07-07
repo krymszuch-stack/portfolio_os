@@ -66,17 +66,17 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
   };
 
   return (
-    <div className="p-4 text-black font-mono space-y-6 max-h-[80vh] overflow-y-auto select-none">
+    <div className="p-4 text-black space-y-6 select-none">
       <div className="border-b-2 border-black pb-2 mb-4">
         <h2 className="text-2xl font-bold tracking-tight text-blue-900">Ustawienia AdrianOS</h2>
-        <p className="text-[10px] text-gray-600 font-bold uppercase tracking-wider">Dostosuj 8-bitowy świat swojego portfolio</p>
+        <p className="text-[0.75rem] text-gray-600 font-bold uppercase tracking-wider leading-relaxed">Dostosuj 8-bitowy świat swojego portfolio</p>
       </div>
 
       {/* 0. Główny Styl Portfolio */}
       <div className="space-y-4 bg-[#f9f9f9] p-3 border-2 border-black rounded shadow-[2px_2px_0px_rgba(0,0,0,0.15)]">
         <div>
           <h3 className="text-sm font-bold text-black border-l-4 border-blue-600 pl-2 uppercase">Główny Styl Portfolio</h3>
-          <p className="text-[10px] text-gray-500 font-bold leading-tight uppercase mt-1">Zdecyduj jak inni zobaczą Twoje Portfolio (np. jako strona główna)</p>
+          <p className="text-[0.75rem] text-gray-500 font-bold leading-tight uppercase mt-1">Zdecyduj jak inni zobaczą Twoje Portfolio (np. jako strona główna)</p>
         </div>
         <div className="grid grid-cols-1 gap-2">
           {[
@@ -89,14 +89,14 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
                 ...localConfig, 
                 portfolioStyle: style.id as any
               })}
-              className={`p-3 text-left border-2 border-black rounded transition-all flex flex-col justify-between ${
+              className={`p-3 text-left border-2 border-black rounded transition-all flex flex-col justify-between cursor-pointer ${
                 localConfig.portfolioStyle === style.id
                   ? 'bg-yellow-100 border-yellow-600 ring-2 ring-black'
                   : 'bg-[#F0F0F0] hover:bg-[#E5E5E5]'
               }`}
             >
               <span className="font-bold text-xs">{style.name}</span>
-              <span className="text-[9px] text-gray-500 mt-1 font-semibold leading-none">{style.desc}</span>
+              <span className="text-[0.7rem] text-gray-500 mt-1 font-semibold leading-none">{style.desc}</span>
             </button>
           ))}
         </div>
@@ -105,7 +105,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
         <div className="border-t border-gray-200 pt-3 mt-1 space-y-2">
             <>
               <h4 className="text-xs font-bold text-blue-900 uppercase">Wybierz wariant ikon dla stylu Modern (Lumine)</h4>
-              <p className="text-[9px] text-gray-500 font-semibold uppercase leading-none mb-1">Dostępnych jest 10 ekskluzywnych stylów poświaty i kompozycji szklanej:</p>
+              <p className="text-[0.7rem] text-gray-500 font-semibold uppercase leading-none mb-1">Dostępnych jest 10 ekskluzywnych stylów poświaty i kompozycji szklanej:</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[220px] overflow-y-auto pr-1 border border-gray-200 p-1.5 rounded bg-white">
                 {[
                   { id: 'lumine-ubuntu-style', name: '🍥 Ubuntu Classic Style', desc: 'Ciepły, gładki gradient pomarańczu i oberżyny w stylu systemu Ubuntu' },
@@ -124,14 +124,14 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
                     key={variant.id}
                     type="button"
                     onClick={() => setLocalConfig({ ...localConfig, iconStyleModern: variant.id })}
-                    className={`p-2 text-left border rounded transition-all text-xs flex flex-col justify-center leading-normal ${
+                    className={`p-2 text-left border rounded transition-all text-xs flex flex-col justify-center leading-normal cursor-pointer ${
                       (localConfig.iconStyleModern || 'lumine-minimalist-glass') === variant.id
                         ? 'bg-blue-50 border-blue-600 text-blue-900 font-bold shadow-[1px_1px_0px_black]'
                         : 'bg-gray-50 border-gray-300 hover:bg-gray-100 text-gray-700'
                     }`}
                   >
-                    <span className="font-bold text-[10px]">{variant.name}</span>
-                    <span className="text-[8px] text-gray-500 mt-0.5 leading-none font-medium">{variant.desc}</span>
+                    <span className="font-bold text-[0.75rem]">{variant.name}</span>
+                    <span className="text-[0.65rem] text-gray-500 mt-0.5 leading-none font-medium">{variant.desc}</span>
                   </button>
                 ))}
               </div>
@@ -152,14 +152,14 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
             <button
               key={theme.id}
               onClick={() => setLocalConfig({ ...localConfig, systemTheme: theme.id as any })}
-              className={`p-3 text-left border-2 border-black rounded transition-all flex flex-col justify-between ${
+              className={`p-3 text-left border-2 border-black rounded transition-all flex flex-col justify-between cursor-pointer ${
                 localConfig.systemTheme === theme.id
                   ? 'bg-yellow-100 border-yellow-600 shadow-[inset_2px_2px_0px_rgba(0,0,0,0.15)] ring-2 ring-black'
                   : 'bg-[#F0F0F0] hover:bg-[#E5E5E5]'
               }`}
             >
               <span className="font-bold text-xs">{theme.name}</span>
-              <span className="text-[9px] text-gray-500 mt-1 font-semibold leading-none">{theme.desc}</span>
+              <span className="text-[0.7rem] text-gray-500 mt-1 font-semibold leading-none">{theme.desc}</span>
             </button>
           ))}
         </div>
@@ -176,14 +176,48 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
             <button
               key={style.id}
               onClick={() => setLocalConfig({ ...localConfig, windowStyle: style.id as any })}
-              className={`p-2.5 text-left border-2 border-black rounded transition-all flex flex-col justify-between ${
+              className={`p-2.5 text-left border-2 border-black rounded transition-all flex flex-col justify-between cursor-pointer ${
                 localConfig.windowStyle === style.id
                   ? 'bg-yellow-100 border-yellow-600 ring-2 ring-black'
                   : 'bg-[#F0F0F0] hover:bg-[#E5E5E5]'
               }`}
             >
               <span className="font-bold text-xs">{style.name}</span>
-              <span className="text-[9px] text-gray-500 mt-1 font-semibold leading-none">{style.desc}</span>
+              <span className="text-[0.7rem] text-gray-500 mt-1 font-semibold leading-none">{style.desc}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 2.5. Kompozycja kolorów i motyw główny */}
+      <div className="space-y-2">
+        <h3 className="text-sm font-bold text-black border-l-4 border-amber-600 pl-2 uppercase">2.5. Kolorystyka i Motyw Główny</h3>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { id: 'black-gold', name: '👑 Opaque Black & Gold', desc: 'Szlachetna matowa czerń, złote krawędzie' },
+            { id: 'white-clean', name: '🕊️ White Clean', desc: 'Minimalistyczna biel z subtelnymi krawędziami' },
+            { id: 'purple', name: '🔮 Deep Purple', desc: 'Mroczny neon fioletowy' },
+            { id: 'cyan', name: '💎 Laser Cyan', desc: 'Futurystyczny błękit' },
+            { id: 'orange', name: '🔥 Solar Orange', desc: 'Gorący słoneczny pomarańcz' },
+            { id: 'emerald', name: '🍃 Forest Emerald', desc: 'Szmaragdowa retro zieleń' },
+            { id: 'amber-retro', name: '🪵 Amber Retro', desc: 'Klasyczny ciepły bursztyn CRT' },
+            { id: 'mono-terminal', name: '📟 Green Terminal', desc: 'Matrix zielony monochrom' }
+          ].map((color) => (
+            <button
+              key={color.id}
+              onClick={() => setLocalConfig({ 
+                ...localConfig, 
+                accentColor: color.id as any,
+                themePack: color.id as any
+              })}
+              className={`p-2.5 text-left border-2 border-black rounded transition-all flex flex-col justify-between cursor-pointer ${
+                localConfig.accentColor === color.id
+                  ? 'bg-yellow-100 border-yellow-600 ring-2 ring-black'
+                  : 'bg-[#F0F0F0] hover:bg-[#E5E5E5]'
+              }`}
+            >
+              <span className="font-bold text-xs">{color.name}</span>
+              <span className="text-[0.7rem] text-gray-500 mt-1 font-semibold leading-none">{color.desc}</span>
             </button>
           ))}
         </div>
@@ -197,19 +231,19 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
             { id: 'leaves', name: '🍁 Spadające Liście', desc: 'Liście z dżungli Terrarii' },
             { id: 'sparkles', name: '✨ Magiczne Iskry', desc: 'Świetliste piksele kurzu' },
             { id: 'bubbles', name: '🫧 Bąbelki Powietrza', desc: 'Relaksujący motyw wodny' },
-            { id: 'none', name: '🚫 Wyłączone', desc: 'Czysty pulpit, maksymalna wydajność' }
+            { id: 'none', name: '🚫 Efekty cząsteczkowe w tle: Wyłączone', desc: 'Czysty pulpit, maksymalna wydajność' }
           ].map((pt) => (
             <button
               key={pt.id}
               onClick={() => setLocalConfig({ ...localConfig, particles: pt.id as any })}
-              className={`p-2.5 text-left border-2 border-black rounded transition-all flex flex-col justify-between ${
+              className={`p-2.5 text-left border-2 border-black rounded transition-all flex flex-col justify-between cursor-pointer ${
                 localConfig.particles === pt.id
                   ? 'bg-yellow-100 border-yellow-600 ring-2 ring-black'
                   : 'bg-[#F0F0F0] hover:bg-[#E5E5E5]'
               }`}
             >
               <span className="font-bold text-xs">{pt.name}</span>
-              <span className="text-[9px] text-gray-500 mt-1 font-semibold leading-none">{pt.desc}</span>
+              <span className="text-[0.7rem] text-gray-500 mt-1 font-semibold leading-none">{pt.desc}</span>
             </button>
           ))}
         </div>
@@ -219,19 +253,19 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
       <div className="space-y-4 bg-[#fbfbfb] p-3.5 border-2 border-black rounded shadow-[2px_2px_0px_rgba(0,0,0,0.15)]">
         <div>
           <h3 className="text-sm font-bold text-black border-l-4 border-blue-600 pl-2 uppercase">3.5. Ułatwienia dostępu i design</h3>
-          <p className="text-[10px] text-gray-500 font-bold leading-tight uppercase mt-1">Skalowanie czcionek dla lepszej czytelności oraz dodatkowe parametry interfejsu</p>
+          <p className="text-[0.75rem] text-gray-500 font-bold leading-tight uppercase mt-1">Skalowanie czcionek dla lepszej czytelności oraz dodatkowe parametry interfejsu</p>
         </div>
 
         {/* Font size adjustment slider */}
         <div className="space-y-2 bg-white p-2.5 border border-gray-200 rounded">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-bold text-black uppercase font-mono">🔍 Rozmiar Czcionki Systemowej:</span>
-            <span className="text-xs font-black bg-blue-100 px-2.5 py-0.5 border border-black rounded text-blue-900 font-mono">
+            <span className="text-xs font-bold text-black uppercase">🔍 Rozmiar Czcionki Systemowej:</span>
+            <span className="text-xs font-black bg-blue-100 px-2.5 py-0.5 border border-black rounded text-blue-900">
               {Math.round((localConfig.fontSizeScale || 1.0) * 100)}%
             </span>
           </div>
           <div className="flex items-center gap-3 py-1">
-            <span className="text-[10px] font-bold font-mono text-gray-400">A</span>
+            <span className="text-[0.75rem] font-bold text-gray-400">A</span>
             <input
               type="range"
               min="0.8"
@@ -241,20 +275,20 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
               onChange={(e) => setLocalConfig({ ...localConfig, fontSizeScale: parseFloat(e.target.value) })}
               className="flex-grow accent-blue-600 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
-            <span className="text-sm font-bold font-mono text-gray-800">A</span>
+            <span className="text-sm font-bold text-gray-800">A</span>
           </div>
-          <p className="text-[8px] text-gray-500 leading-normal uppercase font-semibold">Skaluje tekst całego interfejsu, aby ułatwić czytanie na mniejszych ekranach.</p>
+          <p className="text-[0.65rem] text-gray-500 leading-normal uppercase font-semibold">Skaluje tekst całego interfejsu, aby ułatwić czytanie na mniejszych ekranach.</p>
         </div>
 
         {/* Design details row */}
         <div className="grid grid-cols-2 gap-3">
           {/* Glass blur select */}
           <div className="space-y-1.5">
-            <label className="text-[9px] text-gray-600 font-bold uppercase font-mono block">Rozmycie tła szkła:</label>
+            <label className="text-[0.7rem] text-gray-600 font-bold uppercase block">Rozmycie tła szkła:</label>
             <select
               value={localConfig.glassBlur || 'medium'}
               onChange={(e) => setLocalConfig({ ...localConfig, glassBlur: e.target.value as any })}
-              className="w-full p-1.5 bg-white border border-gray-300 rounded text-xs font-bold font-mono focus:outline-none focus:border-black"
+              className="w-full p-1.5 bg-white border border-gray-300 rounded text-xs font-bold focus:outline-none focus:border-black"
             >
               <option value="none">Brak (Przezroczyste)</option>
               <option value="low">Lekkie (Low)</option>
@@ -265,11 +299,11 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
 
           {/* Border style select */}
           <div className="space-y-1.5">
-            <label className="text-[9px] text-gray-600 font-bold uppercase font-mono block">Obramowanie okien:</label>
+            <label className="text-[0.7rem] text-gray-600 font-bold uppercase block">Obramowanie okien:</label>
             <select
               value={localConfig.borderStyle || 'thin'}
               onChange={(e) => setLocalConfig({ ...localConfig, borderStyle: e.target.value as any })}
-              className="w-full p-1.5 bg-white border border-gray-300 rounded text-xs font-bold font-mono focus:outline-none focus:border-black"
+              className="w-full p-1.5 bg-white border border-gray-300 rounded text-xs font-bold focus:outline-none focus:border-black"
             >
               <option value="none">Brak obramowania</option>
               <option value="thin">Cienka ramka</option>
@@ -281,7 +315,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
 
         {/* Czcionka selection */}
         <div className="space-y-1.5 pt-2 border-t border-gray-200">
-          <label className="text-[9px] text-gray-600 font-bold uppercase font-mono block">Czcionka Interfejsu (Font):</label>
+          <label className="text-[0.7rem] text-gray-600 font-bold uppercase block">Czcionka Interfejsu (Font):</label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             {[
               { id: 'apple', name: '🍏 Apple SF', desc: 'System-ui' },
@@ -293,14 +327,14 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
                 key={font.id}
                 type="button"
                 onClick={() => setLocalConfig({ ...localConfig, systemFont: font.id as any })}
-                className={`p-1.5 text-center border rounded transition-all text-[10px] font-bold flex flex-col justify-center items-center leading-tight cursor-pointer ${
+                className={`p-1.5 text-center border rounded transition-all text-[0.75rem] font-bold flex flex-col justify-center items-center leading-tight cursor-pointer ${
                   localConfig.systemFont === font.id
                     ? 'bg-blue-50 border-blue-600 text-blue-900 shadow-[1px_1px_0px_black]'
                     : 'bg-white border-gray-300 hover:bg-gray-100 text-gray-700'
                 }`}
               >
                 <span>{font.name}</span>
-                <span className="text-[7px] text-gray-400 font-normal">{font.desc}</span>
+                <span className="text-[0.6rem] text-gray-400 font-normal">{font.desc}</span>
               </button>
             ))}
           </div>
@@ -312,7 +346,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
         <div className="space-y-3 bg-[#f3f9f3] p-3.5 border-2 border-black rounded shadow-[2px_2px_0px_rgba(0,0,0,0.15)]">
           <div>
             <h3 className="text-sm font-bold text-black border-l-4 border-green-600 pl-2 uppercase">3.8. Zarządzanie Ikonami Pulpitu</h3>
-            <p className="text-[10px] text-gray-500 font-bold leading-tight uppercase mt-1">
+            <p className="text-[0.75rem] text-gray-500 font-bold leading-tight uppercase mt-1">
               Włączaj lub wyłączaj ikony, aby uprościć pulpit (od pustego do pełnego zestawu)
             </p>
           </div>
@@ -365,7 +399,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-sm select-none">{app.icon}</span>
-                    <span className="font-mono">{app.label}</span>
+                    <span>{app.label}</span>
                   </div>
                   <div className={`w-4 h-4 rounded border flex items-center justify-center font-sans ${
                     isEnabled ? 'bg-green-600 border-green-600 text-white font-bold' : 'border-gray-400 bg-white'
@@ -376,7 +410,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
               );
             })}
           </div>
-          <p className="text-[8px] text-gray-500 leading-normal uppercase font-semibold">
+          <p className="text-[0.65rem] text-gray-500 leading-normal uppercase font-semibold">
             Ikona "Personalizacja" (Ustawienia) jest zawsze widoczna, aby zagwarantować stały dostęp do panelu konfiguracji.
           </p>
         </div>
@@ -412,7 +446,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
                 <button
                   key={fmt}
                   onClick={() => setLocalConfig({ ...localConfig, clockFormat: fmt as any })}
-                  className={`px-3 py-1 border-2 border-black font-bold text-xs rounded ${
+                  className={`px-3 py-1 border-2 border-black font-bold text-xs rounded cursor-pointer ${
                     localConfig.clockFormat === fmt ? 'bg-black text-white' : 'bg-white hover:bg-gray-100'
                   }`}
                 >
@@ -424,18 +458,23 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
         </div>
       </div>
 
-      {/* 5. Integrated Button on a Pedestal */}
+      {/* 5. Modern Glassmorphism Styled Save Button */}
       <div className="flex justify-center pt-2">
         <button
           onClick={handleSave}
-          className="relative group w-full max-w-xs h-16 flex flex-col items-center justify-center cursor-pointer select-none"
+          className="w-full max-w-xs min-h-[48px] h-12 px-6 flex items-center justify-center gap-2 rounded-xl bg-emerald-500/80 hover:bg-emerald-500 border border-emerald-400/30 text-white font-sans font-bold text-xs uppercase tracking-widest cursor-pointer shadow-[0_4px_12px_rgba(16,185,129,0.25),inset_0_1px_1px_rgba(255,255,255,0.2)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4),inset_0_1px_1px_rgba(255,255,255,0.3)] hover:scale-[1.02] active:scale-[0.98] active:translate-y-0 transition-all duration-200 backdrop-blur-md select-none"
         >
-          {/* Base pedestal / solid stand shadow */}
-          <div className="absolute inset-x-2 bottom-0 h-3 bg-black rounded" />
-          {/* Main button block with beautiful depth */}
-          <div className="absolute inset-x-2 bottom-2 top-0 bg-[#4caf50] border-2 border-black text-white font-bold text-sm tracking-widest flex items-center justify-center uppercase shadow-[inset_0_3px_0_rgba(255,255,255,0.4)] group-active:translate-y-[2px] group-active:shadow-none transition-all">
-            {showSavedMsg ? '✅ ZAPISANO Pomyślnie' : '💾 ZAPISZ USTAWIENIA'}
-          </div>
+          {showSavedMsg ? (
+            <>
+              <span className="animate-bounce">✅</span>
+              <span>ZAPISANO Pomyślnie</span>
+            </>
+          ) : (
+            <>
+              <span>💾</span>
+              <span>ZAPISZ USTAWIENIA</span>
+            </>
+          )}
         </button>
       </div>
     </div>

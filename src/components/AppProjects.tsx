@@ -509,6 +509,18 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
             </div>
           </div>
         ))}
+
+        {/* Glowing "+" Project Card */}
+        <button
+          onClick={() => setIsAddingProject(true)}
+          className="p-5 rounded-2xl bg-cyan-500/5 hover:bg-cyan-500/10 border-2 border-dashed border-cyan-500/20 hover:border-cyan-400/50 transition-all duration-300 flex flex-col items-center justify-center min-h-[160px] shadow-[0_0_15px_rgba(6,182,212,0.05)] hover:shadow-[0_0_25px_rgba(6,182,212,0.25)] group cursor-pointer"
+        >
+          <div className="w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform shadow-[0_0_10px_rgba(6,182,212,0.15)]">
+            <Plus className="w-6 h-6 animate-pulse" />
+          </div>
+          <span className="text-xs font-sans font-bold text-cyan-300 uppercase tracking-widest mt-2">Dodaj Nowy Projekt</span>
+          <p className="text-[10px] text-slate-500 font-sans mt-1">Ręcznie lub importując z GitHub</p>
+        </button>
       </div>
 
       {showWinFixer && (

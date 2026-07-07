@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, Reorder } from 'motion/react';
 import { DesktopIcon, OSConfig } from '../types';
 import { initialDesktopIcons } from '../data';
 import * as Lucide from 'lucide-react';
@@ -88,7 +88,9 @@ export const Desktop: React.FC<DesktopProps> = ({
   const [isMobile, setIsMobile] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
   
-  const displayedIcons = isPublicView ? icons.filter(i => i.appId !== 'wizard') : icons;
+  const displayedIcons = isPublicView 
+    ? icons.filter(i => i.appId !== 'wizard' && i.appId !== 'settings') 
+    : icons.filter(i => i.appId !== 'settings');
   
   // Custom device UA and orientation help states
   const [deviceUA, setDeviceUA] = useState('');
@@ -479,8 +481,22 @@ export const Desktop: React.FC<DesktopProps> = ({
 
   // HTML5 Drag-and-Drop Handlers for Icon Movement
   
+  
+  const handleMobileReorder = (newOrder: DesktopIcon[]) => {
+    if (config.viewerMode) return;
+    setIcons(prev => {
+      const newIcons = [...prev];
+      const orderMap = new Map(newOrder.map((item, index) => [item.id, index]));
+      return newIcons.sort((a, b) => {
+        const indexA = orderMap.has(a.id) ? orderMap.get(a.id) : 999;
+        const indexB = orderMap.has(b.id) ? orderMap.get(b.id) : 999;
+        // @ts-ignore
+        return indexA - indexB;
+      });
+    });
+  };
+
   const handleDragEnd = (e: any, info: any, iconId: string) => {
-    if (isMobile) return;
     const dropX = info.point.x;
     const dropY = info.point.y;
     
@@ -517,6 +533,7 @@ export const Desktop: React.FC<DesktopProps> = ({
       });
     }
   };
+
 
 
   const handleOpenEdit = (icon: DesktopIcon, e?: React.MouseEvent) => {
@@ -646,59 +663,6 @@ export const Desktop: React.FC<DesktopProps> = ({
 
   const mobilePriorityGroups = getMobileIconsByPriority();
 
-  // If mobile, render a pristine blank desktop with a single stunning setting gear button
-  if (isMobile) {
-    return (
-      <div 
-        onClick={() => toggleWiggling(false)}
-        className="absolute inset-0 flex flex-col items-center justify-center select-none overflow-hidden font-sans relative"
-      >
-        {isPortrait && showOrientationHint && (
-          <div className="absolute top-10 left-4 right-4 bg-black/40 border border-white/10 text-white p-5 rounded-3xl backdrop-blur-md shadow-xl flex flex-col items-center text-center gap-3 animate-scaleIn z-50">
-             <Lucide.Smartphone className="w-8 h-8 animate-pulse text-white/70" />
-             <p className="text-sm font-medium">Najlepiej obrócić ekran poziomo w celu wygodniejszego przeglądania.</p>
-             <button 
-               onClick={() => {
-                 setShowOrientationHint(false);
-                 localStorage.setItem('adrianOrientationDismissed', 'true');
-               }}
-               className="mt-2 px-5 py-2 bg-white/10 hover:bg-white/20 border border-white/5 rounded-full text-xs font-bold transition-colors cursor-pointer"
-             >
-               Rozumiem
-             </button>
-          </div>
-        )}
-
-        {/* Minimal Pristine Center Workspace Container */}
-        <div className="flex flex-col items-center justify-center text-center p-6 space-y-6 z-10">
-          
-          {/* Main settings trigger gear (Zębatka) */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              openApp('settings');
-              if (config.playSounds) {
-                playXpClick();
-              }
-            }}
-            className="group relative w-24 h-24 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 hover:border-cyan-500/30 active:scale-95 transition-all duration-300 flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-md hover:shadow-cyan-500/10 cursor-pointer overflow-hidden animate-scaleIn"
-            title="Konfiguruj system"
-          >
-            {/* Ambient rotating soft background glow */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="absolute -inset-1 rounded-full bg-cyan-400/10 opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-300 animate-pulse" />
-            
-            {/* Settings Gear with elegant slow spin */}
-            <Lucide.Settings 
-              size={40} 
-              className="text-slate-200 group-hover:text-cyan-400 transition-all duration-500 transform group-hover:rotate-90" 
-            />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div 
       onClick={() => toggleWiggling(false)}
@@ -714,8 +678,263 @@ export const Desktop: React.FC<DesktopProps> = ({
       )}
 
       {/* Grid or Stack items */}
-      {(isMobile ? displayedIcons : gridCells).map((item, idx) => {
-        const isGridCell = !isMobile;
+      {isMobile ? (
+        <div className="w-full grid grid-cols-4 gap-x-2 gap-y-5 px-1 py-4 justify-items-center">
+          {displayedIcons.map((icon) => {
+            const iconStyles = getIconStyleClasses();
+            
+            if (icon.isWidget) {
+              return (
+                <div
+                  key={icon.id}
+                  className="col-span-4 w-full flex flex-col items-center justify-center relative rounded-xl border border-transparent transition-all"
+                >
+                  <div
+                    onClick={(e) => handleIconClick(icon, e)}
+                    className="group flex flex-col justify-between p-3.5 rounded-2xl w-full h-32 text-left bg-slate-900/60 border border-white/10 hover:border-white/25 backdrop-blur-md shadow-xl transition-all duration-200 relative"
+                  >
+                    {/* Delete button inside wiggle mode */}
+                    {isWiggling && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteIcon(icon.id);
+                        }}
+                        className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-rose-500 hover:bg-rose-600 border border-white/20 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 z-20 cursor-pointer animate-scaleIn"
+                      >
+                        <X size={10} strokeWidth={3} />
+                      </button>
+                    )}
+
+                    {/* Widget inner rendering */}
+                    {icon.widgetType === 'weather' && (
+                      <div className="flex flex-col h-full justify-between select-none">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[10px] font-bold text-white/40 uppercase font-mono tracking-wider">Warszawa</p>
+                            <h4 className="text-[11px] font-bold text-amber-400">Słonecznie</h4>
+                          </div>
+                          <Lucide.Sun className="text-amber-400 animate-spin-slow w-6 h-6" style={{ animationDuration: '8s' }} />
+                        </div>
+                        <div className="flex items-baseline gap-1 mt-1">
+                          <span className="text-xl font-extrabold text-white">22°C</span>
+                          <span className="text-[9px] text-white/50">Odczuwalna 23°</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {icon.widgetType === 'clock' && (
+                      <ClockWidgetComponent config={config} />
+                    )}
+
+                    {icon.widgetType === 'notes' && (
+                      <NoteWidgetComponent iconId={icon.id} />
+                    )}
+
+                    {icon.widgetType === 'bio' && (
+                      <div 
+                        onClick={() => openApp('bio')}
+                        className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
+                      >
+                        <div className="flex gap-1.5 items-center">
+                          <div className="w-6 h-6 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20 text-purple-400">
+                            <Lucide.User size={12} />
+                          </div>
+                          <div className="truncate">
+                            <h4 className="text-[10px] font-bold text-white leading-tight">O mnie</h4>
+                            <p className="text-[8px] text-slate-400 font-medium leading-none">Adrian - Portfolio</p>
+                          </div>
+                        </div>
+                        <p className="text-[9px] text-slate-300 leading-snug line-clamp-2 italic my-1">
+                          {config.portfolioBio || "Architekt systemów full-stack, pasjonat AI."}
+                        </p>
+                        <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-purple-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
+                          Otwórz profil &rarr;
+                        </span>
+                      </div>
+                    )}
+
+                    {icon.widgetType === 'projects' && (
+                      <div 
+                        onClick={() => openApp('projects')}
+                        className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex gap-1.5 items-center">
+                            <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400">
+                              <Lucide.FolderGit2 size={12} />
+                            </div>
+                            <div>
+                              <h4 className="text-[10px] font-bold text-white leading-tight">Projekty</h4>
+                              <p className="text-[8px] text-slate-400 leading-none">Repozytoria</p>
+                            </div>
+                          </div>
+                          <span className="text-[7px] font-bold bg-blue-500/20 border border-blue-500/30 text-blue-400 px-1 py-0.2 rounded font-mono">LIVE</span>
+                        </div>
+                        <p className="text-[9px] text-slate-300 leading-tight line-clamp-2 my-1">
+                          Integracje AI, AdrianOS, Micro-SaaS i eksperymenty WebGL.
+                        </p>
+                        <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-blue-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
+                          Zobacz wszystkie &rarr;
+                        </span>
+                      </div>
+                    )}
+
+                    {icon.widgetType === 'lab' && (
+                      <div 
+                        onClick={() => openApp('lab')}
+                        className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
+                      >
+                        <div className="flex gap-1.5 items-center">
+                          <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-400">
+                            <Lucide.Flame size={12} />
+                          </div>
+                          <div>
+                            <h4 className="text-[10px] font-bold text-white leading-tight">Lab AI</h4>
+                            <p className="text-[8px] text-slate-400 leading-none">Symulatory i fizyka</p>
+                          </div>
+                        </div>
+                        <p className="text-[9px] text-slate-300 leading-tight line-clamp-2 my-1">
+                          Testuj cząsteczki i symulator optymalizacji WindowsFixer.
+                        </p>
+                        <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-amber-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
+                          Wejdź do labu &rarr;
+                        </span>
+                      </div>
+                    )}
+
+                    {icon.widgetType === 'certificates' && (
+                      <div 
+                        onClick={() => openApp('certificates')}
+                        className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
+                      >
+                        <div className="flex gap-1.5 items-center">
+                          <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400">
+                            <Lucide.Award size={12} />
+                          </div>
+                          <div>
+                            <h4 className="text-[10px] font-bold text-white leading-tight">Certyfikaty</h4>
+                            <p className="text-[8px] text-slate-400 leading-none">AWS, GCP & Scrum</p>
+                          </div>
+                        </div>
+                        <p className="text-[9px] text-slate-300 leading-tight line-clamp-2 my-1">
+                          Zweryfikowane kwalifikacje chmurowe, DevOps oraz architektury.
+                        </p>
+                        <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-emerald-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
+                          Przeglądaj &rarr;
+                        </span>
+                      </div>
+                    )}
+
+                    {icon.widgetType === 'contact' && (
+                      <div 
+                        onClick={() => openApp('contact')}
+                        className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
+                      >
+                        <div className="flex gap-1.5 items-center">
+                          <div className="w-6 h-6 rounded-lg bg-rose-500/10 flex items-center justify-center border border-rose-500/20 text-rose-400">
+                            <Lucide.Mail size={12} />
+                          </div>
+                          <div>
+                            <h4 className="text-[10px] font-bold text-white leading-tight">Kontakt</h4>
+                            <p className="text-[8px] text-slate-400 leading-none">Napisz do mnie</p>
+                          </div>
+                        </div>
+                        <p className="text-[9px] text-slate-300 leading-tight line-clamp-2 my-1">
+                          Szybka wiadomość, LinkedIn lub połączenie. Odpowiadam w 24h.
+                        </p>
+                        <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-rose-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
+                          Wyślij wiadomość &rarr;
+                        </span>
+                      </div>
+                    )}
+
+                    {icon.widgetType === 'planned' && (
+                      <div 
+                        onClick={() => openApp('planned')}
+                        className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
+                      >
+                        <div className="flex gap-1.5 items-center">
+                          <div className="w-6 h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 text-cyan-400">
+                            <Lucide.Compass size={12} />
+                          </div>
+                          <div>
+                            <h4 className="text-[10px] font-bold text-white leading-tight">Kolejne projekty</h4>
+                            <p className="text-[8px] text-slate-400 leading-none">Status Sprintu</p>
+                          </div>
+                        </div>
+                        <div className="space-y-1 my-1">
+                          <div className="flex justify-between text-[7px] font-mono font-bold text-slate-400">
+                            <span>FAZA 3: INTEGRACJA</span>
+                            <span className="text-cyan-400">85%</span>
+                          </div>
+                          <div className="w-full bg-slate-950 rounded-full h-1 overflow-hidden border border-white/5">
+                            <div className="bg-gradient-to-r from-cyan-500 to-purple-500 h-1 rounded-full" style={{ width: '85%' }} />
+                          </div>
+                        </div>
+                        <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-cyan-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
+                          Sprinty &rarr;
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+
+            // Regular Icon - Arranged in clean 4-column grid
+            return (
+              <div
+                key={icon.id}
+                className="col-span-1 flex flex-col items-center justify-center text-center relative rounded-xl border border-transparent transition-all"
+              >
+                <div
+                  onClick={(e) => handleIconClick(icon, e)}
+                  onContextMenu={(e) => handleContextMenu(e, icon)}
+                  className="group flex flex-col items-center justify-center p-2 rounded-2xl w-20 h-24 text-center cursor-pointer hover:bg-white/5 border border-transparent transition-all duration-200 relative"
+                >
+                  {/* Dynamic Style variant wrapper container */}
+                  <div className={`
+                    w-14 h-14 flex items-center justify-center
+                    transition-all duration-300 relative
+                    ${iconStyles.container}
+                  `}>
+                    {renderIcon(icon.icon, `w-6 h-6 ${iconStyles.icon}`)}
+                    
+                    {/* Subtle inner reflection dot - only for modern styles */}
+                    {config.portfolioStyle !== 'retro' && (
+                      <span className="absolute top-1.5 left-2 w-1.5 h-1.5 rounded-full bg-white/30" />
+                    )}
+                  </div>
+
+                  <div className="mt-1 w-full flex justify-center overflow-hidden">
+                    <span className={`block truncate w-18 text-[11px] leading-tight select-none text-white/90 drop-shadow-md text-center ${iconStyles.text}`}>
+                      {icon.label}
+                    </span>
+                  </div>
+
+                  {/* Delete direct badge button in wiggle mode */}
+                  {isWiggling && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteIcon(icon.id);
+                      }}
+                      className="absolute -top-1.5 -left-1.5 w-6 h-6 bg-rose-500 hover:bg-rose-600 border border-white/20 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 z-20 cursor-pointer animate-scaleIn"
+                      title="Usuń"
+                    >
+                      <X size={12} strokeWidth={3} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+      <React.Fragment>
+        {gridCells.map((item, idx) => {
+        const isGridCell = true;
         const r = isGridCell ? (item as any).r : 0;
         const c = isGridCell ? (item as any).c : 0;
         const icon = isGridCell ? displayedIcons.find(i => i.x === r && i.y === c) : (item as DesktopIcon);
@@ -1032,6 +1251,8 @@ export const Desktop: React.FC<DesktopProps> = ({
           </div>
         );
       })}
+      </React.Fragment>
+      )}
 
       {/* Context Menu Component */}
       {contextMenu && (

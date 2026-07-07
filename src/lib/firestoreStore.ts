@@ -15,12 +15,20 @@ export const savePortfolioConfig = async (
   try {
     const docRef = doc(db, 'portfolios', userId);
     
-    // Generate public slug
-    const suffix = Math.random().toString(36).substring(2, 6);
-    const slugBase = config.portfolioName 
-      ? config.portfolioName.toLowerCase().replace(/[^a-z0-9]+/g, '-') 
-      : 'portfolio';
-    const publicSlug = `${slugBase}-${suffix}`;
+    // Check if the document already exists to preserve the publicSlug
+    const existingSnap = await getDoc(docRef);
+    let publicSlug = '';
+    
+    if (existingSnap.exists() && existingSnap.data().publicSlug) {
+      publicSlug = existingSnap.data().publicSlug;
+    } else {
+      // Generate new public slug only if it doesn't exist
+      const suffix = Math.random().toString(36).substring(2, 6);
+      const slugBase = config.portfolioName 
+        ? config.portfolioName.toLowerCase().replace(/[^a-z0-9]+/g, '-') 
+        : 'portfolio';
+      publicSlug = `${slugBase}-${suffix}`;
+    }
 
     const data = {
       config,

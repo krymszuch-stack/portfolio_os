@@ -102,6 +102,18 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       text: 'text-green-400',
       bgHeader: 'bg-green-950/40',
       bgGlow: 'bg-green-500/10'
+    },
+    'black-gold': {
+      border: 'border-amber-500/80',
+      text: 'text-amber-400',
+      bgHeader: 'bg-black',
+      bgGlow: 'bg-amber-500/20'
+    },
+    'white-clean': {
+      border: 'border-slate-300/80',
+      text: 'text-slate-800',
+      bgHeader: 'bg-slate-100',
+      bgGlow: 'bg-slate-100'
     }
   }[config.accentColor || 'purple'];
 
@@ -114,6 +126,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           config.accentColor === 'orange' ? 'rgba(249,115,22,0.2)' :
           config.accentColor === 'amber-retro' ? 'rgba(234,179,8,0.2)' :
           config.accentColor === 'mono-terminal' ? 'rgba(34,197,94,0.2)' :
+          config.accentColor === 'black-gold' ? 'rgba(245,158,11,0.25)' :
+          config.accentColor === 'white-clean' ? 'rgba(15, 23, 42, 0.08)' :
           'rgba(16,185,129,0.2)'
         }` 
       : 'none'
@@ -180,21 +194,50 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
     }
   };
 
+  const isWhiteClean = config.accentColor === 'white-clean';
+  const isBlackGold = config.accentColor === 'black-gold';
+
   // Dynamic design variables based on config.glassBlur
-  const blurClass = {
-    none: 'backdrop-blur-none bg-black/65',
-    low: 'backdrop-blur-md bg-black/45',
-    medium: 'backdrop-blur-md bg-black/30',
-    high: 'backdrop-blur-lg saturate-150 bg-black/25'
-  }[config.glassBlur || 'medium'];
+  const blurClass = isWhiteClean
+    ? 'bg-white'
+    : isBlackGold
+      ? 'bg-black'
+      : {
+          none: 'backdrop-blur-none bg-black/65',
+          low: 'backdrop-blur-md bg-black/45',
+          medium: 'backdrop-blur-md bg-black/30',
+          high: 'backdrop-blur-lg saturate-150 bg-black/25'
+        }[config.glassBlur || 'medium'];
 
   // Dynamic border styling
-  const borderClass = {
-    none: 'border-0',
-    thin: `border border-white/10 ${accentClasses.border}`,
-    thick: `border-4 border-slate-700/80 ${accentClasses.border}`,
-    double: `border-4 border-double border-slate-600/90 ${accentClasses.border}`
-  }[config.borderStyle || 'thin'];
+  const borderClass = isWhiteClean
+    ? 'border border-slate-300/80 shadow-md'
+    : isBlackGold
+      ? 'border-2 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+      : {
+          none: 'border-0',
+          thin: `border border-white/10 ${accentClasses.border}`,
+          thick: `border-4 border-slate-700/80 ${accentClasses.border}`,
+          double: `border-4 border-double border-slate-600/90 ${accentClasses.border}`
+        }[config.borderStyle || 'thin'];
+
+  const titleBarClass = isWhiteClean
+    ? 'bg-slate-100 border-b border-slate-200 text-slate-800'
+    : isBlackGold
+      ? 'bg-black border-b border-amber-500/50 text-amber-400'
+      : 'bg-[#0e111a] border-b border-white/10 shadow-[0_2px_8px_rgba(0,0,0,0.5)]';
+
+  const titleTextClass = isWhiteClean
+    ? 'text-slate-800'
+    : isBlackGold
+      ? 'text-amber-400'
+      : 'text-slate-300';
+
+  const contentTextClass = isWhiteClean
+    ? 'text-slate-800'
+    : isBlackGold
+      ? 'text-slate-100'
+      : 'text-slate-200';
 
   return (
     <motion.div
@@ -213,6 +256,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       className={`
         fixed
         top-12 left-0 right-0 bottom-0 rounded-t-[28px] rounded-b-none border-t border-x border-white/10 border-b-0
+        max-[480px]:max-h-[90dvh] max-[480px]:top-auto max-[480px]:bottom-0
         ${
           layoutMode === 'full' ? 'sm:absolute sm:top-4 sm:left-4 sm:right-4 sm:bottom-16 sm:rounded-2xl sm:border-b sm:w-auto sm:h-auto sm:max-w-none' :
           layoutMode === 'left-half' ? 'sm:absolute sm:top-4 sm:left-4 sm:right-1/2 sm:bottom-16 sm:rounded-2xl sm:border-b sm:w-auto sm:h-auto sm:max-w-none mr-2' :
@@ -225,6 +269,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         overflow-hidden
         transition-all duration-300
         window-box
+        ${isWhiteClean ? 'theme-white-clean' : ''}
+        ${isBlackGold ? 'theme-black-gold' : ''}
       `}
     >
       {/* Decorative inner glow */}
@@ -232,13 +278,15 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 
       {/* Title Bar */}
       <div 
-        className="flex items-center justify-between px-4 py-3 bg-black/25 border-b border-white/5 select-none cursor-grab active:cursor-grabbing"
+        className={`absolute top-0 left-0 right-0 z-30 flex h-12 items-center justify-between px-4 select-none cursor-grab active:cursor-grabbing ${titleBarClass}`}
         onPointerDown={(e) => { if (layoutMode === "floating") dragControls.start(e); }}
         onDoubleClick={() => handleSnap(layoutMode === "full" ? "floating" : "full")}
       >
         <div className="flex items-center space-x-2">
           {/* Active indicator dot */}
           <span className={`w-2 h-2 rounded-full ${
+            isWhiteClean ? 'bg-slate-600 shadow-[0_0_8px_rgba(100,116,139,0.6)]' :
+            isBlackGold ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]' :
             config.accentColor === 'purple' ? 'bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.6)]' :
             config.accentColor === 'cyan' ? 'bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]' :
             config.accentColor === 'orange' ? 'bg-orange-400 shadow-[0_0_8px_rgba(249,115,22,0.6)]' :
@@ -246,7 +294,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
             config.accentColor === 'mono-terminal' ? 'bg-green-400 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
             'bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]'
           }`} />
-          <span className={config.pixelTheme ? 'pixel-heading text-slate-300 uppercase' : 'font-sans font-medium text-xs tracking-wide text-slate-300'}>
+          <span className={config.pixelTheme ? `pixel-heading uppercase ${isWhiteClean ? 'text-slate-800' : isBlackGold ? 'text-amber-400' : 'text-slate-300'}` : `font-sans font-medium text-xs tracking-wide ${titleTextClass}`}>
             {title}
           </span>
         </div>
@@ -256,7 +304,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           <button
             id={`btn-minimize-${id}`}
             onClick={handleMinimize}
-            className="p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors hidden sm:inline-flex"
+            className={`p-1.5 rounded-lg transition-colors hidden sm:inline-flex ${isWhiteClean ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200' : isBlackGold ? 'text-amber-500 hover:text-amber-300 hover:bg-amber-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
             title="Minimalizuj"
           >
             <Minus size={14} />
@@ -269,7 +317,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
             }}
             onMouseEnter={() => { hoverTimer.current = setTimeout(() => setShowLayoutMenu(true), 400); }}
             onMouseLeave={() => { if (hoverTimer.current) clearTimeout(hoverTimer.current); setShowLayoutMenu(false); }}
-            className="p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-colors hidden sm:inline-flex relative"
+            className={`p-1.5 rounded-lg transition-colors hidden sm:inline-flex relative ${isWhiteClean ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200' : isBlackGold ? 'text-amber-500 hover:text-amber-300 hover:bg-amber-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
             title={layoutMode === 'full' ? "Przywróć" : "Maksymalizuj"}
 
           >
@@ -297,7 +345,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
               handleControlClick(e);
               onClose();
             }}
-            className="p-1.5 sm:p-1 rounded-full bg-white/5 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-white/10 sm:border-transparent transition-all flex items-center justify-center"
+            className={`p-1.5 sm:p-1 rounded-full transition-all flex items-center justify-center ${isWhiteClean ? 'bg-slate-100 hover:bg-rose-500/10 text-slate-600 hover:text-rose-600 border border-slate-200' : isBlackGold ? 'bg-amber-500/5 hover:bg-rose-500/20 text-amber-500 hover:text-amber-400 border border-amber-500/30' : 'bg-white/5 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-white/10 sm:border-transparent'}`}
             title="Zamknij"
           >
             <X size={14} className="sm:w-3.5 sm:h-3.5" />
@@ -306,7 +354,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       </div>
 
       {/* Content Space with custom scrollbar */}
-      <div className="flex-1 overflow-y-auto p-5 md:p-6 custom-scrollbar text-slate-200">
+      <div className={`flex-1 overflow-y-auto px-5 md:px-6 pb-5 md:pb-6 custom-scrollbar ${contentTextClass}`} style={{ paddingTop: '48px' }}>
         {children}
       </div>
     </motion.div>

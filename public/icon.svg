@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Definitions for Gradients, Shadows and Filters -->
+  <defs>
+    <!-- Background Gradient: Violet to Indigo (high contrast, ultra polished) -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="35%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#312e81" />
+    </linearGradient>
+
+    <!-- Glowing effect gradient -->
+    <radialGradient id="glow-grad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#c084fc" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Glassmorphism Card Gradient -->
+    <linearGradient id="glass-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.04" />
+    </linearGradient>
+
+    <!-- Glassmorphism Card Border Gradient -->
+    <linearGradient id="glass-border-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.45" />
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0.3" />
+    </linearGradient>
+
+    <!-- Drop Shadow for the squircle container itself -->
+    <filter id="shadow-main" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#0a0c16" flood-opacity="0.45" />
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#312e81" flood-opacity="0.25" />
+    </filter>
+
+    <!-- Drop Shadow for the glass card to make it pop -->
+    <filter id="shadow-card" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- 1. Deep Space Base for contrast -->
+  <rect width="512" height="512" fill="#050507" rx="140" />
+
+  <!-- 2. Samsung One UI squircle shape -->
+  <path d="M 256,28 C 368,28 412,28 456,72 C 500,116 500,160 500,272 C 500,384 500,428 456,472 C 412,516 368,516 256,516 C 144,516 100,516 56,472 C 12,428 12,384 12,272 C 12,160 12,116 56,72 C 100,28 144,28 256,28 Z" fill="url(#bg-grad)" filter="url(#shadow-main)" />
+
+  <!-- 3. Soft center/top background glow -->
+  <path d="M 256,28 C 368,28 412,28 456,72 C 500,116 500,160 500,272 C 500,384 500,428 456,472 C 412,516 368,516 256,516 C 144,516 100,516 56,472 C 12,428 12,384 12,272 C 12,160 12,116 56,72 C 100,28 144,28 256,28 Z" fill="url(#glow-grad)" opacity="0.85" />
+
+  <!-- 4. Modern Glassmorphism Portfolio Card in the Center -->
+  <rect x="136" y="96" width="240" height="320" rx="36" fill="url(#glass-grad)" stroke="url(#glass-border-grad)" stroke-width="3" filter="url(#shadow-card)" />
+
+  <!-- 5. Glass card shine overlay -->
+  <path d="M 137.5,97.5 L 300,97.5 L 137.5,260 Z" fill="#ffffff" opacity="0.08" />
+
+  <!-- 6. Card Content / Profile Symbol -->
+  <!-- Profile Picture Circle (Glass style) -->
+  <circle cx="256" cy="176" r="38" fill="#ffffff" fill-opacity="0.85" />
+  <circle cx="256" cy="176" r="44" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.4" />
+
+  <!-- Card Lines (Information Details) -->
+  <rect x="186" y="254" width="140" height="12" rx="6" fill="#ffffff" fill-opacity="0.9" />
+  <rect x="176" y="286" width="160" height="8" rx="4" fill="#ffffff" fill-opacity="0.65" />
+  <rect x="196" y="312" width="120" height="6" rx="3" fill="#ffffff" fill-opacity="0.45" />
+
+  <!-- 7. Action Button/Trigger Indicator at bottom of the card -->
+  <rect x="216" y="348" width="80" height="20" rx="10" fill="#ffffff" fill-opacity="0.95" />
+  <path d="M 251,358 L 255,362 L 261,354" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Floating interactive accent -->
+  <path d="M 326,128 Q 326,138 336,138 Q 326,138 326,148 Q 326,138 316,138 Q 326,138 326,128 Z" fill="#ffffff" fill-opacity="0.9" />
+</svg>

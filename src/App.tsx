@@ -36,6 +36,8 @@ import { ActiveAppId, OSConfig, DesktopIcon } from './types';
 import { Sparkles, RefreshCw, Clock, HelpCircle, Monitor, Search, ArrowLeft } from 'lucide-react';
 import * as Lucide from 'lucide-react';
 import { initAuth } from './lib/googleAuth';
+import { usePortfolioSave } from './lib/usePortfolioSave';
+import { Check, Loader2, CloudUpload, Eye } from 'lucide-react';
 import { loadPortfolioConfig, loadPortfolioBySlug } from './lib/firestoreStore';
 import { playXpStartup, playXpShutdown, playXpError, playXpBalloon, playXpClick, setSoundsEnabled } from './lib/sounds';
 
@@ -115,6 +117,20 @@ export default function App() {
   const [showSpotlight, setShowSpotlight] = useState(false);
   const [isKreatorMode, setIsKreatorMode] = useState(false);
   const [isPublicView, setIsPublicView] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { saveToCloud, saveStatus, publicSlug } = usePortfolioSave();
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const handleSaveToCloud = async () => {
+    const result = await saveToCloud(config, projects, certificates, timeline, icons);
+    if (result.success) {
+      showToast('Konfiguracja zapisana w chmurze!');
+    }
+  };
   
   // Customizable dataset states
   const [projects, setProjects] = useState(initialProjects);
@@ -207,9 +223,13 @@ export default function App() {
 
   // Fetch real GitHub projects live
   useEffect(() => {
+    if (!config.githubUsername) {
+      setProjects(prev => prev.filter(p => p.type !== 'github'));
+      return;
+    }
     let isMounted = true;
     const fetchGitHubProjects = async () => {
-      const username = config.githubUsername || 'krymszuch-stack';
+      const username = config.githubUsername;
       try {
         const response = await fetch(`https://api.github.com/users/${username}/repos?sort=pushed&per_page=8`);
         if (!response.ok) throw new Error('Network response was not ok');
@@ -235,7 +255,7 @@ export default function App() {
           });
         }
       } catch (err) {
-        console.warn('Could not fetch real GitHub repos, using fallbacks:', err);
+        console.warn('Could not fetch real GitHub repos:', err);
       }
     };
 
@@ -285,6 +305,7 @@ export default function App() {
   const triggerSparksRef = useRef<((x: number, y: number, count?: number) => void) | null>(null);
 
   const getParticleVariant = () => {
+    if (config.particles === 'none') return 'none';
     switch(config.themePack || config.accentColor) {
       case 'mono-terminal': return 'matrix-rain';
       case 'amber-retro': return 'dust';
@@ -500,8 +521,8 @@ export default function App() {
 
       {/* Immersive Theme Ambient Glow Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[200px] -right-[200px] w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[120px]"></div>
-        <div className="absolute -bottom-[150px] -left-[150px] w-[500px] h-[500px] rounded-full bg-purple-600/10 blur-[100px]"></div>
+        <div className="absolute -top-[200px] -right-[200px] w-[600px] h-[600px] rounded-full bg-blue-600/3 blur-[120px]"></div>
+        <div className="absolute -bottom-[150px] -left-[150px] w-[500px] h-[500px] rounded-full bg-purple-600/3 blur-[100px]"></div>
       </div>
 
       {/* Decorative cyber grid lines layering overlay */}
@@ -640,18 +661,29 @@ export default function App() {
           ) : (
             <>
               <button
+                onClick={handleSaveToCloud}
+                disabled={saveStatus === 'saving'}
+                className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase tracking-widest cursor-pointer disabled:opacity-50"
+                title="Zapisz obecny stan portfolio w chmurze (wymaga logowania Google)"
+              >
+                {saveStatus === 'saving' ? <Loader2 size={11} className="animate-spin" /> : <CloudUpload size={11} />} Zapisz w chmurze
+              </button>
+              
+              <span className="text-white/10">|</span>
+
+              <button
                 id="btn-save-lock"
                 onClick={() => {
                   setConfig(prev => ({ ...prev, viewerMode: true }));
                   if (config.playSounds) {
                     playXpStartup();
                   }
-                  alert("Portfolio zostało pomyślnie zapisane i zablokowane w trybie widza (tylko do wglądu)! Kreator i resetowanie zostały ukryte.");
+                  showToast("Przełączono na widok podglądu");
                 }}
-                className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase tracking-widest cursor-pointer"
-                title="Zapisz obecny stan portfolio i zablokuj jako widok tylko dla widza/obserwatora"
+                className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-widest cursor-pointer"
+                title="Ukrywa przyciski edycji w tym widoku przeglądarki - to nie zapisuje danych w chmurze"
               >
-                <Lucide.Save size={11} /> Zapisz (Tryb Widza)
+                <Eye size={11} /> Zablokuj podgląd (Tryb Widza)
               </button>
               
               <span className="text-white/10">|</span>
@@ -824,7 +856,10 @@ export default function App() {
               zIndex={zIndices['contact'] || 10}
               config={config}
             >
-              <AppContact />
+              <AppContact
+                config={config}
+                setConfig={setConfig}
+              />
             </WindowFrame>
           )}
         </AnimatePresence>
@@ -929,7 +964,9 @@ export default function App() {
       />
 
       {/* Terraria-like retro pixel sparks rendering canvas */}
-      <ParticleOverlay triggerRef={triggerSparksRef} variant={getParticleVariant()} />
+      {config.particles !== 'none' && getParticleVariant() !== 'none' && (
+        <ParticleOverlay triggerRef={triggerSparksRef} variant={getParticleVariant()} />
+      )}
 
       {/* Free watermark and helper banner at desktop base */}
       {!config.proMode && (

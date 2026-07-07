@@ -250,6 +250,18 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
             </div>
           </div>
         ))}
+
+        {/* Glowing "+" Certificate Card */}
+        <button
+          onClick={() => setIsAdding(true)}
+          className="p-5 rounded-2xl bg-pink-500/5 hover:bg-pink-500/10 border-2 border-dashed border-pink-500/20 hover:border-pink-400/50 transition-all duration-300 flex flex-col items-center justify-center min-h-[160px] shadow-[0_0_15px_rgba(236,72,153,0.05)] hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] group cursor-pointer"
+        >
+          <div className="w-10 h-10 rounded-full bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400 group-hover:scale-110 transition-transform shadow-[0_0_10px_rgba(236,72,153,0.15)]">
+            <Plus className="w-6 h-6 animate-pulse" />
+          </div>
+          <span className="text-xs font-sans font-bold text-pink-300 uppercase tracking-widest mt-2">Dodaj Nowy Certyfikat</span>
+          <p className="text-[10px] text-slate-500 font-sans mt-1">Prześlij osiągnięcie lub certyfikat</p>
+        </button>
       </div>
     </div>
   );

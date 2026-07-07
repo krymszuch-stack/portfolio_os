@@ -16,8 +16,6 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const particlesRef = useRef<any[]>([]);
 
-  
-  
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -38,26 +36,31 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
       particles = [];
       if (variant === 'none') return;
       
-      const count = variant === 'snow' ? 100 : variant === 'dust' ? 50 : 0;
+      const isMobile = window.innerWidth < 768;
+      // Limit count: max 30 on mobile, 50 on desktop to keep the background clean and legible
+      const count = isMobile 
+        ? (variant === 'snow' ? 25 : 12) 
+        : (variant === 'snow' ? 45 : 22);
+
       for (let i = 0; i < count; i++) {
         particles.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: variant === 'snow' ? Math.random() * 1 + 0.5 : (Math.random() - 0.5) * 0.2,
-          size: variant === 'snow' ? Math.random() * 3 + 1 : Math.random() * 1.5 + 0.5,
-          life: 1,
-          maxLife: 1
+          vx: (Math.random() - 0.5) * 0.1, // extremely subtle base x velocity
+          vy: variant === 'snow' ? Math.random() * 0.4 + 0.4 : Math.random() * 0.2 + 0.2, // steady, calm vertical speed
+          size: variant === 'snow' ? Math.random() * 1.5 + 1 : Math.random() * 1.0 + 0.5,
+          phase: Math.random() * Math.PI * 2, // phase for smooth sine wave drift
+          phaseSpeed: 0.002 + Math.random() * 0.008 // slower, more relaxing wave speed
         });
       }
       
       if (variant === 'matrix-rain') {
-        const columns = Math.floor(canvas.width / 20);
+        const columns = Math.floor(canvas.width / 24);
         for(let i=0; i<columns; i++) {
           particles.push({
-            x: i * 20,
+            x: i * 24,
             y: Math.random() * canvas.height,
-            vy: Math.random() * 2 + 2,
+            vy: Math.random() * 1.0 + 1.0,
             char: String.fromCharCode(0x30A0 + Math.random() * 96)
           });
         }
@@ -74,43 +77,48 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
       }
       
       if (variant === 'matrix-rain') {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillStyle = 'rgba(5, 5, 7, 0.08)'; // slightly fade previous frames
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#0f0';
-        ctx.font = '15px monospace';
+        ctx.fillStyle = 'rgba(139, 92, 246, 0.65)'; // deep violet matrix characters matching theme
+        ctx.font = '13px monospace';
         
         for (let i = 0; i < particles.length; i++) {
           const p = particles[i];
           ctx.fillText(p.char, p.x, p.y);
-          if (p.y > canvas.height && Math.random() > 0.975) {
-            p.y = 0;
+          if (p.y > canvas.height && Math.random() > 0.98) {
+            p.y = -20;
           }
           p.y += p.vy;
-          p.char = Math.random() > 0.9 ? String.fromCharCode(0x30A0 + Math.random() * 96) : p.char;
+          p.char = Math.random() > 0.92 ? String.fromCharCode(0x30A0 + Math.random() * 96) : p.char;
         }
       } else {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         if (variant !== 'none') {
-          ctx.fillStyle = variant === 'snow' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 200, 100, 0.3)';
+          // Glassmorphism snow is white/semi-transparent, dust is light violet/amber
+          ctx.fillStyle = variant === 'snow' ? 'rgba(255, 255, 255, 0.35)' : 'rgba(167, 139, 250, 0.2)';
           for (let i = 0; i < particles.length; i++) {
             const p = particles[i];
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
             ctx.fill();
             
-            p.x += p.vx;
+            // Peaceful downward motion with a gentle horizontal sway (sine drift)
+            p.phase += p.phaseSpeed;
+            p.x += p.vx + Math.sin(p.phase) * 0.15;
             p.y += p.vy;
             
-            if (p.y > canvas.height) p.y = 0;
-            if (p.y < 0) p.y = canvas.height;
+            if (p.y > canvas.height) {
+              p.y = -p.size;
+              p.x = Math.random() * canvas.width;
+            }
             if (p.x > canvas.width) p.x = 0;
             if (p.x < 0) p.x = canvas.width;
           }
         }
       }
       
-      // Draw triggerRef sparks
+      // Draw triggerRef sparks (retro click effects)
       const sparks = particlesRef.current;
       for (let i = sparks.length - 1; i >= 0; i--) {
         const p = sparks[i];
@@ -125,7 +133,7 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
           continue;
         }
         const alpha = p.life / p.maxLife;
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.fillStyle = `rgba(167, 139, 250, ${alpha * 0.65})`; // soft violet click spark
         ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
       }
       
@@ -165,7 +173,7 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-[9999]"
+      className="fixed inset-0 pointer-events-none z-[0]"
       style={{ mixBlendMode: 'screen' }}
     />
   );

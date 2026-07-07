@@ -57,8 +57,8 @@ export interface DesktopIcon {
 
 export interface OSConfig {
   glowIntensity: number; // 0 to 100
-  accentColor: 'purple' | 'cyan' | 'orange' | 'emerald' | 'amber-retro' | 'mono-terminal';
-  themePack?: 'purple' | 'cyan' | 'orange' | 'emerald' | 'amber-retro' | 'mono-terminal';
+  accentColor: 'purple' | 'cyan' | 'orange' | 'emerald' | 'amber-retro' | 'mono-terminal' | 'black-gold' | 'white-clean';
+  themePack?: 'purple' | 'cyan' | 'orange' | 'emerald' | 'amber-retro' | 'mono-terminal' | 'black-gold' | 'white-clean';
   visualMode: 'deep-space' | 'aurora';
   wallpaper: string; // image ID or class name
   proMode: boolean; // Controls demo tier
@@ -71,6 +71,15 @@ export interface OSConfig {
   githubUsername?: string;
   instagramUsername?: string;
   linkedinUsername?: string;
+  gitlabUsername?: string;
+  facebookUsername?: string;
+  messengerUsername?: string;
+  telegramUsername?: string;
+  whatsappPhone?: string;
+  steamId?: string;
+  eaId?: string;
+  ubiId?: string;
+  discordId?: string;
   instagramPhotos?: string[];
   playSounds?: boolean;
   pixelTheme?: boolean;
@@ -90,6 +99,8 @@ export interface OSConfig {
   wizardAnswers?: { [key: string]: string };
   viewerMode?: boolean;
   systemFont?: 'apple' | 'ubuntu' | 'inter' | 'retro';
+  avatarUrl?: string;
+  professionalRole?: string;
 }
 
 export type ActiveAppId = 'bio' | 'projects' | 'lab' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'gdrive' | 'calendar' | 'planned' | null;

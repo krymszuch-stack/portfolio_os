@@ -62,13 +62,11 @@ export const TopBar: React.FC<TopBarProps> = ({ config }) => {
   return (
     <div className={`fixed top-0 left-0 right-0 h-12 z-[100] flex items-center justify-between px-6 font-mono border-black ${currentStyle.bar}`}>
       <div className="flex items-center gap-4 font-bold select-none">
-        <span className={`text-xl ${currentStyle.apple}`}></span>
-        <span className="tracking-widest text-sm uppercase">AdrianOS</span>
+        <span className="tracking-widest text-sm uppercase">{config?.portfolioName ? `${config.portfolioName} OS` : 'AdrianOS'}</span>
       </div>
       <div className={currentStyle.time}>{time}</div>
       <div className="flex items-center gap-3 select-none">
-        <span className={`text-xs tracking-wider uppercase font-bold ${currentStyle.status}`}>Looking for work</span>
-        <span className={`w-3.5 h-3.5 rounded-full animate-pulse border-2 ${currentStyle.dot}`}></span>
+        <span className={`text-xs tracking-wider uppercase font-bold ${currentStyle.status}`}>Status: Dostępny</span>
       </div>
     </div>
   );

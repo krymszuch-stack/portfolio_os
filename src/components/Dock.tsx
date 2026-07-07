@@ -45,7 +45,7 @@ export const Dock: React.FC<DockProps> = ({
   }[config.accentColor || 'purple'];
 
   return (
-    <div className="hidden md:flex fixed top-24 right-2 md:top-auto md:bottom-3 md:right-auto md:left-1/2 md:-translate-x-1/2 z-[999] w-auto max-w-none px-2 py-3 md:px-6 md:py-2 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md shadow-[0_15px_35px_rgba(0,0,0,0.65)] items-center justify-start gap-3 select-none">
+    <div className="flex fixed bottom-2 left-1/2 -translate-x-1/2 z-[999] w-[95vw] sm:w-auto max-w-max px-3 py-1.5 md:px-6 md:py-2 rounded-2xl md:rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md shadow-[0_15px_35px_rgba(0,0,0,0.65)] items-center justify-start gap-1.5 md:gap-3 overflow-x-auto scrollbar-none select-none">
       
       {dockItems.map((item) => {
         const isOpen = openAppsList[item.id];
@@ -53,9 +53,9 @@ export const Dock: React.FC<DockProps> = ({
         const isActive = activeApp === item.id;
 
         return (
-          <div key={item.id} className="relative group flex flex-col md:flex-col items-center flex-initial">
+          <div key={item.id} className="relative group flex flex-col items-center flex-initial shrink-0">
             {/* Tooltip */}
-            <div className="absolute right-12 md:bottom-16 md:right-auto opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-200 pointer-events-none bg-black/60 border border-white/10 text-slate-200 px-2.5 py-1 rounded-lg text-[10px] font-sans font-medium tracking-wide whitespace-nowrap shadow-md">
+            <div className="absolute bottom-12 md:bottom-16 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 transition-all duration-200 pointer-events-none bg-black/85 border border-white/10 text-slate-200 px-2.5 py-1 rounded-lg text-[10px] font-sans font-medium tracking-wide whitespace-nowrap shadow-md z-[1000]">
               {item.label}
             </div>
 
@@ -64,7 +64,7 @@ export const Dock: React.FC<DockProps> = ({
               id={`dock-btn-${item.id}`}
               onClick={() => openApp(item.id)}
               className={`
-                p-2.5 rounded-xl 
+                p-2 md:p-2.5 rounded-lg md:rounded-xl 
                 bg-white/5 border border-white/5
                 hover:bg-white/10 hover:border-white/10 hover:scale-110
                 text-slate-300 ${item.color}
@@ -74,14 +74,14 @@ export const Dock: React.FC<DockProps> = ({
                 ${isActive ? 'bg-white/15 text-white border-white/20 scale-105 shadow-lg shadow-white/5' : ''}
               `}
             >
-              <span className="scale-100 flex items-center justify-center">
+              <span className="scale-90 md:scale-100 flex items-center justify-center">
                 {item.icon}
               </span>
             </button>
 
             {/* Active/Open status indicators */}
             {isOpen && (
-              <span className={`absolute -left-1 md:-left-auto md:-bottom-1.5 top-1/2 -translate-y-1/2 md:translate-y-0 md:top-auto w-1 h-1 md:w-1.5 md:h-1.5 rounded-full transition-all duration-300 ${
+              <span className={`absolute bottom-0 md:-bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 md:w-1.5 md:h-1.5 rounded-full transition-all duration-300 ${
                 isActive ? dotColorClass : 'bg-white/30 shadow-none'
               }`} />
             )}

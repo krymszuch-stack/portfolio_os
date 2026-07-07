@@ -1,3 +1,4 @@
+import { usePortfolioSave } from '../lib/usePortfolioSave';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -45,8 +46,8 @@ import {
   Info
 } from 'lucide-react';
 import { googleSignIn, auth } from '../lib/googleAuth';
-import { savePortfolioConfig } from '../lib/firestoreStore';
-import { Loader2 } from 'lucide-react';
+
+import { Loader2, Copy, ExternalLink } from 'lucide-react';
 import { playXpClick, playXpStartup, playXpBalloon, playXpError, playPixelBeep } from '../lib/sounds';
 import { 
   classifyIndustry, 
@@ -123,17 +124,20 @@ export const Wizard: React.FC<WizardProps> = ({
   openApp,
   isZeroState = false
 }) => {
+  const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationLogs, setGenerationLogs] = useState<string[]>([]);
   const [isFinished, setIsFinished] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'error' | 'success'>('idle');
+  
 
   // Step 1 states
   const [tags, setTags] = useState<string[]>(() => config.wizardTags || []);
   const [tagInput, setTagInput] = useState('');
   const [focusInput, setFocusInput] = useState(() => config.wizardFocusInput || '');
   const [userName, setUserName] = useState(() => config.portfolioName || '');
+  const [avatarUrl, setAvatarUrl] = useState(() => config.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80');
   const [selectedCategory, setSelectedCategory] = useState<IndustryCategory>(() => {
     if (config.portfolioCategory) {
       const found = industryCategories.find(c => c.id === config.portfolioCategory);
@@ -225,6 +229,7 @@ export const Wizard: React.FC<WizardProps> = ({
     setConfig(prev => ({
       ...prev,
       portfolioName: userName,
+      avatarUrl: avatarUrl,
       wizardTags: tags,
       wizardFocusInput: focusInput,
       wizardManualProfessionId: manualProfessionId,
@@ -232,7 +237,7 @@ export const Wizard: React.FC<WizardProps> = ({
       accentColor: accentColor,
       themePack: themePack
     }));
-  }, [userName, tags, focusInput, manualProfessionId, answers, accentColor, themePack, setConfig]);
+  }, [userName, avatarUrl, tags, focusInput, manualProfessionId, answers, accentColor, themePack, setConfig]);
 
   // Dynamically classify industry based on user input on "Na czym się skupiasz?"
   useEffect(() => {
@@ -354,35 +359,19 @@ export const Wizard: React.FC<WizardProps> = ({
     });
   };
 
-  const handleFinishAndExplore = async () => {
-    try {
-      setSaveStatus('saving');
-      
-      let currentUser = auth.currentUser;
-      if (!currentUser) {
-        const result = await googleSignIn();
-        if (result) currentUser = result.user;
-      }
+  const { saveToCloud, saveStatus } = usePortfolioSave();
 
-      if (currentUser) {
-        await savePortfolioConfig(
-          currentUser.uid,
-          config,
-          projects || [],
-          certificates || [],
-          timeline || [],
-          icons || []
-        );
+  const handleFinishAndExplore = async () => {
+    const result = await saveToCloud(config, projects, certificates, timeline, icons);
+    if (result.success) {
+      if (result.publicSlug) {
+        setPublishedSlug(result.publicSlug);
+      } else {
+        onClose();
+        if (!isZeroState) {
+          openApp('bio');
+        }
       }
-      
-      setSaveStatus('success');
-      onClose();
-      if (!isZeroState) {
-        openApp('bio');
-      }
-    } catch (error) {
-      console.error('Save error:', error);
-      setSaveStatus('error');
     }
   };
 
@@ -440,44 +429,81 @@ export const Wizard: React.FC<WizardProps> = ({
 
   return (
     <div className="max-w-2xl mx-auto py-2">
-      {/* Top progress stepper */}
-      {!isFinished && !isGenerating && (
-        <div className="flex items-center justify-between mb-8 select-none">
-          {([
-            { stepNum: 1, name: 'Branża', icon: <User size={13} /> },
-            { stepNum: 2, name: 'Szczegóły', icon: <HelpCircle size={13} /> },
-            { stepNum: 3, name: 'Sekcje', icon: <Check size={13} /> },
-            { stepNum: 4, name: 'Wygląd', icon: <Palette size={13} /> }
-          ]).map((s) => (
-            <React.Fragment key={s.stepNum}>
-              <div className="flex items-center space-x-2">
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
-                  step === s.stepNum 
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20' 
-                    : step > s.stepNum 
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                      : 'bg-slate-900 border border-slate-800 text-slate-500'
-                }`}>
-                  {s.icon}
-                </div>
-                <span className={`text-xs font-sans font-medium hidden sm:inline ${
-                  step === s.stepNum ? 'text-white' : 'text-slate-400'
-                }`}>
-                  {s.name}
-                </span>
-              </div>
-              {s.stepNum < 4 && (
-                <div className={`flex-1 h-0.5 mx-2 rounded ${
-                  step > s.stepNum ? 'bg-emerald-500/30' : 'bg-slate-800'
-                }`} />
-              )}
-            </React.Fragment>
+      {/* Top progress stepper (Dots) */}
+      {!isFinished && !isGenerating && publishedSlug === null && (
+        <div className="flex items-center justify-center space-x-2.5 mb-8 select-none">
+          {[1, 2, 3, 4].map((stepNum) => (
+            <div
+              key={stepNum}
+              className={`h-2 text-center rounded-full transition-all duration-300 ${
+                step === stepNum
+                  ? 'w-8 bg-amber-500'
+                  : 'w-2 bg-slate-800'
+              }`}
+              title={`Krok ${stepNum}/4`}
+            />
           ))}
+          <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest ml-2">
+            Krok {step}/4
+          </span>
         </div>
       )}
 
       {/* Main Container Form */}
-      {isFinished ? (
+      {publishedSlug !== null ? (
+        <div className="p-6 text-center space-y-5 animate-fadeIn">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto shadow-inner shadow-amber-500/10">
+            <CheckCircle size={32} />
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="text-lg md:text-xl font-sans font-bold text-white">
+              Opublikowano!
+            </h3>
+            <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
+              Twoje portfolio zostało zapisane i jest teraz dostępne publicznie pod poniższym adresem.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-left max-w-sm mx-auto flex items-center gap-2">
+            <input 
+              readOnly 
+              value={`${window.location.origin}/p/${publishedSlug}`}
+              className="flex-1 bg-transparent text-[11px] text-white font-mono outline-none"
+            />
+            <button 
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/p/${publishedSlug}`);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
+              title="Kopiuj link"
+            >
+              {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+            </button>
+            <button
+              onClick={() => window.open(`/p/${publishedSlug}`, '_blank')}
+              className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
+              title="Otwórz podgląd publiczny"
+            >
+              <ExternalLink size={14} />
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              onClose();
+              if (!isZeroState) {
+                openApp('bio');
+              }
+            }}
+            className="px-6 py-2 mt-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-sans font-bold flex items-center gap-1.5 mx-auto shadow-lg transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Eye size={14} /> {isZeroState ? 'Uruchom System' : 'Przejdź do pulpitu'}
+          </button>
+        </div>
+      ) : isFinished ? (
         <div className="p-6 text-center space-y-5 animate-fadeIn">
           <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-inner shadow-emerald-500/10">
             <CheckCircle size={32} className="animate-pulse" />
@@ -488,7 +514,7 @@ export const Wizard: React.FC<WizardProps> = ({
               Instalacja Zakończona Pomyślnie
             </h3>
             <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
-              Gratulacje! Twój system OS został pomyślnie zainstalowany i skonfigurowany dla profilu <strong className="text-amber-400">{selectedCategory.name}</strong>. Wszystkie pakiety systemowe, aplikacje i rejestry zostały wdrożone.
+              Gratulacje! Twój osobisty system PortfolioOS został pomyślnie zainstalowany i skonfigurowany dla profilu <strong className="text-amber-400">{selectedCategory.name}</strong>. Wszystkie pakiety, aplikacje oraz rejestry systemowe zostały pomyślnie wdrożone.
             </p>
           </div>
 
@@ -509,8 +535,10 @@ export const Wizard: React.FC<WizardProps> = ({
               </span>
             </div>
             <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-400">Schemat kolorów:</span>
-              <span className="text-cyan-400 font-mono capitalize">{themePack}</span>
+              <span className="text-slate-400">Tło pulpitu:</span>
+              <span className="text-cyan-400 font-mono capitalize">
+                {config.wallpaper === 'ubuntu-pixel' ? 'Klasyczna Oberżyna' : config.wallpaper === 'space-nebula' ? 'Głęboki Kosmos' : 'Bursztynowa Cisza'}
+              </span>
             </div>
           </div>
 
@@ -518,7 +546,7 @@ export const Wizard: React.FC<WizardProps> = ({
             id="btn-finish-wizard"
             onClick={handleFinishAndExplore}
             disabled={saveStatus === 'saving'}
-            className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center gap-1.5 mx-auto shadow-lg shadow-amber-500/20 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center gap-1.5 mx-auto shadow-lg shadow-amber-500/20 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed animate-scaleIn"
           >
             {saveStatus === 'saving' ? <><Loader2 className="animate-spin" size={14} /> Zapisywanie w chmurze...</> : <><Eye size={14} /> {isZeroState ? 'Uruchom System' : 'Przejdź do pulpitu'}</>}
           </button>
@@ -550,15 +578,38 @@ export const Wizard: React.FC<WizardProps> = ({
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Step 1: Broad focus keyword & core branding */}
+          {/* Step 1: Powitanie */}
           {step === 1 && (
-            <div className="space-y-4 animate-fadeIn">
+            <div className="space-y-6 text-center py-8 animate-fadeIn">
+              <div className="w-20 h-20 rounded-3xl bg-amber-500/15 border-2 border-amber-500/30 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/10">
+                <Laptop size={36} className="text-amber-400" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-black text-white font-sans tracking-tight">Kreator PortfolioOS</h2>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                  Zainstaluj swój własny, interaktywny pulpit systemowy prezentujący Twoje Bio, projekty i umiejętności w formie wbudowanych aplikacji.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center gap-2 mx-auto shadow-lg shadow-amber-500/20 active:scale-95 transition-transform cursor-pointer"
+              >
+                Zacznij konfigurację <ArrowRight size={14} strokeWidth={2.5} />
+              </button>
+            </div>
+          )}
+
+          {/* Step 2: Podstawowe dane profilu i branża */}
+          {step === 2 && (
+            <div className="space-y-5 animate-fadeIn text-left">
               <div className="space-y-1">
-                <h3 className="text-base font-sans font-semibold text-white">Kim jesteś i czym się zajmujesz?</h3>
-                <p className="text-xs text-slate-400">Podaj podstawowe informacje, które pomogą nam spersonalizować Twoje portfolio.</p>
+                <h3 className="text-base font-sans font-bold text-white">Dane profilu oraz Branża</h3>
+                <p className="text-xs text-slate-400">Te dane zostaną wykorzystane do wygenerowania Twojego unikalnego portfolio.</p>
               </div>
 
-              <div className="space-y-4 pt-2">
+              <div className="space-y-4">
+                {/* 1. Imię / Nazwa */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Nazwa wizytówki / Imię i Nazwisko</label>
                   <input
@@ -571,415 +622,200 @@ export const Wizard: React.FC<WizardProps> = ({
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Na czym się skupiasz? (Podaj branżę lub słowa kluczowe)</label>
-                  
-                  {/* Real-time Tags List */}
-                  <div className="flex flex-wrap gap-1.5 p-3 min-h-[56px] bg-slate-950/60 border border-slate-800/80 rounded-xl">
-                    {tags.length === 0 ? (
-                      <span className="text-xs text-slate-500 self-center">
-                        Wpisz słowa kluczowe poniżej i zatwierdź Enterem...
-                      </span>
-                    ) : (
-                      tags.map((tag, idx) => (
-                        <span 
-                          key={idx} 
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs font-sans font-medium text-amber-400 animate-fadeIn"
+                {/* 2. Wybór Avatara */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz avatar profilowy</label>
+                  <div className="grid grid-cols-4 gap-2.5">
+                    {[
+                      { id: 'dev', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', label: 'Programista' },
+                      { id: 'creator', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', label: 'Twórca' },
+                      { id: 'engineer', url: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80', label: 'Rzemieślnik' },
+                      { id: 'manager', url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80', label: 'Biznes' }
+                    ].map((av) => {
+                      const isSelected = avatarUrl === av.url;
+                      return (
+                        <button
+                          key={av.id}
+                          type="button"
+                          onClick={() => setAvatarUrl(av.url)}
+                          className={`relative rounded-xl overflow-hidden border-2 transition-all p-1 cursor-pointer flex flex-col items-center gap-1.5 bg-slate-950/40 ${
+                            isSelected ? 'border-amber-500 bg-amber-500/5 scale-105' : 'border-slate-800 hover:border-slate-700'
+                          }`}
                         >
-                          <span>{tag}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveTag(idx)}
-                            className="text-amber-500/60 hover:text-amber-400 focus:outline-none transition-colors cursor-pointer"
-                          >
-                            <X size={12} strokeWidth={2.5} />
-                          </button>
-                        </span>
-                      ))
-                    )}
+                          <img src={av.url} alt={av.label} className="w-12 h-12 rounded-lg object-cover" />
+                          <span className="text-[9px] text-slate-400 font-sans">{av.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
+                  {/* Custom url input */}
+                  <div className="space-y-1 pt-1">
+                    <input
+                      type="text"
+                      value={avatarUrl}
+                      onChange={(e) => setAvatarUrl(e.target.value)}
+                      placeholder="Lub wklej własny adres URL do zdjęcia profilowego..."
+                      className="w-full px-3 py-1.5 bg-slate-950/40 border border-slate-800 rounded-lg text-[10px] text-slate-300 placeholder-slate-700 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
 
-                  {/* Input field */}
+                {/* 3. Wybór Branży / Kategorii */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz główny obszar działalności</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {industryCategories.map((cat) => {
+                      const isSelected = selectedCategory.id === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCategory(cat);
+                            setManualProfessionId('');
+                          }}
+                          className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer h-16 ${
+                            isSelected
+                              ? 'border-amber-500 bg-amber-500/10 text-white'
+                              : 'border-slate-800 bg-slate-950/20 text-slate-400 hover:border-slate-700 hover:bg-slate-900/40'
+                          }`}
+                        >
+                          <CategoryIcon id={cat.id} size={14} className="text-amber-400 shrink-0" />
+                          <span className="text-xs font-bold font-sans mt-1 leading-tight">{cat.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 4. Słowa kluczowe / Specjalizacja */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Dodatkowe słowa kluczowe (np. rolnictwo, react, meble)</label>
                   <input
                     type="text"
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={handleKeyDown}
                     onBlur={handleBlur}
-                    placeholder="np. rolnictwo, uprawa owoców, programowanie w React, remonty mieszkań"
-                    className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-colors"
+                    placeholder="Wpisz słowo kluczowe i kliknij Enter..."
+                    className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
                   />
-                  <p className="text-[10px] text-slate-500 font-sans leading-relaxed">
-                    Wpisz słowo kluczowe i naciśnij <kbd className="px-1 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 text-[9px] font-mono">Enter</kbd> lub przecinek. Nasz inteligentny algorytm rozpozna profil w czasie rzeczywistym.
-                  </p>
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {tags.map((tag, idx) => (
+                        <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-400 font-medium">
+                          {tag}
+                          <button type="button" onClick={() => handleRemoveTag(idx)} className="text-amber-500 hover:text-amber-300"><X size={10} /></button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Real-time category recognition indicator */}
-                <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800 space-y-4 animate-fadeIn">
-                  <div className="flex items-center justify-between gap-3 pb-1 border-b border-slate-900/60">
-                    <div className="space-y-0.5">
-                      <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider block">Rozpoznany profil branżowy</span>
-                      <div className="flex items-center gap-1.5">
-                        <CategoryIcon id={selectedCategory.id} size={15} className="text-amber-400 shrink-0" />
-                        <span className="text-xs font-bold text-white font-sans">{selectedCategory.name}</span>
-                      </div>
-                    </div>
-
-                    <div>
-                      {selectedCategory.matchedProfession ? (
-                        <div className={`px-2.5 py-1 rounded-full ${manualProfessionId ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400' : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'} text-[10px] font-mono flex items-center gap-1.5 shrink-0 select-none`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${manualProfessionId ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'}`} />
-                          {manualProfessionId ? 'Wybrano' : 'Automatycznie dopasowano'}
-                        </div>
-                      ) : (
-                        <div className="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-[10px] font-mono text-slate-400 flex items-center gap-1.5 shrink-0 select-none">
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
-                          Profil ogólny
-                        </div>
-                      )}
-                    </div>
+                {selectedCategory.matchedProfession && (
+                  <div className="p-3 rounded-xl bg-slate-950/40 border border-slate-800/60 flex items-center justify-between text-xs animate-fadeIn">
+                    <span className="text-slate-400 font-sans">Automatycznie dopasowana profesja:</span>
+                    <span className="text-amber-400 font-bold flex items-center gap-1.5">
+                      <ProfessionIcon id={selectedCategory.matchedProfession.id} size={14} className="text-amber-400 shrink-0" />
+                      {selectedCategory.matchedProfession.title}
+                    </span>
                   </div>
-
-                  {/* Dynamic Suggestions (Top-3 Chips) or descriptive placeholder */}
-                  {topMatches.length > 0 && topMatches[0].confidence >= 0.4 ? (
-                    <div className="space-y-2.5 animate-fadeIn">
-                      <span className="text-[10px] text-slate-400 font-sans font-medium block">
-                        Dopasowane specjalizacje (kliknij jedną, aby wybrać profil):
-                      </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        {topMatches.map(({ profession, confidence, relativePercentage }) => {
-                          const isSelected = selectedCategory.matchedProfession?.id === profession.id;
-                          return (
-                            <button
-                              key={profession.id}
-                              type="button"
-                              onClick={() => setManualProfessionId(profession.id)}
-                              className={`p-2.5 rounded-xl text-left transition-all cursor-pointer flex items-center gap-2.5 group relative ${
-                                isSelected
-                                  ? 'bg-amber-500/10 border-amber-500/60 border text-white shadow-lg shadow-amber-500/5'
-                                  : 'bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 text-slate-300 hover:text-white'
-                              }`}
-                            >
-                              <div className="shrink-0 group-hover:scale-110 transition-transform">
-                                <ProfessionIcon id={profession.id} size={16} className="text-amber-400" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className={`text-xs font-semibold truncate ${isSelected ? 'text-amber-400' : 'text-slate-200'}`}>
-                                  {profession.title}
-                                </div>
-                                <div className="text-[9px] text-slate-500 font-mono mt-0.5">
-                                  Zgodność: {Math.round(confidence * 100)}% <span className="text-slate-400 font-sans font-bold">({relativePercentage}%)</span>
-                                </div>
-                              </div>
-                              {isSelected && (
-                                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-500" />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* Wizualny podział prawdopodobieństwa */}
-                      {topMatches.length > 1 && (
-                        <div className="pt-2 border-t border-slate-900/40 space-y-2 animate-fadeIn">
-                          <span className="text-[9px] text-slate-400 font-sans font-medium uppercase tracking-wider block">
-                            Prawdopodobieństwo tematyczne (Podział branżowy):
-                          </span>
-                          <div className="h-2 w-full bg-slate-950/80 rounded-full overflow-hidden flex border border-slate-800/80">
-                            {topMatches.map(({ profession, relativePercentage }, idx) => {
-                              const colors = [
-                                'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]', 
-                                'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]', 
-                                'bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.5)]'
-                              ];
-                              const color = colors[idx % colors.length];
-                              if (relativePercentage === 0) return null;
-                              return (
-                                <div 
-                                  key={profession.id}
-                                  style={{ width: `${relativePercentage}%` }}
-                                  className={`${color} h-full transition-all duration-500`}
-                                  title={`${profession.title}: ${relativePercentage}%`}
-                                />
-                              );
-                            })}
-                          </div>
-                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[9px] font-mono text-slate-500">
-                            {topMatches.map(({ profession, relativePercentage }, idx) => {
-                              const textColors = ['text-amber-400', 'text-emerald-400', 'text-cyan-400'];
-                              const dots = ['bg-amber-500', 'bg-emerald-500', 'bg-cyan-500'];
-                              const color = textColors[idx % textColors.length];
-                              const dot = dots[idx % dots.length];
-                              if (relativePercentage === 0) return null;
-                              return (
-                                <div key={profession.id} className="flex items-center gap-1">
-                                  <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
-                                  <span className="text-slate-400">{profession.title}:</span>
-                                  <span className={`${color} font-bold`}>{relativePercentage}%</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-xs text-slate-400 leading-relaxed py-1 animate-fadeIn">
-                      Wpisz słowa kluczowe u góry, aby automatycznie dobrać precyzyjną specjalizację (np. <span className="text-amber-400 font-mono">hydraulik</span>, <span className="text-amber-400 font-mono">stolarz</span>, <span className="text-amber-400 font-mono">grafik</span>). Obecnie stosujemy profil ogólny lub najbliższą branżę.
-                    </div>
-                  )}
-
-                  {/* Collapsible search reserve option (Option B) */}
-                  <div className="pt-3 border-t border-slate-900/40 space-y-3">
-                    <button
-                      type="button"
-                      onClick={() => setIsFullListExpanded(!isFullListExpanded)}
-                      className="w-full flex items-center justify-between text-left text-[11px] text-slate-400 hover:text-white transition-colors cursor-pointer py-1"
-                    >
-                      <span className="font-sans font-medium flex items-center gap-1.5">
-                        <Search size={12} className="text-slate-400 shrink-0" />
-                        <span>Żadna z sugestii nie pasuje? Wyszukaj ręcznie z pełnej listy</span>
-                      </span>
-                      <ChevronRight 
-                        size={14} 
-                        className={`text-slate-500 transition-transform duration-200 shrink-0 ${isFullListExpanded ? 'rotate-90 text-amber-500' : ''}`} 
-                      />
-                    </button>
-
-                    {isFullListExpanded && (
-                      <div className="space-y-3 pt-1 animate-fadeIn">
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={comboboxSearch}
-                            onChange={(e) => setComboboxSearch(e.target.value)}
-                            placeholder="Wpisz np. stolarz, rolnik, programista, fotograf, fryzjer..."
-                            className="w-full pl-8 pr-8 py-2 bg-slate-950/80 border border-slate-800 hover:border-slate-700 focus:border-amber-500/50 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none transition-colors"
-                          />
-                          <div className="absolute left-2.5 top-2.5 text-slate-500 pointer-events-none">
-                            <Search size={13} />
-                          </div>
-                          {comboboxSearch && (
-                            <button
-                              type="button"
-                              onClick={() => setComboboxSearch('')}
-                              className="absolute right-2.5 top-2.5 text-slate-400 hover:text-white"
-                            >
-                              <X size={14} />
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="max-h-[170px] overflow-y-auto pr-1 space-y-4 custom-scrollbar">
-                          {industryCategories.map(cat => {
-                            const profsInCat = filteredProfessions.filter(p => p.categoryId === cat.id);
-                            if (profsInCat.length === 0) return null;
-                            return (
-                              <div key={cat.id} className="space-y-1.5 pb-2">
-                                <div className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 py-1 border-b border-slate-900/50 mb-1">
-                                  <CategoryIcon id={cat.id} size={11} className="text-slate-400 shrink-0" />
-                                  <span>{cat.name}</span>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 px-0.5">
-                                  {profsInCat.map(p => {
-                                    const isSelected = selectedCategory.matchedProfession?.id === p.id;
-                                    return (
-                                      <button
-                                        key={p.id}
-                                        type="button"
-                                        onClick={() => setManualProfessionId(p.id)}
-                                        className={`px-2.5 py-1.5 rounded-lg text-left text-xs font-sans border cursor-pointer flex items-center gap-2 transition-all ${
-                                          isSelected
-                                            ? 'bg-amber-500/15 border-amber-500/40 text-amber-400 font-medium'
-                                            : 'bg-transparent border-transparent text-slate-300 hover:text-white hover:bg-slate-900/50 hover:border-slate-800/80'
-                                        }`}
-                                      >
-                                        <ProfessionIcon id={p.id} size={14} className={isSelected ? 'text-amber-400 shrink-0' : 'text-slate-400 shrink-0'} />
-                                        <span className="truncate flex-1">{p.title}</span>
-                                        {isSelected && (
-                                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                        )}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            );
-                          })}
-
-                          {filteredProfessions.length === 0 && (
-                            <div className="text-center py-6 text-xs text-slate-500 italic">
-                              Brak dopasowań dla "{comboboxSearch}".
-                            </div>
-                          )}
-
-                          <div className="border-t border-slate-900/80 pt-1.5 mt-1.5">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setManualProfessionId('');
-                                setTags([]);
-                                setFocusInput('');
-                                setComboboxSearch('');
-                              }}
-                              className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-sans text-amber-500/90 hover:text-amber-400 hover:bg-amber-500/10 border border-transparent hover:border-amber-500/20 cursor-pointer flex items-center gap-2 transition-all"
-                            >
-                              <Globe size={14} className="text-amber-500 shrink-0" />
-                              <span className="flex-1 text-left">Zresetuj i wybierz profil ogólny</span>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* Step 2: Dynamically generated industry specific questions */}
-          {step === 2 && (
-            <div className="space-y-4 animate-fadeIn">
-              <div className="space-y-1">
-                <div className="flex items-center gap-1.5">
-                  <CategoryIcon id={selectedCategory.id} size={18} className="text-amber-400 shrink-0" />
-                  <h3 className="text-base font-sans font-semibold text-white">Podstawowe pytania dla branży: {selectedCategory.name}</h3>
-                </div>
-                <p className="text-xs text-slate-400">Odpowiedz na te proste pytania, aby automatycznie wypełnić opisy i teksty wizytówki.</p>
-              </div>
-
-              <div className="space-y-4 pt-2">
-                {selectedCategory.questions.map((q) => (
-                  <div key={q.id} className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">{q.question}</label>
-                    {q.type === 'select' ? (
-                      <select
-                        value={answers[q.id] || ''}
-                        onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-amber-500"
-                      >
-                        <option value="">Wybierz...</option>
-                        {q.options?.map((opt, i) => (
-                          <option key={i} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    ) : q.type === 'textarea' ? (
-                      <textarea
-                        rows={3}
-                        value={answers[q.id] || ''}
-                        onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                        placeholder={q.placeholder}
-                        className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500"
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        value={answers[q.id] || ''}
-                        onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                        placeholder={q.placeholder}
-                        className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Enable / Disable Recommended Sections */}
+          {/* Step 3: Wybór jednego podstawowego stylu tła pulpitu */}
           {step === 3 && (
-            <div className="space-y-4 animate-fadeIn">
+            <div className="space-y-5 animate-fadeIn text-left">
               <div className="space-y-1">
-                <h3 className="text-base font-sans font-semibold text-white">Sugerowane Sekcje Portfolio</h3>
-                <p className="text-xs text-slate-400">Wybierz, które sekcje i integracje chcesz wdrożyć. Zostały one dobrane do specyfiki Twojej branży.</p>
+                <h3 className="text-base font-sans font-bold text-white">Styl tła pulpitu</h3>
+                <p className="text-xs text-slate-400">Wybierz jeden z neutralnych, spokojnych stylów tła dla swojego nowego pulpitu.</p>
               </div>
 
-              <div className="space-y-3 pt-2 max-h-[280px] overflow-y-auto pr-1">
-                {selectedCategory.suggestedSections.map((sec) => {
-                  const isChecked = !!selectedSections[sec.id];
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                {[
+                  { id: 'ubuntu-pixel', name: 'Klasyczna Oberżyna', desc: 'Mroczny fiolet', bg: 'linear-gradient(135deg, #120e16 0%, #09070c 50%, #040306 100%)' },
+                  { id: 'space-nebula', name: 'Głęboki Kosmos', desc: 'Mroczny granat', bg: 'linear-gradient(135deg, #090c15 0%, #05070c 50%, #020306 100%)' },
+                  { id: 'amber-sunset', name: 'Bursztynowa Cisza', desc: 'Ciepła miedź / czerń', bg: 'linear-gradient(135deg, #120d09 0%, #0a0705 50%, #040302 100%)' }
+                ].map((wp) => {
+                  const isSelected = config.wallpaper === wp.id;
                   return (
-                    <div 
-                      key={sec.id}
-                      onClick={() => toggleSection(sec.id)}
-                      className={`p-3.5 rounded-2xl border text-left transition-all flex items-start gap-3 select-none cursor-pointer ${
-                        isChecked 
-                          ? 'bg-slate-950/80 border-amber-500/40 text-white' 
-                          : 'bg-slate-950/20 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-400'
+                    <button
+                      key={wp.id}
+                      type="button"
+                      onClick={() => {
+                        setConfig(prev => ({ ...prev, wallpaper: wp.id }));
+                      }}
+                      className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer h-28 relative overflow-hidden group ${
+                        isSelected
+                          ? 'border-amber-500 ring-2 ring-amber-500/20 bg-slate-900/60 shadow-lg scale-102'
+                          : 'border-slate-800 bg-slate-950/20 hover:border-slate-700'
                       }`}
                     >
-                      <div className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                        isChecked ? 'bg-amber-500 border-amber-500 text-slate-950' : 'border-slate-700'
-                      }`}>
-                        {isChecked && <Check size={11} strokeWidth={3} />}
+                      <div className="absolute inset-0 opacity-10 group-hover:opacity-15 transition-opacity" style={{ background: wp.bg }} />
+                      <div className="relative z-10 space-y-1">
+                        <span className="block text-xs font-bold text-white">{wp.name}</span>
+                        <span className="block text-[10px] text-slate-400">{wp.desc}</span>
                       </div>
-                      <div className="space-y-0.5">
-                        <span className="text-xs font-bold font-sans block">{sec.name}</span>
-                        <p className="text-[10px] text-slate-400 font-sans leading-relaxed">{sec.description}</p>
-                      </div>
-                    </div>
+                      {isSelected && (
+                        <span className="relative z-10 self-end w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center text-slate-950 text-[10px] font-black">✓</span>
+                      )}
+                    </button>
                   );
                 })}
               </div>
+
+              <div className="p-4 rounded-xl bg-slate-950/30 border border-slate-900 text-[11px] text-slate-400 font-sans leading-relaxed">
+                ℹ️ <strong>Personalizacja zaawansowana po wdrożeniu:</strong> Dodatkowe style, efekty cząsteczkowe w tle (spadające liście, bąbelki, gwiazdy) oraz niestandardowe motywy systemowe możesz dostosować w aplikacji <strong>Personalizacja</strong> bezpośrednio po uruchomieniu pulpitu.
+              </div>
             </div>
           )}
 
-          {/* Step 4: Personalization (theme presets) */}
+          {/* Step 4: Krótkie podsumowanie */}
           {step === 4 && (
-            <div className="space-y-4 animate-fadeIn">
+            <div className="space-y-5 animate-fadeIn text-left">
               <div className="space-y-1">
-                <h3 className="text-base font-sans font-semibold text-white">Wybierz Motyw Systemowy</h3>
-                <p className="text-xs text-slate-400">Paczka motywu definiuje kolory, dźwięki systemowe oraz efekty cząsteczkowe w tle.</p>
+                <h3 className="text-base font-sans font-bold text-white">Podsumowanie Konfiguracji</h3>
+                <p className="text-xs text-slate-400">Twój system operacyjny jest gotowy do wdrożenia. Sprawdź poniższe podsumowanie.</p>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
-                {[
-                  { id: 'purple', name: 'Lumina Deep Violet', glow: 'bg-purple-500', text: 'text-purple-400', sound: playXpStartup, variant: 'snow' },
-                  { id: 'cyan', name: 'Cyber Neon Cyan', glow: 'bg-cyan-500', text: 'text-cyan-400', sound: playXpBalloon, variant: 'snow' },
-                  { id: 'orange', name: 'Sunset Amber Glow', glow: 'bg-orange-500', text: 'text-orange-400', sound: playXpClick, variant: 'dust' },
-                  { id: 'emerald', name: 'Nordic Emerald Mint', glow: 'bg-emerald-500', text: 'text-emerald-400', sound: playXpClick, variant: 'matrix-rain' },
-                  { id: 'amber-retro', name: 'Terminal Retro Gold', glow: 'bg-yellow-500', text: 'text-yellow-400', sound: playPixelBeep, variant: 'dust' },
-                  { id: 'mono-terminal', name: 'Hacker Green Mono', glow: 'bg-green-500', text: 'text-green-400', sound: playXpError, variant: 'matrix-rain' }
-                ].map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onMouseEnter={() => {
-                      if (config.playSounds) preset.sound();
-                    }}
-                    onClick={() => {
-                      setThemePack(preset.id);
-                      setAccentColor(preset.id);
-                      if (config.playSounds) preset.sound();
-                    }}
-                    className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer h-24 ${
-                      themePack === preset.id
-                        ? 'border-amber-500 bg-slate-900/60 shadow-lg scale-[1.02]'
-                        : 'border-slate-800 bg-slate-950/20 hover:border-slate-700 hover:bg-slate-900/40'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <span className={`w-3.5 h-3.5 rounded-full ${preset.glow} shrink-0 shadow-[0_0_10px_currentColor] ${preset.text}`} />
-                      {themePack === preset.id && <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
-                    </div>
-                    <div className="space-y-0.5">
-                      <span className="block text-xs font-sans font-semibold text-slate-200 leading-tight">
-                        {preset.name}
-                      </span>
-                      <span className="block text-[9px] font-mono text-slate-500">
-                        {preset.variant.toUpperCase()}
-                      </span>
-                    </div>
-                  </button>
-                ))}
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-400 font-sans">Nazwa użytkownika / Wizytówka:</span>
+                  <span className="text-white font-semibold">{userName || 'Gość'}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-400 font-sans">Główny obszar działalności:</span>
+                  <span className="text-amber-400 font-semibold">{selectedCategory.name}</span>
+                </div>
+                {selectedCategory.matchedProfession && (
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400 font-sans font-medium">Dopasowana specjalizacja:</span>
+                    <span className="text-emerald-400 font-semibold">{selectedCategory.matchedProfession.title}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-400 font-sans">Wybrane tło pulpitu:</span>
+                  <span className="text-cyan-400 font-semibold">
+                    {config.wallpaper === 'ubuntu-pixel' ? 'Klasyczna Oberżyna' : config.wallpaper === 'space-nebula' ? 'Głęboki Kosmos' : 'Bursztynowa Cisza'}
+                  </span>
+                </div>
               </div>
+
+              <p className="text-[11px] text-slate-500 text-center max-w-md mx-auto leading-relaxed">
+                Kliknij przycisk poniżej, aby wygenerować moduły pulpitu, zainstalować pakiety i zainicjować Twoje PortfolioOS.
+              </p>
             </div>
           )}
 
           {/* Controls Footer buttons */}
-          <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
-            {step > 1 ? (
+          {step > 1 && (
+            <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
               <div className="flex items-center gap-3">
                 <button
+                  type="button"
                   onClick={handleBack}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer"
                 >
@@ -993,33 +829,26 @@ export const Wizard: React.FC<WizardProps> = ({
                   🔄 Wyczyść kreator
                 </button>
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSkipWizard}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs text-amber-500 hover:text-amber-400 transition-colors font-bold cursor-pointer bg-amber-500/10 border border-amber-500/20 rounded-lg"
-              >
-                🚫 Pomiń kreator (pusty pulpit)
-              </button>
-            )}
 
-            {step < 4 ? (
-              <button
-                onClick={handleNext}
-                className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-sans font-bold flex items-center gap-1 cursor-pointer"
-              >
-                Dalej <ArrowRight size={13} />
-              </button>
-            ) : (
-              <button
-                id="btn-trigger-generate"
-                onClick={handleGenerate}
-                className="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center gap-1.5 shadow-lg shadow-amber-500/10 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <Sparkles size={13} /> Generuj Moje Portfolio OS
-              </button>
-            )}
-          </div>
+              {step < 4 ? (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-sans font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95"
+                >
+                  Dalej <ArrowRight size={13} />
+                </button>
+              ) : (
+                <button
+                  id="btn-trigger-generate"
+                  onClick={handleGenerate}
+                  className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center gap-1.5 shadow-lg shadow-amber-500/10 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  <Sparkles size={13} /> Instaluj system i przejdź do pulpitu
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

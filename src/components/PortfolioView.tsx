@@ -187,7 +187,21 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
   };
 
   const currentTheme = config.systemTheme || 'terraria';
-  const activeWallpaper = wallpaperStyles[currentTheme] || wallpaperStyles['terraria'];
+  let activeWallpaper = wallpaperStyles[currentTheme] || wallpaperStyles['terraria'];
+
+  if (config.accentColor === 'black-gold') {
+    activeWallpaper = {
+      gradient: 'linear-gradient(to bottom, #050505, #000000)',
+      dockBg: 'bg-black/90 border border-amber-500/50',
+      dockBorder: 'border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+    };
+  } else if (config.accentColor === 'white-clean') {
+    activeWallpaper = {
+      gradient: 'linear-gradient(to bottom, #fcfcfc, #f4f6f8)',
+      dockBg: 'bg-white/90 border border-slate-300/80',
+      dockBorder: 'border-slate-300 shadow-sm'
+    };
+  }
 
   // Synthesis double play retro click beep for Dock buttons
   const playDockBeep = () => {

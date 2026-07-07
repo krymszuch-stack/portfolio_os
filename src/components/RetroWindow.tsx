@@ -66,11 +66,11 @@ export const RetroWindow: React.FC<RetroWindowProps> = ({
       drag
       dragMomentum={false}
       dragListener={true}
-      className={`fixed z-[150] ${borderThickness} ${corners} ${shadowEffect} ${currentStyle.container} ${className}`}
+      className={`fixed z-[150] flex flex-col overflow-hidden ${borderThickness} ${corners} ${shadowEffect} ${currentStyle.container} ${className}`}
       style={{ minWidth: '340px', minHeight: '220px' }}
     >
       {/* Dynamic Themed Title Bar */}
-      <div className={`px-4 py-2.5 flex items-center justify-between cursor-move relative ${currentStyle.titleBar}`}>
+      <div className={`absolute top-0 left-0 right-0 z-30 h-11 px-4 flex items-center justify-between cursor-move shadow-md ${currentStyle.titleBar}`}>
         {/* Apple Style Control Dots */}
         <div className="flex space-x-2">
           <button
@@ -98,7 +98,7 @@ export const RetroWindow: React.FC<RetroWindowProps> = ({
       </div>
 
       {/* Window Content Body */}
-      <div className={`p-5 overflow-auto font-mono ${currentStyle.body}`} style={{ maxHeight: '70vh' }}>
+      <div className={`px-5 pb-5 overflow-auto font-mono flex-1 ${currentStyle.body}`} style={{ maxHeight: '70vh', paddingTop: '44px' }}>
         {children}
       </div>
     </motion.div>
