@@ -12,6 +12,10 @@ interface PortfolioViewProps {
   certificates: Certificate[];
   timeline: TimelineItem[];
   onLaunchGenerator?: () => void;
+  syncStatus?: 'synced' | 'saving' | 'error';
+  onRetrySync?: () => void;
+  guestMode?: boolean;
+  onLoginClick?: () => void;
 }
 
 // Custom 8-Bit falling / rising particle system (forest leaves, magic sparkles, bubble pop)
@@ -114,7 +118,11 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
   projects,
   certificates,
   timeline,
-  onLaunchGenerator
+  onLaunchGenerator,
+  syncStatus,
+  onRetrySync,
+  guestMode,
+  onLoginClick
 }) => {
   const [activeWindows, setActiveWindows] = useState<string[]>([]);
   const [config, setConfig] = useState<OSConfig>(() => {
@@ -233,7 +241,13 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
       }}
     >
       {/* Top Bar Navigation */}
-      <TopBar config={config} />
+      <TopBar 
+        config={config} 
+        syncStatus={syncStatus}
+        onRetrySync={onRetrySync}
+        guestMode={guestMode}
+        onLoginClick={onLoginClick}
+      />
 
       {/* Dynamic 8-bit Falling Particles */}
       <FallingParticles type={config.particles || 'leaves'} />

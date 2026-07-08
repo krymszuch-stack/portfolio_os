@@ -1,7 +1,11 @@
 import { PublicClientApplication, Configuration } from '@azure/msal-browser';
 
-// Fallback dynamic Multi-tenant Client ID, or load from process/Vite env
-const CLIENT_ID = (import.meta as any).env?.VITE_MICROSOFT_CLIENT_ID || '42db64a1-bdfc-4cb0-9bc7-c93d9ef9999a';
+const CLIENT_ID = (import.meta as any).env?.VITE_MICROSOFT_CLIENT_ID;
+if (!CLIENT_ID) {
+  console.error('VITE_MICROSOFT_CLIENT_ID nie jest ustawiony. Logowanie Microsoft nie będzie działać.');
+}
+
+export const isMicrosoftConfigured = !!CLIENT_ID;
 
 const msalConfig: Configuration = {
   auth: {

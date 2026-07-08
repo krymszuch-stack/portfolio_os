@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
 import { OSConfig, DesktopIcon } from '../types';
 import { useMsal } from '@azure/msal-react';
-import { loginRequest } from '../lib/microsoftAuth';
+import { loginRequest, isMicrosoftConfigured } from '../lib/microsoftAuth';
 import { googleSignIn, logout as logoutGoogle } from '../lib/googleAuth';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, linkWithPopup, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
+import { Download, Upload, Cpu, FileText, Linkedin, Loader2, Sparkles, RefreshCw, Check, AlertCircle } from 'lucide-react';
 
 interface AppSettingsProps {
   config: OSConfig;
   onSave: (newConfig: OSConfig) => void;
   icons?: DesktopIcon[];
   setIcons?: React.Dispatch<React.SetStateAction<DesktopIcon[]>>;
+  projects?: any[];
+  setProjects?: React.Dispatch<React.SetStateAction<any[]>>;
+  certificates?: any[];
+  setCertificates?: React.Dispatch<React.SetStateAction<any[]>>;
+  timeline?: any[];
+  setTimeline?: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
 const DEFAULT_APPS_LIST = [
@@ -24,7 +31,18 @@ const DEFAULT_APPS_LIST = [
   { appId: 'planned', label: 'Planowane projekty', icon: '📞', color: 'from-rose-500/30 to-rose-500/10 hover:shadow-rose-500/20 border-rose-500/20' },
 ];
 
-export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons, setIcons }) => {
+export const AppSettings: React.FC<AppSettingsProps> = ({
+  config,
+  onSave,
+  icons,
+  setIcons,
+  projects,
+  setProjects,
+  certificates,
+  setCertificates,
+  timeline,
+  setTimeline
+}) => {
   const [showSavedMsg, setShowSavedMsg] = useState(false);
   const [localConfig, setLocalConfig] = useState<OSConfig>({
     ...config,
@@ -61,6 +79,18 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
 
   const handleConnectMicrosoft = async () => {
     try {
+      const auth = getAuth();
+      if (auth.currentUser) {
+        const msProvider = new OAuthProvider('microsoft.com');
+        msProvider.setCustomParameters({ prompt: 'select_account' });
+        try {
+          await linkWithPopup(auth.currentUser, msProvider);
+        } catch (linkErr: any) {
+          // If already linked or fails, log and continue to MSAL authentication
+          console.warn("Firebase Microsoft account linkage notice/error:", linkErr);
+        }
+      }
+
       const response = await instance.loginPopup(loginRequest);
       if (response && response.account) {
         setLocalConfig(prev => ({
@@ -95,12 +125,33 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
 
   const handleConnectGoogle = async () => {
     try {
-      const response = await googleSignIn();
-      if (response) {
+      const auth = getAuth();
+      if (auth.currentUser) {
+        const googleProvider = new GoogleAuthProvider();
+        googleProvider.addScope('https://www.googleapis.com/auth/drive');
+        googleProvider.addScope('https://www.googleapis.com/auth/calendar');
+        googleProvider.addScope('https://www.googleapis.com/auth/gmail.send');
+        try {
+          await linkWithPopup(auth.currentUser, googleProvider);
+        } catch (linkErr: any) {
+          console.warn("Firebase Google account linkage notice/error:", linkErr);
+        }
+        setGoogleUser({
+          displayName: auth.currentUser.displayName,
+          email: auth.currentUser.email
+        });
         setLocalConfig(prev => ({
           ...prev,
           emailProvider: 'google'
         }));
+      } else {
+        const response = await googleSignIn();
+        if (response) {
+          setLocalConfig(prev => ({
+            ...prev,
+            emailProvider: 'google'
+          }));
+        }
       }
     } catch (err) {
       console.error("Google sign in failed:", err);
@@ -145,6 +196,225 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
         playBeep(880, 0.1);
       }
     } catch (e) {}
+  };
+
+  // --- LOCAL DATA BACKUP & RESTORE HANDLERS ---
+  const handleExportBackup = () => {
+    try {
+      const backupData = {
+        config: localConfig,
+        projects: projects || [],
+        certificates: certificates || [],
+        timeline: timeline || [],
+        icons: icons || []
+      };
+      
+      const jsonStr = JSON.stringify(backupData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.href = url;
+      downloadAnchor.download = `portfolio_os_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Backup export failed:", err);
+    }
+  };
+
+  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target?.result as string);
+        if (parsed.config) {
+          setLocalConfig(parsed.config);
+          onSave(parsed.config);
+        }
+        if (parsed.projects && setProjects) {
+          setProjects(parsed.projects);
+        }
+        if (parsed.certificates && setCertificates) {
+          setCertificates(parsed.certificates);
+        }
+        if (parsed.timeline && setTimeline) {
+          setTimeline(parsed.timeline);
+        }
+        if (parsed.icons && setIcons) {
+          setIcons(parsed.icons);
+        }
+        alert("Kopia zapasowa została przywrócona pomyślnie!");
+      } catch (err) {
+        console.error("Restore failed:", err);
+        alert("Błąd przywracania: Niepoprawny format pliku kopii zapasowej.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // --- CV & LINKEDIN AI COMPILER STATES ---
+  const [cvText, setCvText] = useState('');
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [parsingLoading, setParsingLoading] = useState(false);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [parseSuccess, setParseSuccess] = useState<boolean>(false);
+
+  const handleParseCV = async () => {
+    setParsingLoading(true);
+    setParseError(null);
+    setParseSuccess(false);
+
+    try {
+      let fileData: string | null = null;
+      let mimeType: string | null = null;
+
+      if (cvFile) {
+        const filePromise = new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(cvFile);
+        });
+        const dataUrl = await filePromise;
+        const parts = dataUrl.split(',');
+        fileData = parts[1];
+        mimeType = dataUrl.split(';')[0].split(':')[1];
+      }
+
+      if (!cvText.trim() && !fileData) {
+        throw new Error("Wklej profil LinkedIn lub załącz plik CV przed analizą.");
+      }
+
+      const response = await fetch('/api/parse-cv', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: cvText,
+          fileData,
+          mimeType
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Błąd komunikacji z kompilatorem.');
+      }
+
+      const result = await response.json();
+
+      // Apply result to bio
+      if (result.bio) {
+        const updatedConfig = {
+          ...localConfig,
+          fullName: result.bio.fullName || localConfig.fullName,
+          title: result.bio.title || localConfig.title,
+          biography: result.bio.biography || localConfig.biography,
+          skills: result.bio.skills || localConfig.skills
+        };
+        setLocalConfig(updatedConfig);
+        onSave(updatedConfig);
+      }
+
+      // Appending parsed datasets to user portfolio config
+      if (result.projects && setProjects) {
+        const parsedProjects = result.projects.map((p: any, idx: number) => ({
+          id: `proj-ai-${idx}-${Date.now()}`,
+          title: p.title || 'Projekt AI',
+          description: p.description || '',
+          role: p.role || '',
+          techStack: p.techStack || [],
+          synonyms: p.synonyms || [],
+          icon: '📁',
+          link: p.link || ''
+        }));
+        setProjects(prev => [...parsedProjects, ...prev]);
+      }
+
+      if (result.certificates && setCertificates) {
+        const parsedCerts = result.certificates.map((c: any, idx: number) => ({
+          id: `cert-ai-${idx}-${Date.now()}`,
+          title: c.title || 'Certyfikat',
+          issuer: c.issuer || '',
+          date: c.date || '',
+          url: c.url || ''
+        }));
+        setCertificates(prev => [...parsedCerts, ...prev]);
+      }
+
+      if (result.timeline && setTimeline) {
+        const parsedTimeline = result.timeline.map((t: any, idx: number) => ({
+          id: `time-ai-${idx}-${Date.now()}`,
+          year: t.year || '2025',
+          role: t.role || '',
+          company: t.company || '',
+          description: t.description || ''
+        }));
+        setTimeline(prev => [...parsedTimeline, ...prev]);
+      }
+
+      setParseSuccess(true);
+      setCvText('');
+      setCvFile(null);
+    } catch (err: any) {
+      console.error("[PARSER ERROR]", err);
+      setParseError(err.message || 'Błąd kompilacji CV.');
+    } finally {
+      setParsingLoading(false);
+    }
+  };
+
+  // --- GITHUB SYNC HANDLERS ---
+  const [gitHubSyncStatus, setGitHubSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+
+  const handleForceSyncGitHub = async () => {
+    if (!projects || !setProjects) return;
+    setGitHubSyncStatus('syncing');
+    
+    try {
+      const githubProjects = projects.filter(p => p.type === 'github');
+      if (githubProjects.length === 0) {
+        setGitHubSyncStatus('success');
+        setLastSyncTime(new Date().toLocaleTimeString('pl-PL'));
+        return;
+      }
+
+      const updatedProjects = [...projects];
+      for (let i = 0; i < updatedProjects.length; i++) {
+        const p = updatedProjects[i];
+        if (p.type === 'github' && p.link) {
+          const match = p.link.match(/github\.com\/([^/]+)\/([^/]+)/);
+          if (match) {
+            const owner = match[1];
+            const repo = match[2];
+            try {
+              const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+              if (res.ok) {
+                const data = await res.json();
+                p.stars = data.stargazers_count;
+                p.lastSync = new Date().toISOString();
+              }
+            } catch (err) {
+              console.error(`Failed to sync repo ${owner}/${repo}:`, err);
+            }
+          }
+        }
+      }
+
+      setProjects(updatedProjects);
+      setGitHubSyncStatus('success');
+      setLastSyncTime(new Date().toLocaleTimeString('pl-PL'));
+    } catch (err) {
+      console.error("Force sync failed:", err);
+      setGitHubSyncStatus('error');
+    }
   };
 
   return (
@@ -597,7 +867,11 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
             </div>
 
             <div className="pt-2 border-t border-gray-150 flex items-center justify-between">
-              {accounts.length > 0 ? (
+              {!isMicrosoftConfigured ? (
+                <div className="w-full text-center py-1.5 bg-red-50 border border-red-200 text-red-600 text-[0.65rem] font-bold rounded uppercase leading-normal px-1">
+                  Logowanie Microsoft niedostępne — brak konfiguracji
+                </div>
+              ) : accounts.length > 0 ? (
                 <div className="flex items-center justify-between w-full">
                   <span className="text-[0.65rem] font-bold text-emerald-600 truncate max-w-[120px]" title={accounts[0].username}>
                     ● {accounts[0].name || accounts[0].username}
@@ -636,8 +910,188 @@ export const AppSettings: React.FC<AppSettingsProps> = ({ config, onSave, icons,
           >
             <option value="smtp">Symulowany SMTP (Bramka Demo)</option>
             <option value="google" disabled={!googleUser}>Gmail API (Google) {!googleUser ? '(Zablokowane)' : ''}</option>
-            <option value="microsoft" disabled={accounts.length === 0}>Outlook Graph (Microsoft) {accounts.length === 0 ? '(Zablokowane)' : ''}</option>
+            <option value="microsoft" disabled={!isMicrosoftConfigured || accounts.length === 0}>
+              {!isMicrosoftConfigured 
+                ? 'Outlook Graph (Niedostępne - brak konfiguracji)' 
+                : accounts.length === 0 
+                  ? 'Outlook Graph (Microsoft) (Zablokowane)' 
+                  : 'Outlook Graph (Microsoft)'}
+            </option>
           </select>
+        </div>
+      </div>
+
+      {/* 4.6. Synchronizacja GitHub (Status & Manual Sync) */}
+      <div className="space-y-3 bg-amber-50/20 border border-amber-300 p-3.5 rounded shadow-[1px_1px_0px_black]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-amber-600 font-bold">🐙</span>
+            <h3 className="text-sm font-bold text-black uppercase">4.6. Status Synchronizacji GitHub</h3>
+          </div>
+          <span className={`text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded border ${
+            gitHubSyncStatus === 'syncing' 
+              ? 'bg-yellow-100 border-yellow-400 text-yellow-700 animate-pulse'
+              : gitHubSyncStatus === 'success'
+                ? 'bg-emerald-100 border-emerald-400 text-emerald-700'
+                : gitHubSyncStatus === 'error'
+                  ? 'bg-rose-100 border-rose-400 text-rose-700'
+                  : 'bg-gray-100 border-gray-300 text-gray-600'
+          }`}>
+            {gitHubSyncStatus === 'syncing' && 'Trwa synchronizacja...'}
+            {gitHubSyncStatus === 'success' && 'Zsynchronizowano'}
+            {gitHubSyncStatus === 'error' && 'Błąd połączenia'}
+            {gitHubSyncStatus === 'idle' && 'Bezczynny'}
+          </span>
+        </div>
+
+        <p className="text-[0.7rem] text-gray-500 font-bold uppercase leading-relaxed text-left">
+          Monitoruj oraz wymuś pobieranie aktualnych statystyk i liczby gwiazdek (Stars) Twoich repozytoriów zintegrowanych jako aplikacja Projekty.
+        </p>
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2 border-t border-amber-200/50">
+          <div className="text-[10px] font-mono text-gray-600 uppercase font-bold">
+            Ostatnia udana synchronizacja: <span className="text-amber-700">{lastSyncTime || 'Nigdy (wymagane odświeżenie)'}</span>
+          </div>
+          <button
+            onClick={handleForceSyncGitHub}
+            disabled={gitHubSyncStatus === 'syncing'}
+            className="px-3.5 py-1.5 flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-200 text-slate-950 disabled:text-gray-400 font-sans font-bold text-xs rounded border border-black cursor-pointer transition-all uppercase select-none"
+          >
+            <RefreshCw size={12} className={gitHubSyncStatus === 'syncing' ? 'animate-spin' : ''} />
+            <span>Wymuś Odświeżenie (Force Sync)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 4.7. Kopia Zapasowa (Backup & Restore) */}
+      <div className="space-y-3 bg-[#f8fafc] border border-blue-200 p-3.5 rounded shadow-[1px_1px_0px_black]">
+        <div className="flex items-center gap-2">
+          <span className="text-blue-600 font-bold">💾</span>
+          <h3 className="text-sm font-bold text-black uppercase">4.7. Kopia Zapasowa i Przywracanie</h3>
+        </div>
+
+        <p className="text-[0.7rem] text-gray-500 font-bold uppercase leading-relaxed text-left">
+          Pobierz pełną kopię zapasową konfiguracji systemu, projektów, certyfikatów, osi czasu oraz ikon, aby zapisać je bezpiecznie lokalnie w pliku JSON lub przywrócić je w dowolnym momencie.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-blue-100">
+          <button
+            onClick={handleExportBackup}
+            className="p-2 flex items-center justify-center gap-2 bg-white hover:bg-blue-50 border border-blue-300 hover:border-blue-400 text-blue-700 font-sans font-bold text-xs rounded cursor-pointer transition-all uppercase"
+          >
+            <Download size={13} />
+            <span>Pobierz Kopię Zapasową (JSON)</span>
+          </button>
+
+          <label className="p-2 flex items-center justify-center gap-2 bg-white hover:bg-blue-50 border border-dashed border-blue-300 hover:border-blue-400 text-blue-700 font-sans font-bold text-xs rounded cursor-pointer transition-all uppercase text-center select-none">
+            <Upload size={13} />
+            <span>Przywróć z pliku JSON</span>
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImportBackup}
+              className="hidden"
+            />
+          </label>
+        </div>
+      </div>
+
+      {/* 4.8. Import Profilu CV / LinkedIn (Kompilator AI & OCR) */}
+      <div className="space-y-3.5 bg-[#fdfaf7] border border-orange-300 p-3.5 rounded shadow-[1px_1px_0px_black]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Cpu className="text-orange-600 w-4 h-4" />
+            <h3 className="text-sm font-bold text-black uppercase">4.8. Kompilator AI CV / LinkedIn z OCR</h3>
+          </div>
+          <span className="text-[9px] bg-orange-100 border border-orange-200 text-orange-700 px-2 py-0.5 rounded font-mono font-bold uppercase tracking-wider">
+            Powered by Gemini AI
+          </span>
+        </div>
+
+        <p className="text-[0.7rem] text-gray-500 font-bold uppercase leading-relaxed text-left">
+          Prześlij swój plik CV (PDF, PNG, JPG) lub wklej profil LinkedIn. Zaawansowane modele Gemini przeprowadzą automatyczną ekstrakcję danych (w tym proces OCR dla skanów) oraz dopasują je inteligentnie do zmiennych PortfolioOS wraz z przypisaniem synonimów umiejętności.
+        </p>
+
+        <div className="space-y-2.5">
+          {/* Paste profile text */}
+          <div className="space-y-1">
+            <label className="text-[10px] text-gray-600 font-bold uppercase block text-left">Wklej tekst profilu LinkedIn / CV:</label>
+            <textarea
+              value={cvText}
+              onChange={(e) => setCvText(e.target.value)}
+              placeholder="Wklej tutaj surowy tekst profilu zawodowego lub CV..."
+              rows={3}
+              className="w-full p-2 bg-white border border-gray-300 rounded text-xs focus:outline-none focus:border-orange-500"
+            />
+          </div>
+
+          {/* PDF/Image File Upload with custom styles */}
+          <div className="space-y-1">
+            <label className="text-[10px] text-gray-600 font-bold uppercase block text-left">LUB prześlij dokument CV (PDF, Obraz):</label>
+            <div className="border border-dashed border-gray-300 rounded p-2 bg-white flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <FileText className="text-gray-400 w-4 h-4" />
+                <span className="text-xs font-semibold text-gray-600 truncate max-w-[180px]">
+                  {cvFile ? `${cvFile.name} (${Math.round(cvFile.size / 1024)} KB)` : 'Nie wybrano pliku (Formaty: pdf, png, jpg)'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {cvFile && (
+                  <button
+                    onClick={() => setCvFile(null)}
+                    className="text-[10px] font-bold text-red-500 hover:underline px-1.5 cursor-pointer"
+                  >
+                    Usuń
+                  </button>
+                )}
+                <label className="px-2 py-1 bg-gray-100 hover:bg-gray-200 border border-gray-350 text-[10px] font-bold rounded cursor-pointer transition-colors uppercase">
+                  Wybierz Plik
+                  <input
+                    type="file"
+                    accept=".pdf,image/png,image/jpeg"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) setCvFile(e.target.files[0]);
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Feedback alerts */}
+          {parseError && (
+            <div className="p-2 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded flex items-start gap-1.5">
+              <AlertCircle size={14} className="shrink-0 mt-0.5" />
+              <span>{parseError}</span>
+            </div>
+          )}
+
+          {parseSuccess && (
+            <div className="p-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded flex items-start gap-1.5">
+              <Check size={14} className="shrink-0 mt-0.5" />
+              <span>Kompilacja i import zakończone sukcesem! Twoje Bio, Projekty i inne sekcje zostały natychmiastowo zaktualizowane o wykryte atrybuty.</span>
+            </div>
+          )}
+
+          {/* Parse button */}
+          <button
+            onClick={handleParseCV}
+            disabled={parsingLoading || (!cvText.trim() && !cvFile)}
+            className="w-full py-2.5 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:from-gray-200 disabled:to-gray-200 text-white disabled:text-gray-400 font-sans font-extrabold text-xs rounded border border-black cursor-pointer transition-all uppercase select-none tracking-wider shadow-[0_2px_4px_rgba(249,115,22,0.2)]"
+          >
+            {parsingLoading ? (
+              <>
+                <Loader2 size={13} className="animate-spin" />
+                <span>URUCHAMIANIE KOMPILATORA AI (OCR + Analiza)...</span>
+              </>
+            ) : (
+              <>
+                <Cpu size={13} />
+                <span>Kompiluj i Zaimplementuj Dane (AI Import)</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 

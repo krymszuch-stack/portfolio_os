@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { OSConfig } from '../types';
+import { Cloud, CloudUpload, CloudOff, Key } from 'lucide-react';
 
 interface TopBarProps {
   config: OSConfig;
+  syncStatus?: 'synced' | 'saving' | 'error';
+  onRetrySync?: () => void;
+  guestMode?: boolean;
+  onLoginClick?: () => void;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ config }) => {
+export const TopBar: React.FC<TopBarProps> = ({ config, syncStatus, onRetrySync, guestMode, onLoginClick }) => {
   const [time, setTime] = useState('');
   const activeTheme = config?.systemTheme || 'terraria';
 
@@ -66,6 +71,36 @@ export const TopBar: React.FC<TopBarProps> = ({ config }) => {
       </div>
       <div className={currentStyle.time}>{time}</div>
       <div className="flex items-center gap-3 select-none">
+        {syncStatus && (
+          <div className="flex items-center gap-1.5 mr-2">
+            {syncStatus === 'saving' && (
+              <span className="text-[10px] text-yellow-400 font-bold uppercase animate-pulse flex items-center gap-1">
+                <CloudUpload size={11} className="animate-bounce" /> Zapisywanie...
+              </span>
+            )}
+            {syncStatus === 'synced' && (
+              <span className="text-[10px] text-green-400 font-bold uppercase flex items-center gap-1" title="Zsynchronizowano z chmurą">
+                <Cloud size={11} /> Zsynchronizowano
+              </span>
+            )}
+            {syncStatus === 'error' && (
+              <button 
+                onClick={onRetrySync}
+                className="text-[10px] text-red-500 hover:underline font-bold uppercase flex items-center gap-1 cursor-pointer"
+              >
+                <CloudOff size={11} /> Błąd synchronizacji (Ponów)
+              </button>
+            )}
+          </div>
+        )}
+        {guestMode && onLoginClick && (
+          <button 
+            onClick={onLoginClick}
+            className="text-[10px] text-amber-400 hover:bg-amber-400/10 hover:underline font-bold uppercase mr-2 cursor-pointer flex items-center gap-1 px-2 py-1 rounded border border-amber-400/20"
+          >
+            <Key size={10} /> Połącz z chmurą
+          </button>
+        )}
         <span className={`text-xs tracking-wider uppercase font-bold ${currentStyle.status}`}>Status: Dostępny</span>
       </div>
     </div>

@@ -35,11 +35,13 @@ import {
 import { ActiveAppId, OSConfig, DesktopIcon } from './types';
 import { Sparkles, RefreshCw, Clock, HelpCircle, Monitor, Search, ArrowLeft } from 'lucide-react';
 import * as Lucide from 'lucide-react';
-import { initAuth } from './lib/googleAuth';
+import { auth } from './lib/googleAuth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { usePortfolioSave } from './lib/usePortfolioSave';
 import { Check, Loader2, CloudUpload, Eye } from 'lucide-react';
-import { loadPortfolioConfig, loadPortfolioBySlug } from './lib/firestoreStore';
+import { loadPortfolioConfig, loadPortfolioBySlug, savePortfolioConfig } from './lib/firestoreStore';
 import { playXpStartup, playXpShutdown, playXpError, playXpBalloon, playXpClick, setSoundsEnabled } from './lib/sounds';
+import { AuthScreen } from './components/AuthScreen';
 
 export default function App() {
   // Config & Core System states
@@ -64,75 +66,8 @@ export default function App() {
     localStorage.setItem('adrianOSConfig', JSON.stringify(config));
   }, [config]);
 
-  
-  useEffect(() => {
-    const path = window.location.pathname;
-    const match = path.match(/^\/p\/(.+)$/);
-    
-    if (match) {
-      const slug = match[1];
-      setIsPublicView(true);
-      setConfig(prev => ({ ...prev, viewerMode: true, isInitialized: true }));
-      
-      loadPortfolioBySlug(slug).then(cloudData => {
-        if (cloudData) {
-          if (cloudData.config) setConfig(cloudData.config);
-          if (cloudData.projects) setProjects(cloudData.projects);
-          if (cloudData.certificates) setCertificates(cloudData.certificates);
-          if (cloudData.timeline) setTimeline(cloudData.timeline);
-          if (cloudData.icons) setIcons(cloudData.icons);
-        }
-      }).catch(err => console.error(err));
-    } else {
-      const unsubscribe = initAuth(async (user) => {
-        try {
-          const cloudData = await loadPortfolioConfig(user.uid);
-          if (cloudData) {
-            if (cloudData.config) setConfig(cloudData.config);
-            if (cloudData.projects) setProjects(cloudData.projects);
-            if (cloudData.certificates) setCertificates(cloudData.certificates);
-            if (cloudData.timeline) setTimeline(cloudData.timeline);
-            if (cloudData.icons) setIcons(cloudData.icons);
-          }
-        } catch (err) {
-          console.error("Failed to load cloud config", err);
-        }
-      });
-      return () => unsubscribe();
-    }
-  }, []);
-
-  const fontClass = config.systemFont ? `system-font-${config.systemFont}` : 'system-font-apple';
-
-  // Set global HTML scale for font accessibility scaling
-  useEffect(() => {
-    const scale = config.fontSizeScale || 1.0;
-    document.documentElement.style.setProperty('--font-size-scale', `${scale}`);
-  }, [config.fontSizeScale]);
-
-  const [currentView, setCurrentView] = useState<'portfolio' | 'generator'>('portfolio');
-  const [activeApp, setActiveApp] = useState<ActiveAppId>(null);
-  const [openApps, setOpenApps] = useState<{ [key: string]: boolean }>({});
-  const [minimizedApps, setMinimizedApps] = useState<{ [key: string]: boolean }>({});
-  const [showSpotlight, setShowSpotlight] = useState(false);
-  const [isKreatorMode, setIsKreatorMode] = useState(false);
+  // Customizable dataset states (Declared first)
   const [isPublicView, setIsPublicView] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const { saveToCloud, saveStatus, publicSlug } = usePortfolioSave();
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 4000);
-  };
-
-  const handleSaveToCloud = async () => {
-    const result = await saveToCloud(config, projects, certificates, timeline, icons);
-    if (result.success) {
-      showToast('Konfiguracja zapisana w chmurze!');
-    }
-  };
-  
-  // Customizable dataset states
   const [projects, setProjects] = useState(initialProjects);
   const [certificates, setCertificates] = useState(initialCertificates);
   const [timeline, setTimeline] = useState(initialTimeline);
@@ -153,6 +88,118 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('adrianDesktopIcons', JSON.stringify(icons));
   }, [icons]);
+
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [guestMode, setGuestMode] = useState<boolean>(() => {
+    return localStorage.getItem('portfolio_os_guest_mode') === 'true';
+  });
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
+  const [isDataLoaded, setIsDataLoaded] = useState<boolean>(false);
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'saving' | 'error'>('synced');
+
+  useEffect(() => {
+    const path = window.location.pathname;
+    const match = path.match(/^\/p\/(.+)$/);
+    
+    if (match) {
+      const slug = match[1];
+      setIsPublicView(true);
+      setConfig(prev => ({ ...prev, viewerMode: true, isInitialized: true }));
+      setAuthLoading(false);
+      setIsDataLoaded(true);
+      
+      loadPortfolioBySlug(slug).then(cloudData => {
+        if (cloudData) {
+          if (cloudData.config) setConfig(cloudData.config);
+          if (cloudData.projects) setProjects(cloudData.projects);
+          if (cloudData.certificates) setCertificates(cloudData.certificates);
+          if (cloudData.timeline) setTimeline(cloudData.timeline);
+          if (cloudData.icons) setIcons(cloudData.icons);
+        }
+      }).catch(err => console.error(err));
+    } else {
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        setAuthLoading(false);
+        if (firebaseUser) {
+          setCurrentUser(firebaseUser);
+          setSyncStatus('saving');
+          try {
+            const cloudData = await loadPortfolioConfig(firebaseUser.uid);
+            if (cloudData) {
+              if (cloudData.config) setConfig(cloudData.config);
+              if (cloudData.projects) setProjects(cloudData.projects);
+              if (cloudData.certificates) setCertificates(cloudData.certificates);
+              if (cloudData.timeline) setTimeline(cloudData.timeline);
+              if (cloudData.icons) setIcons(cloudData.icons);
+            }
+            setSyncStatus('synced');
+          } catch (err) {
+            console.error("Failed to load cloud config", err);
+            setSyncStatus('error');
+          } finally {
+            setIsDataLoaded(true);
+          }
+        } else {
+          setCurrentUser(null);
+          setIsDataLoaded(true);
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, []);
+
+  // Debounced Autosave to Firestore
+  useEffect(() => {
+    if (!currentUser || !isDataLoaded || isPublicView) return;
+
+    setSyncStatus('saving');
+    const timer = setTimeout(async () => {
+      try {
+        await savePortfolioConfig(
+          currentUser.uid,
+          config,
+          projects,
+          certificates,
+          timeline,
+          icons
+        );
+        setSyncStatus('synced');
+      } catch (err) {
+        console.error('Autosave failed:', err);
+        setSyncStatus('error');
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [config, projects, certificates, timeline, icons, currentUser, isDataLoaded, isPublicView]);
+
+  const fontClass = config.systemFont ? `system-font-${config.systemFont}` : 'system-font-apple';
+
+  // Set global HTML scale for font accessibility scaling
+  useEffect(() => {
+    document.documentElement.style.setProperty('--font-size-scale', `${config.fontSizeScale || 1.0}`);
+  }, [config.fontSizeScale]);
+
+  const [currentView, setCurrentView] = useState<'portfolio' | 'generator'>('portfolio');
+  const [activeApp, setActiveApp] = useState<ActiveAppId>(null);
+  const [openApps, setOpenApps] = useState<{ [key: string]: boolean }>({});
+  const [minimizedApps, setMinimizedApps] = useState<{ [key: string]: boolean }>({});
+  const [showSpotlight, setShowSpotlight] = useState(false);
+  const [isKreatorMode, setIsKreatorMode] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { saveToCloud, saveStatus, publicSlug } = usePortfolioSave();
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const handleSaveToCloud = async () => {
+    const result = await saveToCloud(config, projects, certificates, timeline, icons);
+    if (result.success) {
+      showToast('Konfiguracja zapisana w chmurze!');
+    }
+  };
 
   // Depth layering manager for window focus
   const [zIndices, setZIndices] = useState<{ [key: string]: number }>({
@@ -446,6 +493,31 @@ export default function App() {
     }
   };
 
+  // Loading screen during initial Firebase auth check
+  if (authLoading) {
+    return (
+      <div 
+        className="w-screen h-screen bg-[#050507] text-[#e0e0e0] flex flex-col items-center justify-center p-6 space-y-4 font-mono"
+        style={{ background: 'radial-gradient(circle at 50% 50%, rgba(217, 119, 6, 0.08) 0%, transparent 60%), #050507' }}
+      >
+        <Loader2 className="animate-spin text-amber-500" size={36} />
+        <span className="uppercase text-xs tracking-widest font-bold text-amber-500">INICJALIZACJA SYSTEMU OPERACYJNEGO PORTFOLIOOS...</span>
+      </div>
+    );
+  }
+
+  // Pre-desktop authorization screen for visitors/creators
+  if (!isPublicView && !currentUser && !guestMode) {
+    return (
+      <AuthScreen 
+        onContinueGuest={() => {
+          setGuestMode(true);
+          localStorage.setItem('portfolio_os_guest_mode', 'true');
+        }}
+      />
+    );
+  }
+
   // Zero-state onboarding wizard screen
   if (!config.isInitialized) {
     return (
@@ -506,6 +578,13 @@ export default function App() {
             playXpStartup();
           }
           setCurrentView('generator');
+        }}
+        syncStatus={syncStatus}
+        onRetrySync={handleSaveToCloud}
+        guestMode={!currentUser && guestMode}
+        onLoginClick={() => {
+          setGuestMode(false);
+          localStorage.setItem('portfolio_os_guest_mode', 'false');
         }}
       />
     );
@@ -660,14 +739,39 @@ export default function App() {
             </>
           ) : (
             <>
-              <button
-                onClick={handleSaveToCloud}
-                disabled={saveStatus === 'saving'}
-                className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase tracking-widest cursor-pointer disabled:opacity-50"
-                title="Zapisz obecny stan portfolio w chmurze (wymaga logowania Google)"
-              >
-                {saveStatus === 'saving' ? <Loader2 size={11} className="animate-spin" /> : <CloudUpload size={11} />} Zapisz w chmurze
-              </button>
+              {currentUser ? (
+                <div className="flex items-center gap-1.5 text-[11px] font-sans font-bold uppercase tracking-widest">
+                  {syncStatus === 'saving' && (
+                    <span className="text-yellow-400 animate-pulse flex items-center gap-1">
+                      <Loader2 size={11} className="animate-spin" /> Zapisywanie...
+                    </span>
+                  )}
+                  {syncStatus === 'synced' && (
+                    <span className="text-emerald-400 flex items-center gap-1" title="Automatycznie zsynchronizowano z chmurą">
+                      <Lucide.Cloud size={11} /> Zsynchronizowano
+                    </span>
+                  )}
+                  {syncStatus === 'error' && (
+                    <button 
+                      onClick={handleSaveToCloud}
+                      className="text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Lucide.CloudOff size={11} /> Błąd synchronizacji (Ponów)
+                    </button>
+                  )}
+                </div>
+              ) : guestMode ? (
+                <button
+                  onClick={() => {
+                    setGuestMode(false);
+                    localStorage.setItem('portfolio_os_guest_mode', 'false');
+                  }}
+                  className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-amber-400 hover:text-amber-300 transition-colors uppercase tracking-widest cursor-pointer"
+                  title="Kliknij, aby połączyć się z chmurą i zsynchronizować dane"
+                >
+                  <Lucide.Key size={11} /> Połącz z chmurą
+                </button>
+              ) : null}
               
               <span className="text-white/10">|</span>
 
@@ -837,6 +941,12 @@ export default function App() {
                 onSave={setConfig}
                 icons={icons}
                 setIcons={setIcons}
+                projects={projects}
+                setProjects={setProjects}
+                certificates={certificates}
+                setCertificates={setCertificates}
+                timeline={timeline}
+                setTimeline={setTimeline}
               />
             </WindowFrame>
           )}
