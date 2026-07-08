@@ -2,8 +2,28 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, OAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
 
-export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+export let app: any;
+export let auth: any;
+
+try {
+  // Rzutowanie appId i messagingSenderId na stringi, aby uniknąć błędów notacji naukowej
+  const config = {
+    ...firebaseConfig,
+    appId: String(firebaseConfig.appId),
+    messagingSenderId: String(firebaseConfig.messagingSenderId)
+  };
+  app = initializeApp(config);
+  auth = getAuth(app);
+} catch (error) {
+  console.error("Błąd inicjalizacji Firebase - sprawdź firebase-applet-config.json", error);
+  // Provide dummy mock to prevent crashes when auth object is imported
+  auth = {
+    currentUser: null,
+    onAuthStateChanged: () => () => {},
+    signInWithPopup: async () => { throw new Error("Firebase offline"); },
+    signOut: async () => {}
+  } as any;
+}
 
 const provider = new GoogleAuthProvider();
 // Request Drive, Calendar and Gmail send scopes
@@ -22,19 +42,29 @@ export const initAuth = (
   onAuthSuccess?: (user: User, token: string) => void,
   onAuthFailure?: () => void
 ) => {
-  return onAuthStateChanged(auth, async (user: User | null) => {
-    if (user) {
-      if (cachedAccessToken) {
-        if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken);
-      } else if (!isSigningIn) {
+  try {
+    if (!auth || !auth.name) {
+      if (onAuthFailure) onAuthFailure();
+      return () => {};
+    }
+    return onAuthStateChanged(auth, async (user: User | null) => {
+      if (user) {
+        if (cachedAccessToken) {
+          if (onAuthSuccess) onAuthSuccess(user, cachedAccessToken);
+        } else if (!isSigningIn) {
+          cachedAccessToken = null;
+          if (onAuthFailure) onAuthFailure();
+        }
+      } else {
         cachedAccessToken = null;
         if (onAuthFailure) onAuthFailure();
       }
-    } else {
-      cachedAccessToken = null;
-      if (onAuthFailure) onAuthFailure();
-    }
-  });
+    });
+  } catch (error) {
+    console.error("Firebase auth listen error:", error);
+    if (onAuthFailure) onAuthFailure();
+    return () => {};
+  }
 };
 
 // Must be called from a button click or user interaction

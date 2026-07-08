@@ -2,7 +2,10 @@ import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, l
 import { app } from './googleAuth';
 import { OSConfig, Project, Certificate, TimelineItem, DesktopIcon } from '../types';
 
-const db = getFirestore(app);
+const getDb = () => {
+  if (!app) throw new Error("Firebase app not initialized");
+  return getFirestore(app);
+};
 
 export const savePortfolioConfig = async (
   userId: string,
@@ -13,6 +16,7 @@ export const savePortfolioConfig = async (
   icons: DesktopIcon[]
 ) => {
   try {
+    const db = getDb();
     const docRef = doc(db, 'portfolios', userId);
     
     // Check if the document already exists to preserve the publicSlug
@@ -50,6 +54,7 @@ export const savePortfolioConfig = async (
 
 export const loadPortfolioConfig = async (userId: string) => {
   try {
+    const db = getDb();
     const docRef = doc(db, 'portfolios', userId);
     const docSnap = await getDoc(docRef);
     
@@ -66,6 +71,7 @@ export const loadPortfolioConfig = async (userId: string) => {
 
 export const loadPortfolioBySlug = async (slug: string) => {
   try {
+    const db = getDb();
     const portfoliosRef = collection(db, 'portfolios');
     const q = query(portfoliosRef, where('publicSlug', '==', slug), limit(1));
     const querySnapshot = await getDocs(q);

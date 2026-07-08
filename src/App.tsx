@@ -97,6 +97,20 @@ export default function App() {
   const [isDataLoaded, setIsDataLoaded] = useState<boolean>(false);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'saving' | 'error'>('synced');
 
+  // Firebase Auth timeout failsafe
+  useEffect(() => {
+    let timeoutId: any;
+    if (authLoading) {
+      timeoutId = setTimeout(() => {
+        console.warn('Firebase Auth timeout — przełączono na tryb offline/gość');
+        setAuthLoading(false);
+        setGuestMode(true);
+        localStorage.setItem('portfolio_os_guest_mode', 'true');
+      }, 8000);
+    }
+    return () => clearTimeout(timeoutId);
+  }, [authLoading]);
+
   useEffect(() => {
     const path = window.location.pathname;
     const match = path.match(/^\/p\/(.+)$/);
@@ -118,33 +132,44 @@ export default function App() {
         }
       }).catch(err => console.error(err));
     } else {
-      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        setAuthLoading(false);
-        if (firebaseUser) {
-          setCurrentUser(firebaseUser);
-          setSyncStatus('saving');
-          try {
-            const cloudData = await loadPortfolioConfig(firebaseUser.uid);
-            if (cloudData) {
-              if (cloudData.config) setConfig(cloudData.config);
-              if (cloudData.projects) setProjects(cloudData.projects);
-              if (cloudData.certificates) setCertificates(cloudData.certificates);
-              if (cloudData.timeline) setTimeline(cloudData.timeline);
-              if (cloudData.icons) setIcons(cloudData.icons);
+      try {
+        if (!auth || !auth.name) {
+          throw new Error("Invalid Auth object - likely Firebase failed to initialize");
+        }
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          setAuthLoading(false);
+          if (firebaseUser) {
+            setCurrentUser(firebaseUser);
+            setSyncStatus('saving');
+            try {
+              const cloudData = await loadPortfolioConfig(firebaseUser.uid);
+              if (cloudData) {
+                if (cloudData.config) setConfig(cloudData.config);
+                if (cloudData.projects) setProjects(cloudData.projects);
+                if (cloudData.certificates) setCertificates(cloudData.certificates);
+                if (cloudData.timeline) setTimeline(cloudData.timeline);
+                if (cloudData.icons) setIcons(cloudData.icons);
+              }
+              setSyncStatus('synced');
+            } catch (err) {
+              console.error("Failed to load cloud config", err);
+              setSyncStatus('error');
+            } finally {
+              setIsDataLoaded(true);
             }
-            setSyncStatus('synced');
-          } catch (err) {
-            console.error("Failed to load cloud config", err);
-            setSyncStatus('error');
-          } finally {
+          } else {
+            setCurrentUser(null);
             setIsDataLoaded(true);
           }
-        } else {
-          setCurrentUser(null);
-          setIsDataLoaded(true);
-        }
-      });
-      return () => unsubscribe();
+        });
+        return () => unsubscribe();
+      } catch (err) {
+        console.error("Firebase auth listen error:", err);
+        // Fallback to offline/guest mode immediately if auth is completely broken
+        setAuthLoading(false);
+        setGuestMode(true);
+        setIsDataLoaded(true);
+      }
     }
   }, []);
 
