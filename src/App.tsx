@@ -7,18 +7,19 @@ import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ParticleOverlay } from './components/ParticleOverlay';
 import { Desktop } from './components/Desktop';
+import { BentoHub } from './components/BentoHub';
 import { WindowFrame } from './components/WindowFrame';
-import { AppBio } from './components/AppBio';
-import { AppProjects } from './components/AppProjects';
-import { AppLab } from './components/AppLab';
-import { AppCertificates } from './components/AppCertificates';
-import { AppSettings } from './components/AppSettings';
-import { AppContact } from './components/AppContact';
-import { AppGDrive } from './components/AppGDrive';
-import { AppCalendar } from './components/AppCalendar';
-import { AppPlanned } from './components/AppPlanned';
+import { lazy, Suspense } from 'react';
+const AppBio = lazy(() => import('./components/AppBio').then(m => ({ default: m.AppBio })));
+const AppProjects = lazy(() => import('./components/AppProjects').then(m => ({ default: m.AppProjects })));
+const AppCertificates = lazy(() => import('./components/AppCertificates').then(m => ({ default: m.AppCertificates })));
+const AppSettings = lazy(() => import('./components/AppSettings').then(m => ({ default: m.AppSettings })));
+const AppContact = lazy(() => import('./components/AppContact').then(m => ({ default: m.AppContact })));
+const AppTerminal = lazy(() => import('./components/AppTerminal').then(m => ({ default: m.AppTerminal })));
+const AppDashboard = lazy(() => import('./components/AppDashboard').then(m => ({ default: m.AppDashboard })));
+const Wizard = lazy(() => import('./components/Wizard').then(m => ({ default: m.Wizard })));
+import { WindowSkeleton } from './components/WindowSkeleton';
 import { PortfolioView } from './components/PortfolioView';
-import { Wizard } from './components/Wizard';
 import { Dock } from './components/Dock';
 import { SpotlightSearch } from './components/SpotlightSearch';
 import { SystemClock } from './components/SystemClock';
@@ -35,16 +36,34 @@ import {
 import { ActiveAppId, OSConfig, DesktopIcon } from './types';
 import { Sparkles, RefreshCw, Clock, HelpCircle, Monitor, Search, ArrowLeft } from 'lucide-react';
 import * as Lucide from 'lucide-react';
-import { auth } from './lib/googleAuth';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useAuthContext } from './contexts/AuthContext';
+import { useWindowContext } from './contexts/WindowContext';
 import { usePortfolioSave } from './lib/usePortfolioSave';
 import { Check, Loader2, CloudUpload, Eye } from 'lucide-react';
 import { triggerHaptic } from './lib/haptics';
 import { loadPortfolioConfig, loadPortfolioBySlug, savePortfolioConfig } from './lib/firestoreStore';
 import { playXpStartup, playXpShutdown, playXpError, playXpBalloon, playXpClick, setSoundsEnabled } from './lib/sounds';
 import { AuthScreen } from './components/AuthScreen';
+import { useDynamicFonts } from './hooks/useDynamicFonts';
+
+const ALL_SOCIALS = [
+  { id: 'linkedin', label: 'LinkedIn', icon: 'Linkedin', color: 'text-[#0a66c2] hover:bg-[#0a66c2]/10', url: 'https://linkedin.com' },
+  { id: 'skype', label: 'Skype', icon: 'Phone', color: 'text-[#00aff0] hover:bg-[#00aff0]/10', url: 'https://skype.com' },
+  { id: 'teams', label: 'Teams', icon: 'Users', color: 'text-[#6264a7] hover:bg-[#6264a7]/10', url: 'https://teams.microsoft.com' },
+  { id: 'discord', label: 'Discord', icon: 'MessageSquare', color: 'text-[#5865f2] hover:bg-[#5865f2]/10', url: 'https://discord.com' },
+  { id: 'mail', label: 'Mail', icon: 'Mail', color: 'text-[#ea4335] hover:bg-[#ea4335]/10', url: 'mailto:contact@adrian.dev' },
+  { id: 'steam', label: 'Steam', icon: 'Gamepad2', color: 'text-[#101822] hover:bg-[#101822]/10 dark:text-[#8cc2e6] dark:hover:bg-[#8cc2e6]/10', url: 'https://store.steampowered.com' },
+  { id: 'facebook', label: 'Facebook', icon: 'Facebook', color: 'text-[#1877f2] hover:bg-[#1877f2]/10', url: 'https://facebook.com' },
+  { id: 'instagram', label: 'Instagram', icon: 'Instagram', color: 'text-[#e1306c] hover:bg-[#e1306c]/10', url: 'https://instagram.com' },
+  { id: 'vk', label: 'VK', icon: 'Share2', color: 'text-[#0077ff] hover:bg-[#0077ff]/10', url: 'https://vk.com' },
+  { id: 'telegram', label: 'Telegram', icon: 'Send', color: 'text-[#229ed9] hover:bg-[#229ed9]/10', url: 'https://t.me' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: 'MessageCircle', color: 'text-[#25d366] hover:bg-[#25d366]/10', url: 'https://whatsapp.com' },
+  { id: 'viber', label: 'Viber', icon: 'PhoneCall', color: 'text-[#7360f2] hover:bg-[#7360f2]/10', url: 'https://viber.com' },
+  { id: 'messenger', label: 'Messenger', icon: 'Zap', color: 'text-[#006aff] hover:bg-[#006aff]/10', url: 'https://messenger.com' }
+];
 
 export default function App() {
+
   // Config & Core System states
   const [config, setConfig] = useState<OSConfig>(() => {
     const saved = localStorage.getItem('adrianOSConfig');
@@ -66,6 +85,9 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('adrianOSConfig', JSON.stringify(config));
   }, [config]);
+
+  // Load dynamic fonts based on theme/settings
+  useDynamicFonts(config);
 
   // Customizable dataset states (Declared first)
   const [isPublicView, setIsPublicView] = useState(false);
@@ -90,27 +112,24 @@ export default function App() {
     localStorage.setItem('adrianDesktopIcons', JSON.stringify(icons));
   }, [icons]);
 
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [guestMode, setGuestMode] = useState<boolean>(() => {
-    return localStorage.getItem('portfolio_os_guest_mode') === 'true';
-  });
-  const [authLoading, setAuthLoading] = useState<boolean>(true);
+  const { currentUser, guestMode, setGuestMode, authLoading, setAuthLoading } = useAuthContext();
   const [isDataLoaded, setIsDataLoaded] = useState<boolean>(false);
-  const [syncStatus, setSyncStatus] = useState<'synced' | 'saving' | 'error'>('synced');
-
-  // Firebase Auth timeout failsafe
-  useEffect(() => {
-    let timeoutId: any;
-    if (authLoading) {
-      timeoutId = setTimeout(() => {
-        console.warn('Firebase Auth timeout — przełączono na tryb offline/gość');
-        setAuthLoading(false);
-        setGuestMode(true);
-        localStorage.setItem('portfolio_os_guest_mode', 'true');
-      }, 8000);
+  const [activeSocials, setActiveSocials] = useState<string[]>(() => {
+    const saved = localStorage.getItem('activeSocials');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
     }
-    return () => clearTimeout(timeoutId);
-  }, [authLoading]);
+    return ['linkedin', 'mail'];
+  });
+  const [showSocialsDropdown, setShowSocialsDropdown] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('activeSocials', JSON.stringify(activeSocials));
+  }, [activeSocials]);
+
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'saving' | 'error'>('synced');
 
   useEffect(() => {
     const path = window.location.pathname;
@@ -132,50 +151,41 @@ export default function App() {
           if (cloudData.icons) setIcons(cloudData.icons);
         }
       }).catch(err => console.error(err));
-    } else {
-      try {
-        if (!auth || !auth.name) {
-          throw new Error("Invalid Auth object - likely Firebase failed to initialize");
-        }
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-          setAuthLoading(false);
-          if (firebaseUser) {
-            setCurrentUser(firebaseUser);
-            setSyncStatus('saving');
-      triggerHaptic('light');
-            try {
-              const cloudData = await loadPortfolioConfig(firebaseUser.uid);
-              if (cloudData) {
-                if (cloudData.config) setConfig(cloudData.config);
-                if (cloudData.projects) setProjects(cloudData.projects);
-                if (cloudData.certificates) setCertificates(cloudData.certificates);
-                if (cloudData.timeline) setTimeline(cloudData.timeline);
-                if (cloudData.icons) setIcons(cloudData.icons);
-              }
-              setSyncStatus('synced');
-        triggerHaptic('success');
-            } catch (err) {
-              console.error("Failed to load cloud config", err);
-              setSyncStatus('error');
-      triggerHaptic('error');
-            } finally {
-              setIsDataLoaded(true);
-            }
-          } else {
-            setCurrentUser(null);
-            setIsDataLoaded(true);
-          }
-        });
-        return () => unsubscribe();
-      } catch (err) {
-        console.error("Firebase auth listen error:", err);
-        // Fallback to offline/guest mode immediately if auth is completely broken
-        setAuthLoading(false);
-        setGuestMode(true);
-        setIsDataLoaded(true);
-      }
     }
   }, []);
+
+  useEffect(() => {
+    if (isPublicView) return;
+    
+    const fetchCloudData = async () => {
+      if (currentUser) {
+        setSyncStatus('saving');
+        triggerHaptic('light');
+        try {
+          const cloudData = await loadPortfolioConfig(currentUser.uid);
+          if (cloudData) {
+            if (cloudData.config) setConfig(cloudData.config);
+            if (cloudData.projects) setProjects(cloudData.projects);
+            if (cloudData.certificates) setCertificates(cloudData.certificates);
+            if (cloudData.timeline) setTimeline(cloudData.timeline);
+            if (cloudData.icons) setIcons(cloudData.icons);
+          }
+          setSyncStatus('synced');
+          triggerHaptic('success');
+        } catch (err) {
+          console.error("Failed to load cloud config", err);
+          setSyncStatus('error');
+          triggerHaptic('error');
+        } finally {
+          setIsDataLoaded(true);
+        }
+      } else if (!authLoading) {
+        setIsDataLoaded(true);
+      }
+    };
+    
+    fetchCloudData();
+  }, [currentUser, authLoading, isPublicView]);
 
   // Debounced Autosave to Firestore
   useEffect(() => {
@@ -210,39 +220,30 @@ export default function App() {
   }, [config.fontSizeScale]);
 
   const [currentView, setCurrentView] = useState<'portfolio' | 'generator'>('portfolio');
-  const [activeApp, setActiveApp] = useState<ActiveAppId>(null);
-  const [openApps, setOpenApps] = useState<{ [key: string]: boolean }>({});
-  const [minimizedApps, setMinimizedApps] = useState<{ [key: string]: boolean }>({});
+  const { activeApp, openApps, minimizedApps, zIndices, handleOpenApp: _handleOpenApp, handleCloseApp: _handleCloseApp, handleMinimizeApp, handleFocusApp, handleSystemReset: _handleSystemReset } = useWindowContext();
   const [showSpotlight, setShowSpotlight] = useState(false);
   const [isKreatorMode, setIsKreatorMode] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const { saveToCloud, saveStatus, publicSlug } = usePortfolioSave();
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    };
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 4000);
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => setToastMessage(null), 4000);
   };
-
   const handleSaveToCloud = async () => {
     const result = await saveToCloud(config, projects, certificates, timeline, icons);
     if (result.success) {
       showToast('Konfiguracja zapisana w chmurze!');
     }
   };
-
-  // Depth layering manager for window focus
-  const [zIndices, setZIndices] = useState<{ [key: string]: number }>({
-    bio: 10,
-    projects: 10,
-    lab: 10,
-    certificates: 10,
-    settings: 10,
-    contact: 10,
-    wizard: 10,
-    gdrive: 10,
-    calendar: 10,
-    planned: 10
-  });
 
   // Listen for global Ctrl+K / Cmd+K shortcut to open Spotlight
   useEffect(() => {
@@ -267,16 +268,16 @@ export default function App() {
       const diffHours = Math.floor(diffMins / 60);
       const diffDays = Math.floor(diffHours / 24);
 
-      if (diffMins < 1) return 'Przed chwilą';
+      if (diffMins < 1) return 'Przed chwilĂ„â€¦';
       if (diffMins < 60) {
-        if (diffMins === 1) return '1 minutę temu';
+        if (diffMins === 1) return '1 minutĂ„â„˘ temu';
         if (diffMins % 10 >= 2 && diffMins % 10 <= 4 && (diffMins % 100 < 10 || diffMins % 100 >= 20)) {
           return `${diffMins} minuty temu`;
         }
         return `${diffMins} minut temu`;
       }
       if (diffHours < 24) {
-        if (diffHours === 1) return '1 godzinę temu';
+        if (diffHours === 1) return '1 godzinĂ„â„˘ temu';
         if (diffHours % 10 >= 2 && diffHours % 10 <= 4 && (diffHours % 100 < 10 || diffHours % 100 >= 20)) {
           return `${diffHours} godziny temu`;
         }
@@ -417,27 +418,15 @@ export default function App() {
     };
   }, [currentView]);
 
-  // System actions
-  const handleMinimizeApp = (appId: string) => {
-    setMinimizedApps(prev => ({ ...prev, [appId]: true }));
-    if (activeApp === appId) setActiveApp(null);
-  };
-
-  const handleOpenApp = (appId: 'bio' | 'projects' | 'lab' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'gdrive' | 'calendar' | 'planned') => {
-    setOpenApps(prev => ({ ...prev, [appId]: true }));
-    setMinimizedApps(prev => ({ ...prev, [appId]: false }));
-    handleFocusApp(appId);
+  const handleOpenApp = (appId: ActiveAppId | string) => {
+    _handleOpenApp(appId as ActiveAppId);
     if (config.playSounds) {
       playXpBalloon();
     }
   };
 
   const handleCloseApp = (appId: string) => {
-    setOpenApps(prev => ({ ...prev, [appId]: false }));
-    setMinimizedApps(prev => ({ ...prev, [appId]: false }));
-    if (activeApp === appId) {
-      setActiveApp(null);
-    }
+    _handleCloseApp(appId);
     if (config.playSounds) {
       playXpClick();
     }
@@ -474,8 +463,7 @@ export default function App() {
       setTimeline(initialTimeline);
       setSprints(initialSprints);
       setIcons(initialDesktopIcons);
-      setOpenApps({});
-      setActiveApp(null);
+      _handleSystemReset();
     }
   };
 
@@ -491,29 +479,29 @@ export default function App() {
         if (category === 'agriculture') return 'O Gospodarstwie - Nasza Tradycja';
         if (category === 'gardening') return 'O Ogrodnictwie - Pasja do Zieleni';
         if (category === 'creative') return 'O mnie - Manifest Artystyczny';
-        if (category === 'business') return 'O mnie - Doświadczenie Biznesowe';
-        return 'O mnie - Wizytówka Osobista';
+        if (category === 'business') return 'O mnie - DoÄąâ€şwiadczenie Biznesowe';
+        return 'O mnie - WizytÄ‚Ĺ‚wka Osobista';
       case 'projects':
         if (category === 'tech') return 'Moje Projekty & Integracja GitHub';
         if (category === 'craft') return 'Galeria Prac - Zrealizowane Zlecenia';
         if (category === 'agriculture') return 'Nasze Plony - Naturalna Oferta';
-        if (category === 'gardening') return 'Realizacje Ogrodów - Moje Portfolio';
+        if (category === 'gardening') return 'Realizacje OgrodÄ‚Ĺ‚w - Moje Portfolio';
         if (category === 'creative') return 'Moje Portfolio - Wybrane Prace';
         if (category === 'business') return 'Case Studies - Projekty i Efekty';
         return 'Moje Projekty i Realizacje';
       case 'certificates':
         if (category === 'tech') return 'Zweryfikowane Certyfikaty IT';
         if (category === 'craft') return 'Uprawnienia i Kwalifikacje Zawodowe';
-        if (category === 'agriculture') return 'Certyfikaty Jakości i Eko-atesty';
+        if (category === 'agriculture') return 'Certyfikaty JakoÄąâ€şci i Eko-atesty';
         if (category === 'gardening') return 'Uprawnienia i Certyfikaty Ogrodnicze';
-        if (category === 'creative') return 'Wyróżnienia, Dyplomy i Nagrody';
+        if (category === 'creative') return 'WyrÄ‚Ĺ‚ÄąÄ˝nienia, Dyplomy i Nagrody';
         if (category === 'business') return 'Certyfikaty i Akredytacje Biznesowe';
-        return 'Moje Certyfikaty i Osiągnięcia';
+        return 'Moje Certyfikaty i OsiĂ„â€¦gniĂ„â„˘cia';
       case 'lab':
         if (category === 'tech') return 'Aktualne Sprinty & Lab deweloperski';
         if (category === 'craft') return 'Zlecenia w toku & Plany rozwojowe';
-        if (category === 'agriculture') return 'Terminarz zbiorów i plany rozwoju';
-        if (category === 'gardening') return 'Harmonogram Prac & Rośliny w Hodowli';
+        if (category === 'agriculture') return 'Terminarz zbiorÄ‚Ĺ‚w i plany rozwoju';
+        if (category === 'gardening') return 'Harmonogram Prac & RoÄąâ€şliny w Hodowli';
         if (category === 'creative') return 'Prace w toku & Inspiracje';
         if (category === 'business') return 'Metodologia pracy & Cele strategiczne';
         return 'Aktualne i Planowane Zadania';
@@ -566,30 +554,32 @@ export default function App() {
               Instalator Systemu Portfolio
             </h1>
             <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-              Witaj w asystencie konfiguracji! Odpowiedz na kilka pytań, a Instalator Systemu automatycznie skonfiguruje spersonalizowane środowisko pracy i przygotuje Twój pulpit.
+              Witaj w asystencie konfiguracji! Odpowiedz na kilka pytaÄąâ€ž, a Instalator Systemu automatycznie skonfiguruje spersonalizowane Äąâ€şrodowisko pracy i przygotuje TwÄ‚Ĺ‚j pulpit.
             </p>
           </div>
 
-          <Wizard
-            config={config}
-            setConfig={setConfig}
-            projects={projects}
-            setProjects={setProjects}
-            certificates={certificates}
-            setCertificates={setCertificates}
-            timeline={timeline}
-            setTimeline={setTimeline}
-            icons={icons}
-            setIcons={setIcons}
-            onClose={() => {
-              setConfig(prev => ({ ...prev, isInitialized: true }));
-              if (config.playSounds) {
-                playXpStartup();
-              }
-            }}
-            openApp={handleOpenApp}
-            isZeroState={true}
-          />
+          <Suspense fallback={<WindowSkeleton />}>
+            <Wizard
+              config={config}
+              setConfig={setConfig}
+              projects={projects}
+              setProjects={setProjects}
+              certificates={certificates}
+              setCertificates={setCertificates}
+              timeline={timeline}
+              setTimeline={setTimeline}
+              icons={icons}
+              setIcons={setIcons}
+              onClose={() => {
+                setConfig(prev => ({ ...prev, isInitialized: true }));
+                if (config.playSounds) {
+                  playXpStartup();
+                }
+              }}
+              openApp={handleOpenApp}
+              isZeroState={true}
+            />
+          </Suspense>
         </div>
       </div>
     );
@@ -637,17 +627,17 @@ export default function App() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
 
       {/* Top Utility System Menu Bar */}
-      <header className="hidden md:flex fixed top-0 left-0 right-0 h-12 bg-black/20 border-b border-white/5 backdrop-blur-md z-[999] px-4 md:px-6 items-center justify-between select-none">
+      <header className="hidden md:flex fixed top-0 left-0 right-0 h-24 bg-black/25 border-b border-white/10 backdrop-blur-xl z-[999] px-6 md:px-8 items-center justify-between select-none shadow-[0_4px_30px_rgba(0,0,0,0.35)]">
         
         {/* Brand logo & Account mode indicator */}
-        <div className="flex items-center space-x-2 md:space-x-4">
+        <div className="flex items-center space-x-3 md:space-x-5">
           {isPublicView ? (
-            <div className="flex items-center gap-1 px-2 md:px-3 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-sans text-[10px] md:text-xs font-semibold tracking-wide cursor-default">
-              <Lucide.Globe size={12} className="text-indigo-400 animate-pulse" /> <span className="hidden sm:inline">Wersja Publiczna</span><span className="inline sm:hidden">Publiczny</span>
+            <div className="flex items-center gap-1.5 px-3 md:px-4.5 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-sans text-xs md:text-sm font-semibold tracking-wide cursor-default shadow-sm">
+              <Lucide.Globe size={15} className="text-indigo-400 animate-pulse" /> <span className="hidden sm:inline">Wersja Publiczna</span><span className="inline sm:hidden">Publiczny</span>
             </div>
           ) : config.viewerMode ? (
-            <div className="flex items-center gap-1 px-2 md:px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-sans text-[10px] md:text-xs font-semibold tracking-wide cursor-default">
-              <Lucide.Eye size={12} className="text-emerald-400 animate-pulse" /> <span className="hidden sm:inline">Tryb widza</span><span className="inline sm:hidden">Widz</span>
+            <div className="flex items-center gap-1.5 px-3 md:px-4.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-sans text-xs md:text-sm font-semibold tracking-wide cursor-default shadow-sm">
+              <Lucide.Eye size={15} className="text-emerald-400 animate-pulse" /> <span className="hidden sm:inline">Tryb widza</span><span className="inline sm:hidden">Widz</span>
             </div>
           ) : currentView === 'generator' ? (
             <button
@@ -658,10 +648,10 @@ export default function App() {
                 setCurrentView('portfolio');
                 setIsKreatorMode(false);
               }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white font-sans text-[10px] md:text-xs font-semibold tracking-wide transition-all uppercase duration-200 cursor-pointer hover:border-purple-500/50"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-sans text-xs md:text-sm font-semibold tracking-wide transition-all uppercase duration-200 cursor-pointer hover:border-purple-500/50"
               title="Wróć do głównego portfolio"
             >
-              <ArrowLeft size={12} className="text-purple-400" /> <span className="hidden sm:inline">Podgląd Portfolio</span><span className="inline sm:hidden">Portfolio</span>
+              <ArrowLeft size={15} className="text-purple-400" /> <span className="hidden sm:inline">Podgląd Portfolio</span><span className="inline sm:hidden">Portfolio</span>
             </button>
           ) : (
             <button
@@ -673,57 +663,45 @@ export default function App() {
                 setIsKreatorMode(true);
                 handleOpenApp('wizard'); // Open generator wizard automatically!
               }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/35 border border-yellow-500/30 text-yellow-400 font-sans text-[10px] md:text-xs font-bold tracking-wider transition-all uppercase duration-200 cursor-pointer animate-pulse hover:border-yellow-400"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/35 border border-yellow-500/30 text-yellow-400 font-sans text-xs md:text-sm font-bold tracking-wider transition-all uppercase duration-200 cursor-pointer animate-pulse hover:border-yellow-400"
               title="Zarządzaj konfiguracją i edytuj system"
             >
-              <Sparkles size={12} className="text-yellow-400" /> <span className="hidden sm:inline">Zarządzanie / Edycja OS</span><span className="inline sm:hidden">System</span>
+              <Sparkles size={15} className="text-yellow-400" /> <span className="hidden sm:inline">Zarządzanie / Edycja OS</span><span className="inline sm:hidden">System</span>
             </button>
           )}
           
           <span className="text-white/10 hidden md:inline">|</span>
 
-          <div className="hidden md:flex items-center space-x-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
-            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50"></div>
-            <div className="w-2.5 h-2.5 rounded-full bg-green-500/50"></div>
+          <div className="hidden md:flex items-center space-x-2.5">
+            <div className="w-3.5 h-3.5 rounded-full bg-red-500/60 border border-red-500/10"></div>
+            <div className="w-3.5 h-3.5 rounded-full bg-yellow-500/60 border border-yellow-500/10"></div>
+            <div className="w-3.5 h-3.5 rounded-full bg-green-500/60 border border-green-500/10"></div>
           </div>
           
-          <div className="hidden md:flex items-center space-x-2.5 cursor-default">
-            <Monitor size={14} className="text-[#e0e0e0]/60" />
-            <span className="font-sans font-semibold tracking-widest text-xs uppercase opacity-80 text-white">
+          <span className="text-white/10 hidden md:inline">|</span>
+
+          <div className="hidden md:flex items-center space-x-3.5 cursor-default">
+            <Monitor size={18} className="text-[#e0e0e0]/70" />
+            <span className="font-sans font-extrabold tracking-widest text-xs uppercase opacity-90 text-white">
               PortfolioOS v1.0.4
             </span>
-            <span className="text-[9px] tracking-wider bg-white/5 text-white/50 px-2 py-0.5 rounded-full border border-white/10 font-bold uppercase">
+            <span className="text-[10px] tracking-wider bg-white/5 text-white/55 px-2.5 py-0.5 rounded-full border border-white/15 font-bold uppercase">
               {config.proMode ? 'PRO BUILD' : 'DEMO BUILD'}
             </span>
           </div>
         </div>
 
         {/* Dynamic clocks and greetings */}
-        <div className="flex items-center space-x-1.5 text-[11px] font-sans font-medium text-white/60 tracking-wider uppercase">
-          <Clock size={12} className="text-white/40 hidden sm:inline" />
+        <div className="flex items-center space-x-2 text-xs md:text-sm font-sans font-medium text-white/60 tracking-wider uppercase">
+          <Clock size={15} className="text-white/40 hidden sm:inline animate-pulse" />
           <SystemGreeting className="font-light hidden sm:inline" />
-          <SystemClock className="text-[#e0e0e0] font-semibold text-xs sm:text-xs tracking-widest bg-white/5 sm:bg-transparent px-2.5 py-0.5 sm:p-0 rounded-full border border-white/5 sm:border-transparent" />
+          <SystemClock className="text-[#e0e0e0] font-bold text-sm tracking-widest bg-white/5 sm:bg-transparent px-3 py-1 sm:p-0 rounded-full border border-white/10 sm:border-transparent" />
         </div>
 
         {/* Action quick links */}
-        <div className="flex items-center space-x-4 text-[10px] uppercase tracking-wider font-medium text-white/45">
+        <div className="flex items-center space-x-4 text-[10px] uppercase tracking-wider font-medium text-white/45 relative">
           <div className="hidden lg:flex items-center gap-1.5 border-r border-white/5 pr-4 mr-1">
-            {[
-              { id: 'linkedin', label: 'LinkedIn', icon: 'Linkedin', color: 'text-[#0a66c2] hover:bg-[#0a66c2]/10', url: 'https://linkedin.com' },
-              { id: 'skype', label: 'Skype', icon: 'Phone', color: 'text-[#00aff0] hover:bg-[#00aff0]/10', url: 'https://skype.com' },
-              { id: 'teams', label: 'Teams', icon: 'Users', color: 'text-[#6264a7] hover:bg-[#6264a7]/10', url: 'https://teams.microsoft.com' },
-              { id: 'discord', label: 'Discord', icon: 'MessageSquare', color: 'text-[#5865f2] hover:bg-[#5865f2]/10', url: 'https://discord.com' },
-              { id: 'mail', label: 'Mail', icon: 'Mail', color: 'text-[#ea4335] hover:bg-[#ea4335]/10', url: 'mailto:contact@adrian.dev' },
-              { id: 'steam', label: 'Steam', icon: 'Gamepad2', color: 'text-[#101822] hover:bg-[#101822]/10 dark:text-[#8cc2e6] dark:hover:bg-[#8cc2e6]/10', url: 'https://store.steampowered.com' },
-              { id: 'facebook', label: 'Facebook', icon: 'Facebook', color: 'text-[#1877f2] hover:bg-[#1877f2]/10', url: 'https://facebook.com' },
-              { id: 'instagram', label: 'Instagram', icon: 'Instagram', color: 'text-[#e1306c] hover:bg-[#e1306c]/10', url: 'https://instagram.com' },
-              { id: 'vk', label: 'VK', icon: 'Share2', color: 'text-[#0077ff] hover:bg-[#0077ff]/10', url: 'https://vk.com' },
-              { id: 'telegram', label: 'Telegram', icon: 'Send', color: 'text-[#229ed9] hover:bg-[#229ed9]/10', url: 'https://t.me' },
-              { id: 'whatsapp', label: 'WhatsApp', icon: 'MessageCircle', color: 'text-[#25d366] hover:bg-[#25d366]/10', url: 'https://whatsapp.com' },
-              { id: 'viber', label: 'Viber', icon: 'PhoneCall', color: 'text-[#7360f2] hover:bg-[#7360f2]/10', url: 'https://viber.com' },
-              { id: 'messenger', label: 'Messenger', icon: 'Zap', color: 'text-[#006aff] hover:bg-[#006aff]/10', url: 'https://messenger.com' }
-            ].map((item) => {
+            {ALL_SOCIALS.filter(item => activeSocials.includes(item.id)).map((item) => {
               const IconComp = (Lucide as any)[item.icon] || Lucide.File;
               return (
                 <a
@@ -732,12 +710,67 @@ export default function App() {
                   target="_blank"
                   rel="noopener noreferrer"
                   title={item.label}
-                  className={`p-1 rounded-full transition-all duration-200 hover:scale-115 flex items-center justify-center bg-white/5 border border-white/5 hover:border-white/20 shadow-sm ${item.color}`}
+                  className={`p-1.5 rounded-full transition-all duration-200 hover:scale-110 flex items-center justify-center bg-white/5 border border-white/5 hover:border-white/20 shadow-sm ${item.color}`}
                 >
                   <IconComp size={11} />
                 </a>
               );
             })}
+            
+            {/* Plus Button */}
+            <button
+              onClick={() => {
+                triggerHaptic('light');
+                setShowSocialsDropdown(prev => !prev);
+              }}
+              className="p-1.5 rounded-full transition-all duration-200 hover:scale-110 flex items-center justify-center bg-white/5 border border-white/5 hover:border-white/20 shadow-sm text-white/50 hover:text-white/80 cursor-pointer"
+              title="Wybierz portale społecznościowe"
+            >
+              <Lucide.Plus size={11} />
+            </button>
+
+            {/* Dropdown for selecting social portals */}
+            {showSocialsDropdown && (
+              <div className="absolute top-8 left-0 z-[110] bg-slate-950/95 backdrop-blur-md border border-white/10 rounded-2xl p-2.5 shadow-2xl w-48 max-h-64 overflow-y-auto space-y-1.5 custom-scrollbar text-white animate-scaleIn">
+                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider px-1 pb-1 border-b border-white/5 mb-1 flex justify-between items-center">
+                  <span>Dodaj do paska</span>
+                  <button 
+                    onClick={() => setShowSocialsDropdown(false)}
+                    className="text-slate-500 hover:text-white text-[10px] lowercase cursor-pointer"
+                  >
+                    zamknij
+                  </button>
+                </div>
+                {ALL_SOCIALS.map((item) => {
+                  const IconComp = (Lucide as any)[item.icon] || Lucide.File;
+                  const isActive = activeSocials.includes(item.id);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        triggerHaptic('light');
+                        if (isActive) {
+                          setActiveSocials(prev => prev.filter(id => id !== item.id));
+                        } else {
+                          setActiveSocials(prev => [...prev, item.id]);
+                        }
+                      }}
+                      className="w-full flex items-center justify-between p-1.5 hover:bg-white/5 rounded-lg text-left transition-colors cursor-pointer text-xs group"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <span className={`${item.color} shrink-0`}><IconComp size={12} /></span>
+                        <span className="font-semibold text-slate-200 truncate">{item.label}</span>
+                      </div>
+                      <div className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-all ${
+                        isActive ? 'bg-cyan-500 border-cyan-500 text-white font-bold' : 'border-slate-600 bg-transparent'
+                      }`}>
+                        {isActive && <Check size={10} strokeWidth={3} />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <button
@@ -747,118 +780,46 @@ export default function App() {
           >
             <Search size={11} className="text-cyan-400 animate-pulse" /> Szukaj <span className="text-[9px] font-mono opacity-60 bg-black/40 px-1 py-0.2 rounded border border-cyan-500/10">Ctrl+K</span>
           </button>
-
-          <span className="text-white/10">|</span>
           
-          {isPublicView ? null : config.viewerMode ? (
-            <>
-              <button
-                id="btn-exit-viewer"
-                onClick={() => {
-                  setConfig(prev => ({ ...prev, viewerMode: false }));
-                  if (config.playSounds) {
-                    playXpStartup();
-                  }
-                }}
-                className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-amber-400 hover:text-amber-300 transition-colors uppercase tracking-widest cursor-pointer"
-                title="Przełącz z powrotem w tryb edycji administratora"
-              >
-                <Lucide.Unlock size={11} /> Przejdź do Edycji
-              </button>
-            </>
-          ) : (
-            <>
-              {currentUser ? (
-                <div className="flex items-center gap-1.5 text-[11px] font-sans font-bold uppercase tracking-widest min-h-[16px]">
-                  <AnimatePresence mode="wait">
-                    {syncStatus === 'saving' && (
-                      <motion.span 
-                        key="saving"
-                        initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
-                        className="text-yellow-400 flex items-center gap-1"
-                      >
-                        <Loader2 size={11} className="animate-spin" /> Zapisywanie...
-                      </motion.span>
-                    )}
-                    {syncStatus === 'synced' && (
-                      <motion.span 
-                        key="synced"
-                        initial={{ opacity: 0, y: -5, scale: 0.8 }} 
-                        animate={{ opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 400, damping: 20 } }} 
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className="text-emerald-400 flex items-center gap-1" 
-                        title="Automatycznie zsynchronizowano z chmurą"
-                      >
-                        <Check size={11} className="drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]" /> Zsynchronizowano
-                      </motion.span>
-                    )}
-                    {syncStatus === 'error' && (
-                      <motion.button 
-                        key="error"
-                        initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
-                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                        onClick={handleSaveToCloud}
-                        className="text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <Lucide.CloudOff size={11} /> Błąd synchronizacji (Ponów)
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : guestMode ? (
-                <button
-                  onClick={() => {
-                    setGuestMode(false);
-                    localStorage.setItem('portfolio_os_guest_mode', 'false');
-                  }}
-                  className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-amber-400 hover:text-amber-300 transition-colors uppercase tracking-widest cursor-pointer"
-                  title="Kliknij, aby połączyć się z chmurą i zsynchronizować dane"
-                >
-                  <Lucide.Key size={11} /> Połącz z chmurą
-                </button>
-              ) : null}
-              
-              <span className="text-white/10">|</span>
-
-              <button
-                id="btn-save-lock"
-                onClick={() => {
-                  setConfig(prev => ({ ...prev, viewerMode: true }));
-                  if (config.playSounds) {
-                    playXpStartup();
-                  }
-                  showToast("Przełączono na widok podglądu");
-                }}
-                className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-widest cursor-pointer"
-                title="Ukrywa przyciski edycji w tym widoku przeglądarki - to nie zapisuje danych w chmurze"
-              >
-                <Eye size={11} /> Zablokuj podgląd (Tryb Widza)
-              </button>
-              
-              <span className="text-white/10">|</span>
-
-              <button
-                id="btn-quick-wizard"
-                onClick={() => {
-                  handleOpenApp('wizard');
-                  setIsKreatorMode(true);
-                }}
-                className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-amber-400 hover:text-amber-300 transition-colors uppercase tracking-widest cursor-pointer"
-              >
-                <Sparkles size={11} /> Ustawienia
-              </button>
-              
-              <span className="text-white/10">|</span>
-              
-              <button
-                id="btn-system-reset"
-                onClick={handleSystemReset}
-                className="flex items-center gap-1.5 text-[11px] font-sans text-white/40 hover:text-rose-400 transition-colors uppercase tracking-widest cursor-pointer"
-                title="Reset danych demonstracyjnych"
-              >
-                <RefreshCw size={11} /> Reset
-              </button>
-            </>
+          {currentUser && <span className="text-white/10">|</span>}
+          
+          {currentUser && (
+            <div className="flex items-center gap-1.5 text-xs font-sans font-bold uppercase tracking-widest min-h-[16px]">
+              <AnimatePresence mode="wait">
+                {syncStatus === 'saving' && (
+                  <motion.span 
+                    key="saving"
+                    initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
+                    className="text-yellow-400 flex items-center gap-1"
+                  >
+                    <Loader2 size={13} className="animate-spin" /> Zapisywanie...
+                  </motion.span>
+                )}
+                {syncStatus === 'synced' && (
+                  <motion.span 
+                    key="synced"
+                    initial={{ opacity: 0, y: -5, scale: 0.8 }} 
+                    animate={{ opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 400, damping: 20 } }} 
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="text-emerald-400 flex items-center gap-1" 
+                    title="Automatycznie zsynchronizowano z chmurą"
+                  >
+                    <Check size={13} className="drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]" /> Zsynchronizowano
+                  </motion.span>
+                )}
+                {syncStatus === 'error' && (
+                  <motion.button 
+                    key="error"
+                    initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
+                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                    onClick={handleSaveToCloud}
+                    className="text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Lucide.CloudOff size={13} /> Błąd synchronizacji
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
           )}
         </div>
       </header>
@@ -876,15 +837,23 @@ export default function App() {
           </button>
         </div>
 
-        <Desktop
-          icons={icons}
-          setIcons={setIcons}
-          openApp={handleOpenApp}
-          config={config}
-          isKreatorMode={isKreatorMode}
-          setIsKreatorMode={setIsKreatorMode}
-          isPublicView={isPublicView}
-        />
+        {isPublicView ? (
+          <BentoHub 
+            projects={projects}
+            config={config}
+            openApp={handleOpenApp}
+          />
+        ) : (
+          <Desktop
+            icons={icons}
+            setIcons={setIcons}
+            openApp={handleOpenApp}
+            config={config}
+            isKreatorMode={isKreatorMode}
+            setIsKreatorMode={setIsKreatorMode}
+            isPublicView={isPublicView}
+          />
+        )}
 
         {/* Floating Interactive Glass Windows */}
         
@@ -895,19 +864,19 @@ export default function App() {
               id="bio"
               isMinimized={minimizedApps['bio'] || false}
               onMinimize={() => handleMinimizeApp('bio')}
-              title={getAppTitle('bio', 'O mnie - Kwalifikacje i Osiągnięcia')}
+              title={getAppTitle('bio', 'O mnie - Kwalifikacje i OsiĂ„â€¦gniĂ„â„˘cia')}
               isOpen={true}
               onClose={() => handleCloseApp('bio')}
               onFocus={() => handleFocusApp('bio')}
               zIndex={zIndices['bio'] || 10}
               config={config}
             >
-              <AppBio
+              <Suspense fallback={<WindowSkeleton />}><AppBio
                 config={config}
                 setConfig={setConfig}
                 timeline={timeline}
                 setTimeline={setTimeline}
-              />
+              /></Suspense>
             </WindowFrame>
           )}
         </AnimatePresence>
@@ -926,32 +895,49 @@ export default function App() {
               zIndex={zIndices['projects'] || 10}
               config={config}
             >
-              <AppProjects
+              <Suspense fallback={<WindowSkeleton />}><AppProjects
                 projects={projects}
                 setProjects={setProjects}
-              />
+                config={config}
+              /></Suspense>
             </WindowFrame>
           )}
         </AnimatePresence>
 
-        {/* ACTIVE SPRINTS APPLICATION */}
+        {/* DASHBOARD APPLICATION */}
         <AnimatePresence>
-          {openApps['lab'] && (
+          {openApps['dashboard'] && (
             <WindowFrame
-              id="lab"
-              isMinimized={minimizedApps['lab'] || false}
-              onMinimize={() => handleMinimizeApp('lab')}
-              title={getAppTitle('lab', 'Aktualne Sprinty & Lab deweloperski')}
+              id="dashboard"
+              isMinimized={minimizedApps['dashboard'] || false}
+              onMinimize={() => handleMinimizeApp('dashboard')}
+              title={getAppTitle('dashboard', 'MĂłj Ekosystem')}
               isOpen={true}
-              onClose={() => handleCloseApp('lab')}
-              onFocus={() => handleFocusApp('lab')}
-              zIndex={zIndices['lab'] || 10}
+              onClose={() => handleCloseApp('dashboard')}
+              onFocus={() => handleFocusApp('dashboard')}
+              zIndex={zIndices['dashboard'] || 10}
               config={config}
             >
-              <AppLab
-                sprints={sprints}
-                setSprints={setSprints}
-              />
+              <Suspense fallback={<WindowSkeleton />}><AppDashboard config={config} /></Suspense>
+            </WindowFrame>
+          )}
+        </AnimatePresence>
+
+        {/* TERMINAL APPLICATION */}
+        <AnimatePresence>
+          {openApps['terminal'] && (
+            <WindowFrame
+              id="terminal"
+              isMinimized={minimizedApps['terminal'] || false}
+              onMinimize={() => handleMinimizeApp('terminal')}
+              title="Terminal - bash"
+              isOpen={true}
+              onClose={() => handleCloseApp('terminal')}
+              onFocus={() => handleFocusApp('terminal')}
+              zIndex={zIndices['terminal'] || 10}
+              config={config}
+            >
+              <Suspense fallback={<WindowSkeleton />}><AppTerminal config={config} /></Suspense>
             </WindowFrame>
           )}
         </AnimatePresence>
@@ -970,10 +956,10 @@ export default function App() {
               zIndex={zIndices['certificates'] || 10}
               config={config}
             >
-              <AppCertificates
+              <Suspense fallback={<WindowSkeleton />}><AppCertificates
                 certificates={certificates}
                 setCertificates={setCertificates}
-              />
+              /></Suspense>
             </WindowFrame>
           )}
         </AnimatePresence>
@@ -992,7 +978,7 @@ export default function App() {
               zIndex={zIndices['settings'] || 10}
               config={config}
             >
-              <AppSettings
+              <Suspense fallback={<WindowSkeleton />}><AppSettings
                 config={config}
                 onSave={setConfig}
                 icons={icons}
@@ -1003,7 +989,7 @@ export default function App() {
                 setCertificates={setCertificates}
                 timeline={timeline}
                 setTimeline={setTimeline}
-              />
+              /></Suspense>
             </WindowFrame>
           )}
         </AnimatePresence>
@@ -1022,10 +1008,10 @@ export default function App() {
               zIndex={zIndices['contact'] || 10}
               config={config}
             >
-              <AppContact
+              <Suspense fallback={<WindowSkeleton />}><AppContact
                 config={config}
                 setConfig={setConfig}
-              />
+              /></Suspense>
             </WindowFrame>
           )}
         </AnimatePresence>
@@ -1044,80 +1030,27 @@ export default function App() {
               zIndex={zIndices['wizard'] || 10}
               config={config}
             >
-              <Wizard
-                config={config}
-                setConfig={setConfig}
-                projects={projects}
-                setProjects={setProjects}
-                certificates={certificates}
-                setCertificates={setCertificates}
-                timeline={timeline}
-                setTimeline={setTimeline}
-                icons={icons}
-                setIcons={setIcons}
-                onClose={() => handleCloseApp('wizard')}
-                openApp={handleOpenApp}
-              />
+              <Suspense fallback={<WindowSkeleton />}>
+                <Wizard
+                  config={config}
+                  setConfig={setConfig}
+                  projects={projects}
+                  setProjects={setProjects}
+                  certificates={certificates}
+                  setCertificates={setCertificates}
+                  timeline={timeline}
+                  setTimeline={setTimeline}
+                  icons={icons}
+                  setIcons={setIcons}
+                  onClose={() => handleCloseApp('wizard')}
+                  openApp={handleOpenApp}
+                />
+              </Suspense>
             </WindowFrame>
           )}
         </AnimatePresence>
 
-        {/* GOOGLE DRIVE APPLICATION */}
-        <AnimatePresence>
-          {openApps['gdrive'] && (
-            <WindowFrame
-              id="gdrive"
-              isMinimized={minimizedApps['gdrive'] || false}
-              onMinimize={() => handleMinimizeApp('gdrive')}
-              title="Google Drive - Przeglądarka Plików"
-              isOpen={true}
-              onClose={() => handleCloseApp('gdrive')}
-              onFocus={() => handleFocusApp('gdrive')}
-              zIndex={zIndices['gdrive'] || 10}
-              config={config}
-            >
-              <AppGDrive />
-            </WindowFrame>
-          )}
-        </AnimatePresence>
 
-        {/* GOOGLE CALENDAR APPLICATION */}
-        <AnimatePresence>
-          {openApps['calendar'] && (
-            <WindowFrame
-              id="calendar"
-              isMinimized={minimizedApps['calendar'] || false}
-              onMinimize={() => handleMinimizeApp('calendar')}
-              title="Kalendarz Google - Agenda & Harmonogram"
-              isOpen={true}
-              onClose={() => handleCloseApp('calendar')}
-              onFocus={() => handleFocusApp('calendar')}
-              zIndex={zIndices['calendar'] || 10}
-              config={config}
-            >
-              <AppCalendar />
-            </WindowFrame>
-          )}
-        </AnimatePresence>
-
-        {/* PLANNED PROJECTS APPLICATION */}
-        <AnimatePresence>
-          {openApps['planned'] && (
-            <WindowFrame
-              id="planned"
-              isMinimized={minimizedApps['planned'] || false}
-              onMinimize={() => handleMinimizeApp('planned')}
-              title="Planowane projekty - Scam Identifier"
-              isOpen={true}
-              onClose={() => handleCloseApp('planned')}
-              onFocus={() => handleFocusApp('planned')}
-              zIndex={zIndices['planned'] || 10}
-              config={config}
-            >
-              <AppPlanned />
-            </WindowFrame>
-          )}
-        </AnimatePresence>
       </main>
 
       {/* Floating docked system launch bar */}
@@ -1127,6 +1060,7 @@ export default function App() {
         openAppsList={openApps}
         minimizedApps={minimizedApps}
         config={config}
+        icons={icons}
       />
 
       {/* Terraria-like retro pixel sparks rendering canvas */}
@@ -1139,7 +1073,7 @@ export default function App() {
         <div className="hidden md:block fixed bottom-24 left-1/2 -translate-x-1/2 pointer-events-none select-none text-center bg-slate-950/45 px-3 py-1.5 rounded-full border border-slate-800/40 backdrop-blur-sm">
           <p className="text-[10px] text-slate-400 font-sans tracking-wide flex items-center gap-1.5">
             <HelpCircle size={11} className="text-amber-400" />
-            Zasilane przez <strong>PortfolioOS</strong> • Kliknij dwukrotnie w ikonę <strong>Generatora</strong> lub ikonę w doku aby stworzyć własną stronę.
+            Zasilane przez <strong>PortfolioOS</strong> Ă˘â‚¬Ë Kliknij dwukrotnie w ikonĂ„â„˘ <strong>Generatora</strong> lub ikonĂ„â„˘ w doku aby stworzyĂ„â€ˇ wÄąâ€šasnĂ„â€¦ stronĂ„â„˘.
           </p>
         </div>
       )}

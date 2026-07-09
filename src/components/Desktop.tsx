@@ -12,64 +12,10 @@ import { Edit2, Sparkles, X, Check } from 'lucide-react';
 import { playXpClick, playXpError, playXpBalloon } from '../lib/sounds';
 import { triggerHaptic } from '../lib/haptics';
 
-const ClockWidgetComponent: React.FC<{ config: OSConfig }> = ({ config }) => {
-  const [time, setTime] = useState(new Date());
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const hrs = time.getHours();
-  const mins = time.getMinutes();
-  const secs = time.getSeconds();
-  
-  const hStr = hrs.toString().padStart(2, '0');
-  const mStr = mins.toString().padStart(2, '0');
-  const sStr = secs.toString().padStart(2, '0');
-
-  const days = ['Niedziela', 'Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota'];
-  const dayStr = days[time.getDay()];
-
-  return (
-    <div className="flex flex-col h-full justify-between select-none font-mono">
-      <div className="flex justify-between items-center">
-        <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">{dayStr}</span>
-        <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-      </div>
-      <div className="text-lg font-black text-white/90 flex items-center justify-center tracking-wider bg-black/20 py-1.5 px-2.5 rounded-xl border border-white/5 my-1">
-        <span>{hStr}</span>
-        <span className="animate-pulse mx-0.5 text-cyan-400">:</span>
-        <span>{mStr}</span>
-        <span className="animate-pulse mx-0.5 text-cyan-400 opacity-60">:</span>
-        <span className="text-xs text-white/50">{sStr}</span>
-      </div>
-    </div>
-  );
-};
-
-const NoteWidgetComponent: React.FC<{ iconId: string }> = ({ iconId }) => {
-  const [noteText, setNoteText] = useState(() => localStorage.getItem(`note-${iconId}`) || '');
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNoteText(e.target.value);
-    localStorage.setItem(`note-${iconId}`, e.target.value);
-  };
-  return (
-    <div className="flex flex-col h-full w-full justify-between gap-1">
-      <span className="text-[8px] font-bold text-white/40 uppercase font-mono tracking-wider">Moje Notatki</span>
-      <textarea
-        value={noteText}
-        onChange={handleChange}
-        placeholder="Napisz coś..."
-        className="w-full flex-grow bg-black/40 text-white/90 text-[10px] p-1.5 focus:outline-none resize-none font-sans rounded-xl border border-white/5 shadow-inner"
-      />
-    </div>
-  );
-};
-
 interface DesktopProps {
   icons: DesktopIcon[];
   setIcons: React.Dispatch<React.SetStateAction<DesktopIcon[]>>;
-  openApp: (appId: 'bio' | 'projects' | 'lab' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'gdrive' | 'calendar') => void;
+  openApp: (appId: 'bio' | 'projects' | 'dashboard' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'terminal') => void;
   config: OSConfig;
   isKreatorMode?: boolean;
   setIsKreatorMode?: (val: boolean) => void;
@@ -205,7 +151,7 @@ export const Desktop: React.FC<DesktopProps> = ({
     color: 'from-blue-500/30 to-blue-500/10 hover:shadow-blue-500/20 border-blue-500/20',
     url: '',
     socialPreset: 'linkedin',
-    widgetType: 'weather' as 'weather' | 'clock' | 'notes'
+    widgetType: 'weather' as 'weather' | 'clock' | 'notes' | 'inbox'
   });
 
   const handleOpenAddElement = (r: number, c: number) => {
@@ -244,7 +190,7 @@ export const Desktop: React.FC<DesktopProps> = ({
     let finalColor = addForm.color;
     let finalUrl: string | undefined = undefined;
     let isWidget = false;
-    let widgetType: 'weather' | 'clock' | 'notes' | undefined = undefined;
+    let widgetType: DesktopIcon['widgetType'] = undefined;
 
     if (addForm.type === 'social') {
       const p = socialPresets.find(x => x.id === addForm.socialPreset) || socialPresets[0];
@@ -291,6 +237,10 @@ export const Desktop: React.FC<DesktopProps> = ({
         finalLabel = 'Plany i Sprint';
         finalIcon = 'Compass';
         finalColor = 'from-cyan-500/20 to-blue-500/10 border-cyan-500/20';
+      } else if (widgetType === 'inbox') {
+        finalLabel = 'Skrzynka Poczty';
+        finalIcon = 'Mail';
+        finalColor = 'from-purple-500/20 to-indigo-500/10 border-purple-500/20';
       }
     } else {
       finalLabel = addForm.label || 'Mój Skrót';
@@ -318,21 +268,7 @@ export const Desktop: React.FC<DesktopProps> = ({
       playXpBalloon();
     }
   };
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    icon: DesktopIcon;
-  } | null>(null);
-
-  const longPressTimer = useRef<any>(null);
-  const hasLongPressed = useRef(false);
-
-  // Close context menu on any outside click
-  useEffect(() => {
-    const closeMenu = () => setContextMenu(null);
-    window.addEventListener('click', closeMenu);
-    return () => window.removeEventListener('click', closeMenu);
-  }, []);
+    const { contextMenu, setContextMenu, handleContextMenu } = useDesktopContextMenu(config);
 
   // Dynamic Lucide icon lookup helper
   const renderIcon = (name: string, className = '') => {
@@ -539,6 +475,11 @@ export const Desktop: React.FC<DesktopProps> = ({
         card: 'bg-gradient-to-br from-cyan-500/10 via-slate-900/60 to-slate-950/80 border-cyan-500/20 hover:border-cyan-400/40 shadow-[0_4px_20px_rgba(6,182,212,0.05)] hover:shadow-[0_4px_30px_rgba(6,182,212,0.15)]',
         iconBg: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
         text: 'text-cyan-400'
+      },
+      inbox: {
+        card: 'bg-gradient-to-br from-purple-500/10 via-slate-900/60 to-slate-950/80 border-purple-500/20 hover:border-purple-400/40 shadow-[0_4px_20px_rgba(168,85,247,0.05)] hover:shadow-[0_4px_30px_rgba(168,85,247,0.15)]',
+        iconBg: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
+        text: 'text-purple-400'
       }
     };
     return styles[widgetType] || styles.bio;
@@ -547,61 +488,7 @@ export const Desktop: React.FC<DesktopProps> = ({
   // HTML5 Drag-and-Drop Handlers for Icon Movement
   
   
-  const handleMobileReorder = (newOrder: DesktopIcon[]) => {
-    if (config.viewerMode) return;
-    setIcons(prev => {
-      const newIcons = [...prev];
-      const orderMap = new Map(newOrder.map((item, index) => [item.id, index]));
-      return newIcons.sort((a, b) => {
-        const indexA = orderMap.has(a.id) ? orderMap.get(a.id) : 999;
-        const indexB = orderMap.has(b.id) ? orderMap.get(b.id) : 999;
-        // @ts-ignore
-        return indexA - indexB;
-      });
-    });
-  };
-
-  const handleDragEnd = (e: any, info: any, iconId: string) => {
-    const dropX = info.point.x;
-    const dropY = info.point.y;
-    
-    const cells = document.querySelectorAll('.desktop-grid-cell');
-    let targetR = -1;
-    let targetC = -1;
-    
-    cells.forEach(cell => {
-      const rect = cell.getBoundingClientRect();
-      if (dropX >= rect.left && dropX <= rect.right && dropY >= rect.top && dropY <= rect.bottom) {
-        targetR = parseInt(cell.getAttribute('data-grid-r') || '-1');
-        targetC = parseInt(cell.getAttribute('data-grid-c') || '-1');
-      }
-    });
-
-    if (targetR !== -1 && targetC !== -1) {
-      setIcons(prev => {
-        const draggedIcon = prev.find(i => i.id === iconId);
-        if (!draggedIcon) return prev;
-        
-        if (draggedIcon.x === targetR && draggedIcon.y === targetC) return prev;
-
-        const targetIcon = prev.find(i => i.x === targetR && i.y === targetC);
-
-        if (targetIcon) {
-          return prev.map(icon => {
-            if (icon.id === draggedIcon.id) return { ...icon, x: targetR, y: targetC };
-            if (icon.id === targetIcon.id) return { ...icon, x: draggedIcon.x, y: draggedIcon.y };
-            return icon;
-          });
-        } else {
-          return prev.map(icon => icon.id === iconId ? { ...icon, x: targetR, y: targetC } : icon);
-        }
-      });
-    }
-  };
-
-
-
-  const handleOpenEdit = (icon: DesktopIcon, e?: React.MouseEvent) => {
+    const { handleDragEnd, handleMobileReorder } = useDesktopIconLayout(setIcons);const handleOpenEdit = (icon: DesktopIcon, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setEditingIcon(icon);
     setEditForm({
@@ -683,29 +570,6 @@ export const Desktop: React.FC<DesktopProps> = ({
     }
   };
 
-  const handleContextMenu = (e: React.MouseEvent, icon: DesktopIcon) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (config.playSounds) {
-      playXpClick();
-    }
-    
-    // Position menu clamping it inside viewport
-    const menuWidth = 192;
-    const menuHeight = 120;
-    let x = e.clientX;
-    let y = e.clientY;
-
-    if (x + menuWidth > window.innerWidth) {
-      x = window.innerWidth - menuWidth - 10;
-    }
-    if (y + menuHeight > window.innerHeight) {
-      y = window.innerHeight - menuHeight - 10;
-    }
-
-    setContextMenu({ x, y, icon });
-  };
-
   // Render a grid cell layout (e.g. 5 rows x 6 columns)
   const rows = 5;
   const cols = 6;
@@ -734,703 +598,46 @@ export const Desktop: React.FC<DesktopProps> = ({
   return (
     <div 
       onClick={() => toggleWiggling(false)}
-      className={`absolute inset-0 pb-28 px-4 ${isMobile ? 'overflow-y-auto flex flex-col gap-3 content-start pt-24' : 'pt-16 overflow-hidden grid grid-cols-6 grid-rows-5 gap-3 p-4'}`}
+      className={`absolute inset-0 pb-28 px-4 ${isMobile ? 'overflow-y-auto flex flex-col gap-3 content-start pt-24' : 'pt-28 overflow-hidden grid grid-cols-[repeat(6,min-content)] grid-rows-[repeat(5,min-content)] gap-8 p-4 content-start justify-start'}`}
       
     >
       {/* Wiggle mode edit overlay banner */}
       {isWiggling && (
-        <div className="absolute top-18 left-1/2 -translate-x-1/2 z-[999] bg-purple-500/10 border border-purple-500/20 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 shadow-xl shadow-purple-950/20 animate-bounce">
+        <div className="absolute top-28 left-1/2 -translate-x-1/2 z-[999] bg-purple-500/10 border border-purple-500/20 backdrop-blur-md px-4 py-2 rounded-full flex items-center gap-2 shadow-xl shadow-purple-950/20 animate-bounce">
           <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
           <span className="text-xs text-purple-200 font-sans font-medium">Tryb edycji włączony. Kliknij w puste miejsce, aby zakończyć.</span>
         </div>
       )}
 
-      {/* Grid or Stack items */}
-      {isMobile ? (
-        <div className="w-full grid grid-cols-4 gap-x-2 gap-y-5 px-1 py-4 justify-items-center">
-          {displayedIcons.map((icon) => {
-            const iconStyles = getIconStyleClasses();
-            
-            if (icon.isWidget) {
-              return (
-                <div
-                  key={icon.id}
-                  className="col-span-4 w-full flex flex-col items-center justify-center relative rounded-xl border border-transparent transition-all"
-                >
-                  <div
-                    onClick={(e) => handleIconClick(icon, e)}
-                    className="group flex flex-col justify-between p-3.5 rounded-2xl w-full h-32 text-left bg-slate-900/60 border border-white/10 hover:border-white/25 backdrop-blur-md shadow-xl transition-all duration-200 relative"
-                  >
-                    {/* Delete button inside wiggle mode */}
-                    {isWiggling && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteIcon(icon.id);
-                        }}
-                        className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-rose-500 hover:bg-rose-600 border border-white/20 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 z-20 cursor-pointer animate-scaleIn"
-                      >
-                        <X size={10} strokeWidth={3} />
-                      </button>
-                    )}
+            {/* Grid or Stack items */}
+      <DesktopIconGrid
+        icons={icons}
+        displayedIcons={displayedIcons}
+        config={config}
+        isMobile={isMobile}
+        isWiggling={isWiggling}
+        gridCells={gridCells}
+        isDraggingRef={isDraggingRef}
+        handleIconClick={handleIconClick}
+        handleContextMenu={handleContextMenu}
+        handleDeleteIcon={handleDeleteIcon}
+        handleOpenEdit={handleOpenEdit}
+        handleOpenAddElement={handleOpenAddElement}
+        startPress={startPress}
+        endPress={endPress}
+        handleDragEnd={handleDragEnd}
+        handleMobileReorder={handleMobileReorder}
+        openApp={openApp}
+      />
 
-                    {/* Widget inner rendering */}
-                    {icon.widgetType === 'weather' && (
-                      <div className="flex flex-col h-full justify-between select-none">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-[10px] font-bold text-white/40 uppercase font-mono tracking-wider">Warszawa</p>
-                            <h4 className="text-[11px] font-bold text-amber-400">Słonecznie</h4>
-                          </div>
-                          <Lucide.Sun className="text-amber-400 animate-spin-slow w-6 h-6" style={{ animationDuration: '8s' }} />
-                        </div>
-                        <div className="flex items-baseline gap-1 mt-1">
-                          <span className="text-xl font-extrabold text-white">22°C</span>
-                          <span className="text-[9px] text-white/50">Odczuwalna 23°</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {icon.widgetType === 'clock' && (
-                      <ClockWidgetComponent config={config} />
-                    )}
-
-                    {icon.widgetType === 'notes' && (
-                      <NoteWidgetComponent iconId={icon.id} />
-                    )}
-
-                    {icon.widgetType === 'bio' && (
-                      <div 
-                        onClick={() => openApp('bio')}
-                        className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
-                      >
-                        <div className="flex gap-1.5 items-center">
-                          <div className="w-6 h-6 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20 text-purple-400">
-                            <Lucide.User size={12} />
-                          </div>
-                          <div className="truncate">
-                            <h4 className="text-[10px] font-bold text-white leading-tight">O mnie</h4>
-                            <p className="text-[8px] text-slate-400 font-medium leading-none">Adrian - Portfolio</p>
-                          </div>
-                        </div>
-                        <p className="text-[9px] text-slate-300 leading-snug line-clamp-2 italic my-1">
-                          {config.portfolioBio || "Architekt systemów full-stack, pasjonat AI."}
-                        </p>
-                        <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-purple-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
-                          Otwórz profil &rarr;
-                        </span>
-                      </div>
-                    )}
-
-                    {icon.widgetType === 'projects' && (
-                      <div 
-                        onClick={() => openApp('projects')}
-                        className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex gap-1.5 items-center">
-                            <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400">
-                              <Lucide.FolderGit2 size={12} />
-                            </div>
-                            <div>
-                              <h4 className="text-[10px] font-bold text-white leading-tight">Projekty</h4>
-                              <p className="text-[8px] text-slate-400 leading-none">Repozytoria</p>
-                            </div>
-                          </div>
-                          <span className="text-[7px] font-bold bg-blue-500/20 border border-blue-500/30 text-blue-400 px-1 py-0.2 rounded font-mono">LIVE</span>
-                        </div>
-                        <p className="text-[9px] text-slate-300 leading-tight line-clamp-2 my-1">
-                          Integracje AI, AdrianOS, Micro-SaaS i eksperymenty WebGL.
-                        </p>
-                        <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-blue-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
-                          Zobacz wszystkie &rarr;
-                        </span>
-                      </div>
-                    )}
-
-                    {icon.widgetType === 'lab' && (
-                      <div 
-                        onClick={() => openApp('lab')}
-                        className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
-                      >
-                        <div className="flex gap-1.5 items-center">
-                          <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-400">
-                            <Lucide.Flame size={12} />
-                          </div>
-                          <div>
-                            <h4 className="text-[10px] font-bold text-white leading-tight">Lab AI</h4>
-                            <p className="text-[8px] text-slate-400 leading-none">Symulatory i fizyka</p>
-                          </div>
-                        </div>
-                        <p className="text-[9px] text-slate-300 leading-tight line-clamp-2 my-1">
-                          Testuj cząsteczki i symulator optymalizacji WindowsFixer.
-                        </p>
-                        <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-amber-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
-                          Wejdź do labu &rarr;
-                        </span>
-                      </div>
-                    )}
-
-                    {icon.widgetType === 'certificates' && (
-                      <div 
-                        onClick={() => openApp('certificates')}
-                        className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
-                      >
-                        <div className="flex gap-1.5 items-center">
-                          <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400">
-                            <Lucide.Award size={12} />
-                          </div>
-                          <div>
-                            <h4 className="text-[10px] font-bold text-white leading-tight">Certyfikaty</h4>
-                            <p className="text-[8px] text-slate-400 leading-none">AWS, GCP & Scrum</p>
-                          </div>
-                        </div>
-                        <p className="text-[9px] text-slate-300 leading-tight line-clamp-2 my-1">
-                          Zweryfikowane kwalifikacje chmurowe, DevOps oraz architektury.
-                        </p>
-                        <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-emerald-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
-                          Przeglądaj &rarr;
-                        </span>
-                      </div>
-                    )}
-
-                    {icon.widgetType === 'contact' && (
-                      <div 
-                        onClick={() => openApp('contact')}
-                        className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
-                      >
-                        <div className="flex gap-1.5 items-center">
-                          <div className="w-6 h-6 rounded-lg bg-rose-500/10 flex items-center justify-center border border-rose-500/20 text-rose-400">
-                            <Lucide.Mail size={12} />
-                          </div>
-                          <div>
-                            <h4 className="text-[10px] font-bold text-white leading-tight">Kontakt</h4>
-                            <p className="text-[8px] text-slate-400 leading-none">Napisz do mnie</p>
-                          </div>
-                        </div>
-                        <p className="text-[9px] text-slate-300 leading-tight line-clamp-2 my-1">
-                          Szybka wiadomość, LinkedIn lub połączenie. Odpowiadam w 24h.
-                        </p>
-                        <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-rose-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
-                          Wyślij wiadomość &rarr;
-                        </span>
-                      </div>
-                    )}
-
-                    {icon.widgetType === 'planned' && (
-                      <div 
-                        onClick={() => openApp('planned')}
-                        className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
-                      >
-                        <div className="flex gap-1.5 items-center">
-                          <div className="w-6 h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 text-cyan-400">
-                            <Lucide.Compass size={12} />
-                          </div>
-                          <div>
-                            <h4 className="text-[10px] font-bold text-white leading-tight">Kolejne projekty</h4>
-                            <p className="text-[8px] text-slate-400 leading-none">Status Sprintu</p>
-                          </div>
-                        </div>
-                        <div className="space-y-1 my-1">
-                          <div className="flex justify-between text-[7px] font-mono font-bold text-slate-400">
-                            <span>FAZA 3: INTEGRACJA</span>
-                            <span className="text-cyan-400">85%</span>
-                          </div>
-                          <div className="w-full bg-slate-950 rounded-full h-1 overflow-hidden border border-white/5">
-                            <div className="bg-gradient-to-r from-cyan-500 to-purple-500 h-1 rounded-full" style={{ width: '85%' }} />
-                          </div>
-                        </div>
-                        <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-cyan-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
-                          Sprinty &rarr;
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            }
-
-            // Regular Icon - Arranged in clean 4-column grid
-            return (
-              <div
-                key={icon.id}
-                className="col-span-1 flex flex-col items-center justify-center text-center relative rounded-xl border border-transparent transition-all"
-              >
-                <motion.div
-                  onClick={(e) => {
-                    triggerHaptic('light');
-                    handleIconClick(icon, e);
-                  }}
-                  onContextMenu={(e) => handleContextMenu(e, icon)}
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.92 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                  className="group flex flex-col items-center justify-center p-2 rounded-2xl w-20 h-24 text-center cursor-pointer hover:bg-white/5 border border-transparent transition-all duration-200 relative"
-                >
-                  {/* Dynamic Style variant wrapper container */}
-                  <div className={`
-                    w-14 h-14 flex items-center justify-center
-                    transition-all duration-300 relative
-                    ${iconStyles.container}
-                  `}>
-                    {renderIcon(icon.icon, `w-6 h-6 ${iconStyles.icon}`)}
-                    
-                    {/* Subtle inner reflection dot - only for modern styles */}
-                    {config.portfolioStyle !== 'retro' && (
-                      <span className="absolute top-1.5 left-2 w-1.5 h-1.5 rounded-full bg-white/30" />
-                    )}
-                  </div>
-
-                  <div className="mt-1 w-full flex justify-center overflow-hidden">
-                    <span className={`block truncate w-18 text-[11px] leading-tight select-none text-white/90 drop-shadow-md text-center ${iconStyles.text}`}>
-                      {icon.label}
-                    </span>
-                  </div>
-
-                  {/* Delete direct badge button in wiggle mode */}
-                  {isWiggling && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteIcon(icon.id);
-                      }}
-                      className="absolute -top-1.5 -left-1.5 w-6 h-6 bg-rose-500 hover:bg-rose-600 border border-white/20 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 z-20 cursor-pointer animate-scaleIn"
-                      title="Usuń"
-                    >
-                      <X size={12} strokeWidth={3} />
-                    </button>
-                  )}
-                </motion.div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-      <React.Fragment>
-        {gridCells.map((item, idx) => {
-        const isGridCell = true;
-        const r = isGridCell ? (item as any).r : 0;
-        const c = isGridCell ? (item as any).c : 0;
-        const icon = isGridCell ? displayedIcons.find(i => i.x === r && i.y === c) : (item as DesktopIcon);
-        
-        const iconStyles = getIconStyleClasses();
-
-        // Empty cell for drop target on desktop
-        if (isGridCell && !icon) {
-          return (
-            <div
-              key={`${r}-${c}`}
-              data-grid-r={r}
-              data-grid-c={c}
-              className={`flex items-center justify-center relative rounded-2xl border border-dashed transition-all duration-300 desktop-grid-cell group/cell h-full min-h-[110px] ${
-                isWiggling 
-                  ? 'border-purple-500/25 bg-purple-500/5 shadow-[inset_0_0_12px_rgba(168,85,247,0.05)]' 
-                  : 'border-white/[0.02] hover:border-white/[0.08] hover:bg-white/[0.01]'
-              }`}
-            >
-              {isWiggling && (
-                <button
-                  type="button"
-                  aria-label="Dodaj element"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOpenAddElement(r, c);
-                  }}
-                  className="w-8 h-8 rounded-full bg-purple-500/15 hover:bg-purple-500/30 flex items-center justify-center text-purple-400 hover:text-purple-300 border border-purple-500/20 hover:border-purple-500/40 transition-all opacity-0 group-hover/cell:opacity-100 duration-200"
-                >
-                  <Lucide.Plus size={14} />
-                </button>
-              )}
-              {/* Subtle futuristic corner accents */}
-              {!isWiggling && (
-                <div className="absolute inset-0 pointer-events-none opacity-[0.03] group-hover/cell:opacity-[0.1] transition-opacity">
-                  <div className="absolute top-2 left-2 w-1.5 h-1.5 border-t border-l border-white" />
-                  <div className="absolute top-2 right-2 w-1.5 h-1.5 border-t border-r border-white" />
-                  <div className="absolute bottom-2 left-2 w-1.5 h-1.5 border-b border-l border-white" />
-                  <div className="absolute bottom-2 right-2 w-1.5 h-1.5 border-b border-r border-white" />
-                </div>
-              )}
-            </div>
-          );
-        }
-
-        return (
-          <div
-            key={isGridCell ? `${r}-${c}` : icon.id}
-            data-grid-r={isGridCell ? r : undefined}
-            data-grid-c={isGridCell ? c : undefined}
-            className={`flex relative rounded-2xl border transition-all duration-300 desktop-grid-cell ${
-              isMobile 
-                ? 'w-full max-w-md mx-auto items-center justify-start h-auto border-transparent' 
-                : 'items-center justify-center border-white/[0.01] hover:border-white/[0.06] hover:bg-white/[0.01]'
-            }`}
-          >
-            {icon ? (
-              icon.isWidget ? (
-                <motion.div
-                  layout
-                  layoutId={icon.id}
-                  drag={!isMobile}
-                  dragElastic={0}
-                  dragSnapToOrigin={true}
-                  whileDrag={{ 
-                    scale: 1.1, 
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.7)', 
-                    zIndex: 100,
-                    cursor: 'grabbing',
-                    opacity: 0.95,
-                    filter: 'brightness(1.15) contrast(1.05)'
-                  }}
-                  onDragStart={() => {
-                    isDraggingRef.current = true;
-                  }}
-                  onDragEnd={(e, info) => {
-                    handleDragEnd(e, info, icon.id);
-                    setTimeout(() => {
-                      isDraggingRef.current = false;
-                    }, 250);
-                  }}
-                  onPointerDown={(e) => startPress(icon.id, e)}
-                  onPointerUp={endPress}
-                  onPointerLeave={endPress}
-                  onTap={(e) => {
-                    if (icon.widgetType === 'notes' || icon.widgetType === 'weather' || icon.widgetType === 'clock') {
-                      return;
-                    }
-                    triggerHaptic('light');
-                    if (isWiggling) {
-                      handleOpenEdit(icon, e as any);
-                    } else {
-                      openApp(icon.appId as any);
-                    }
-                  }}
-                  className={`group flex flex-col justify-between p-3.5 rounded-2xl w-40 h-28 text-left backdrop-blur-md transition-all duration-300 relative ${!isMobile ? 'cursor-grab active:cursor-grabbing' : 'w-full !w-full !h-32 mb-1'} ${
-                    isWiggling ? 'animate-wiggle border-dashed border-purple-500/55' : getWidgetStyleClasses(icon.widgetType).card
-                  }`}
-                  animate={isWiggling ? { rotate: [-2, 2, -2] } : { rotate: 0 }}
-                  transition={isWiggling ? { repeat: Infinity, duration: 0.3 } : {}}
-                >
-                  {/* Delete button inside wiggle mode */}
-                  {isWiggling && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteIcon(icon.id);
-                      }}
-                      className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-rose-500 hover:bg-rose-600 border border-white/20 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 z-20 cursor-pointer animate-scaleIn"
-                    >
-                      <X size={10} strokeWidth={3} />
-                    </button>
-                  )}
-
-                  {/* Widget inner rendering */}
-                  {icon.widgetType === 'weather' && (
-                    <div className="flex flex-col h-full justify-between select-none">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="text-[10px] font-bold text-white/40 uppercase font-mono tracking-wider">Warszawa</p>
-                          <h4 className="text-[11px] font-bold text-amber-400">Słonecznie</h4>
-                        </div>
-                        <Lucide.Sun className="text-amber-400 animate-spin-slow w-6 h-6" style={{ animationDuration: '8s' }} />
-                      </div>
-                      <div className="flex items-baseline gap-1 mt-1">
-                        <span className="text-xl font-extrabold text-white">22°C</span>
-                        <span className="text-[9px] text-white/50">Odczuwalna 23°</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {icon.widgetType === 'clock' && (
-                    <ClockWidgetComponent config={config} />
-                  )}
-
-                  {icon.widgetType === 'notes' && (
-                    <NoteWidgetComponent iconId={icon.id} />
-                  )}
-
-                  {icon.widgetType === 'bio' && (
-                    <div className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full">
-                      <div className="flex gap-1.5 items-center">
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${getWidgetStyleClasses(icon.widgetType).iconBg}`}>
-                          <Lucide.User size={12} />
-                        </div>
-                        <div className="truncate">
-                          <h4 className="text-[10px] font-bold text-white leading-tight">O mnie</h4>
-                          <p className="text-[8px] text-slate-400 font-medium leading-none">Adrian - Portfolio</p>
-                        </div>
-                      </div>
-                      <p className="text-[9px] text-slate-300 leading-snug line-clamp-2 italic my-1">
-                        {config.portfolioBio || "Architekt systemów full-stack, pasjonat AI."}
-                      </p>
-                      <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-purple-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
-                        Otwórz profil &rarr;
-                      </span>
-                    </div>
-                  )}
-
-                  {icon.widgetType === 'projects' && (
-                    <div className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full">
-                      <div className="flex justify-between items-start">
-                        <div className="flex gap-1.5 items-center">
-                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${getWidgetStyleClasses(icon.widgetType).iconBg}`}>
-                            <Lucide.FolderGit2 size={12} />
-                          </div>
-                          <div>
-                            <h4 className="text-[10px] font-bold text-white leading-tight">Projekty</h4>
-                            <p className="text-[8px] text-slate-400 leading-none">Repozytoria</p>
-                          </div>
-                        </div>
-                        <span className="text-[7px] font-bold bg-blue-500/20 border border-blue-500/30 text-blue-400 px-1 py-0.2 rounded font-mono">LIVE</span>
-                      </div>
-                      <p className="text-[9px] text-slate-300 leading-tight line-clamp-2 my-1">
-                        Integracje AI, AdrianOS, Micro-SaaS i eksperymenty WebGL.
-                      </p>
-                      <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-blue-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
-                        Zobacz wszystkie &rarr;
-                      </span>
-                    </div>
-                  )}
-
-                  {icon.widgetType === 'lab' && (
-                    <div className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full">
-                      <div className="flex gap-1.5 items-center">
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${getWidgetStyleClasses(icon.widgetType).iconBg}`}>
-                          <Lucide.Flame size={12} />
-                        </div>
-                        <div>
-                          <h4 className="text-[10px] font-bold text-white leading-tight">Lab AI</h4>
-                          <p className="text-[8px] text-slate-400 leading-none">Symulatory i fizyka</p>
-                        </div>
-                      </div>
-                      <p className="text-[9px] text-slate-300 leading-tight line-clamp-2 my-1">
-                        Testuj cząsteczki i symulator optymalizacji WindowsFixer.
-                      </p>
-                      <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-amber-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
-                        Wejdź do labu &rarr;
-                      </span>
-                    </div>
-                  )}
-
-                  {icon.widgetType === 'certificates' && (
-                    <div className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full">
-                      <div className="flex gap-1.5 items-center">
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${getWidgetStyleClasses(icon.widgetType).iconBg}`}>
-                          <Lucide.Award size={12} />
-                        </div>
-                        <div>
-                          <h4 className="text-[10px] font-bold text-white leading-tight">Certyfikaty</h4>
-                          <p className="text-[8px] text-slate-400 leading-none">AWS, GCP & Scrum</p>
-                        </div>
-                      </div>
-                      <p className="text-[9px] text-slate-300 leading-tight line-clamp-2 my-1">
-                        Zweryfikowane kwalifikacje chmurowe, DevOps oraz architektury.
-                      </p>
-                      <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-emerald-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
-                        Przeglądaj &rarr;
-                      </span>
-                    </div>
-                  )}
-
-                  {icon.widgetType === 'contact' && (
-                    <div className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full">
-                      <div className="flex gap-1.5 items-center">
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${getWidgetStyleClasses(icon.widgetType).iconBg}`}>
-                          <Lucide.Mail size={12} />
-                        </div>
-                        <div>
-                          <h4 className="text-[10px] font-bold text-white leading-tight">Kontakt</h4>
-                          <p className="text-[8px] text-slate-400 leading-none">Napisz do mnie</p>
-                        </div>
-                      </div>
-                      <p className="text-[9px] text-slate-300 leading-tight line-clamp-2 my-1">
-                        Szybka wiadomość, LinkedIn lub połączenie. Odpowiadam w 24h.
-                      </p>
-                      <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-rose-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
-                        Wyślij wiadomość &rarr;
-                      </span>
-                    </div>
-                  )}
-
-                  {icon.widgetType === 'planned' && (
-                    <div className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full">
-                      <div className="flex gap-1.5 items-center">
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${getWidgetStyleClasses(icon.widgetType).iconBg}`}>
-                          <Lucide.Compass size={12} />
-                        </div>
-                        <div>
-                          <h4 className="text-[10px] font-bold text-white leading-tight">Kolejne projekty</h4>
-                          <p className="text-[8px] text-slate-400 leading-none">Status Sprintu</p>
-                        </div>
-                      </div>
-                      <div className="space-y-1 my-1">
-                        <div className="flex justify-between text-[7px] font-mono font-bold text-slate-400">
-                          <span>FAZA 3: INTEGRACJA</span>
-                          <span className="text-cyan-400">85%</span>
-                        </div>
-                        <div className="w-full bg-slate-950 rounded-full h-1 overflow-hidden border border-white/5">
-                          <div className="bg-gradient-to-r from-cyan-500 to-purple-500 h-1 rounded-full" style={{ width: '85%' }} />
-                        </div>
-                      </div>
-                      <span className="text-[8px] font-bold uppercase font-mono tracking-wider text-cyan-400 group-hover/widget:translate-x-1 transition-transform inline-flex items-center gap-0.5">
-                        Sprinty &rarr;
-                      </span>
-                    </div>
-                  )}
-                </motion.div>
-              ) : (
-                <motion.div
-                  layout
-                  layoutId={icon.id}
-                  drag={!isMobile}
-                  dragElastic={0}
-                  dragSnapToOrigin={true}
-                  whileDrag={{ 
-                    scale: 1.12, 
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.7)', 
-                    zIndex: 100,
-                    cursor: 'grabbing',
-                    opacity: 0.95,
-                    filter: 'brightness(1.15) contrast(1.05)'
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onDragStart={() => {
-                    isDraggingRef.current = true;
-                  }}
-                  onDragEnd={(e, info) => {
-                    handleDragEnd(e, info, icon.id);
-                    setTimeout(() => {
-                      isDraggingRef.current = false;
-                    }, 250);
-                  }}
-                  onPointerDown={(e) => startPress(icon.id, e)}
-                  onPointerUp={endPress}
-                  onPointerLeave={endPress}
-                  onContextMenu={(e) => handleContextMenu(e, icon)}
-                  onTap={(e) => {
-                    triggerHaptic('light');
-                    handleIconClick(icon, e as any);
-                  }}
-                  className={`group flex ${
-                    isMobile 
-                      ? 'flex-row items-center justify-start w-full gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 shadow-lg backdrop-blur-md' 
-                      : 'flex-col items-center justify-center p-3 rounded-[24px] w-[108px] h-[108px] text-center cursor-grab active:cursor-grabbing hover:bg-white/[0.06] hover:border-white/10 hover:shadow-2xl hover:shadow-black/40 border border-transparent'
-                  } transition-all duration-300 relative ${
-                    isWiggling ? 'animate-wiggle' : ''
-                  }`}
-                  animate={isWiggling ? { rotate: [-2, 2, -2] } : { rotate: 0 }}
-                  transition={isWiggling ? { repeat: Infinity, duration: 0.3 } : {}}
-                >
-                  {/* Dynamic Style variant wrapper container */}
-                  <div className={`
-                    ${isMobile ? 'w-12 h-12 shrink-0' : 'w-16 h-16 group-hover:scale-105 group-hover:-translate-y-0.5'} flex items-center justify-center
-                    transition-all duration-300 relative
-                    ${iconStyles.container}
-                  `}>
-                    {renderIcon(icon.icon, `${isMobile ? 'w-5 h-5' : 'w-6 h-6'} ${iconStyles.icon}`)}
-                    
-                    {/* Subtle inner reflection dot - only for modern styles */}
-                    {config.portfolioStyle !== 'retro' && (
-                      <span className="absolute top-1.5 left-2 w-1.5 h-1.5 rounded-full bg-white/30" />
-                    )}
-                  </div>
-
-                  {/* Edit options trigger */}
-                  {!config.viewerMode && !isMobile && (
-                    <button
-                      id={`btn-edit-icon-${icon.id}`}
-                      onClick={(e) => handleOpenEdit(icon, e)}
-                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 bg-black/60 rounded-md border border-white/10 text-slate-400 hover:text-white transition-all duration-200"
-                      title="Edytuj wygląd ikony"
-                    >
-                      <Edit2 size={10} />
-                    </button>
-                  )}
-
-                  <div className={`${isMobile ? 'flex flex-col text-left' : 'mt-1.5'}`}>
-                    <span className={`truncate max-w-[180px] leading-tight select-none ${isMobile ? 'font-bold text-[13px] text-white/90 drop-shadow-md' : iconStyles.text}`}>
-                      {icon.label}
-                    </span>
-                    {isMobile && (
-                      <span className="text-[10px] text-slate-400 font-mono mt-0.5">Stuknij, aby otworzyć</span>
-                    )}
-                  </div>
-
-                  {/* Delete direct badge button in wiggle mode */}
-                  {isWiggling && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteIcon(icon.id);
-                      }}
-                      className={`absolute ${isMobile ? 'right-4 top-1/2 -translate-y-1/2' : '-top-1 -left-1'} w-6 h-6 bg-rose-500 hover:bg-rose-600 border border-white/20 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 z-20 cursor-pointer animate-scaleIn`}
-                      title="Usuń"
-                    >
-                      <X size={12} strokeWidth={3} />
-                    </button>
-                  )}
-                </motion.div>
-              )
-            ) : (
-              isWiggling && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOpenAddElement(r, c);
-                  }}
-                  className="w-14 h-14 rounded-2xl border border-dashed border-white/20 hover:border-amber-400/50 flex items-center justify-center text-white/40 hover:text-amber-400 hover:bg-amber-400/10 transition-all cursor-pointer shadow-inner"
-                  title="Dodaj nową ikonę lub widget"
-                >
-                  <Lucide.Plus size={16} />
-                </button>
-              )
-            )}
-          </div>
-        );
-      })}
-      </React.Fragment>
-      )}
-
-      {/* Context Menu Component */}
-      {contextMenu && (
-        <div 
-          style={{ 
-            position: 'fixed',
-            top: contextMenu.y, 
-            left: contextMenu.x,
-            zIndex: 999999
-          }}
-          className="bg-slate-950/90 backdrop-blur-md border border-white/10 rounded-2xl py-2 w-48 shadow-xl animate-scaleIn text-left select-none flex flex-col gap-0.5 p-1.5"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="px-3 py-1.5 border-b border-white/5 mb-1">
-            <p className="text-[10px] font-mono font-bold text-white/40 uppercase tracking-widest leading-none">Opcje ikony</p>
-            <p className="text-xs font-semibold text-white truncate mt-1">{contextMenu.icon.label}</p>
-          </div>
-          <button
-            onClick={(e) => {
-              setContextMenu(null);
-              handleOpenEdit(contextMenu.icon);
-            }}
-            className="w-full px-3 py-2 text-xs text-left text-white/80 hover:text-white hover:bg-white/10 rounded-xl flex items-center gap-2 transition-all cursor-pointer font-sans"
-          >
-            <Edit2 size={13} className="text-purple-400" />
-            Zmień nazwę / edytuj
-          </button>
-          <button
-            onClick={() => {
-              handleDeleteIcon(contextMenu.icon.id);
-              setContextMenu(null);
-            }}
-            className="w-full px-3 py-2 text-xs text-left text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl flex items-center gap-2 transition-all cursor-pointer font-sans"
-          >
-            <X size={13} className="text-rose-400" />
-            Usuń ikonę
-          </button>
-        </div>
-      )}
-
-      {/* Inline Icon Customize Modal */}
+            {/* Context Menu Component */}
+      <DesktopContextMenu 
+        contextMenu={contextMenu} 
+        setContextMenu={setContextMenu} 
+        handleOpenEdit={handleOpenEdit} 
+        handleDeleteIcon={handleDeleteIcon} 
+      />
+{/* Inline Icon Customize Modal */}
       {editingIcon && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5 animate-scaleIn">
@@ -1649,7 +856,8 @@ export const Desktop: React.FC<DesktopProps> = ({
                       { id: 'lab', name: 'Laboratorium', desc: 'Szybki dostęp do eksperymentów AI', icon: 'Flame', color: 'from-amber-500/20 to-red-500/10 border-amber-500/20 text-amber-400' },
                       { id: 'certificates', name: 'Certyfikaty', desc: 'Kwalifikacje i dyplomy zawodowe', icon: 'Award', color: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/20 text-emerald-400' },
                       { id: 'contact', name: 'Kontakt', desc: 'Szybkie wysłanie wiadomości e-mail', icon: 'Mail', color: 'from-rose-500/20 to-pink-500/10 border-rose-500/20 text-rose-400' },
-                      { id: 'planned', name: 'Plany / Sprint', desc: 'Wizualny status postępów i sprintu', icon: 'Compass', color: 'from-cyan-500/20 to-blue-500/10 border-cyan-500/20 text-cyan-400' }
+                      { id: 'planned', name: 'Plany / Sprint', desc: 'Wizualny status postępów i sprintu', icon: 'Compass', color: 'from-cyan-500/20 to-blue-500/10 border-cyan-500/20 text-cyan-400' },
+                      { id: 'inbox', name: 'Poczta Rekrutera', desc: 'Skrzynka odbiorcza na wiadomości z formularza', icon: 'Mail', color: 'from-purple-400/20 to-indigo-500/10 border-purple-500/20 text-purple-400' }
                     ].map((w) => {
                       const isSel = addForm.widgetType === w.id;
                       return (
@@ -1775,46 +983,14 @@ export const Desktop: React.FC<DesktopProps> = ({
         </div>
       )}
 
-      {/* Context Menu Component */}
-      {contextMenu && (
-        <div 
-          style={{ 
-            position: 'fixed',
-            top: contextMenu.y, 
-            left: contextMenu.x,
-            zIndex: 999999
-          }}
-          className="bg-slate-950/90 backdrop-blur-md border border-white/10 rounded-2xl py-2 w-48 shadow-xl animate-scaleIn text-left select-none flex flex-col gap-0.5 p-1.5"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="px-3 py-1.5 border-b border-white/5 mb-1">
-            <p className="text-[10px] font-mono font-bold text-white/40 uppercase tracking-widest leading-none">Opcje ikony</p>
-            <p className="text-xs font-semibold text-white truncate mt-1">{contextMenu.icon.label}</p>
-          </div>
-          <button
-            onClick={(e) => {
-              setContextMenu(null);
-              handleOpenEdit(contextMenu.icon);
-            }}
-            className="w-full px-3 py-2 text-xs text-left text-white/80 hover:text-white hover:bg-white/10 rounded-xl flex items-center gap-2 transition-all cursor-pointer font-sans"
-          >
-            <Edit2 size={13} className="text-purple-400" />
-            Zmień nazwę / edytuj
-          </button>
-          <button
-            onClick={() => {
-              handleDeleteIcon(contextMenu.icon.id);
-              setContextMenu(null);
-            }}
-            className="w-full px-3 py-2 text-xs text-left text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl flex items-center gap-2 transition-all cursor-pointer font-sans"
-          >
-            <X size={13} className="text-rose-400" />
-            Usuń ikonę
-          </button>
-        </div>
-      )}
-
-      {/* Inline Icon Customize Modal */}
+            {/* Context Menu Component */}
+      <DesktopContextMenu 
+        contextMenu={contextMenu} 
+        setContextMenu={setContextMenu} 
+        handleOpenEdit={handleOpenEdit} 
+        handleDeleteIcon={handleDeleteIcon} 
+      />
+{/* Inline Icon Customize Modal */}
       {editingIcon && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5 animate-scaleIn">
@@ -1916,3 +1092,8 @@ export const Desktop: React.FC<DesktopProps> = ({
     </div>
   );
 };
+
+
+
+
+

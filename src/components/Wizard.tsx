@@ -405,7 +405,7 @@ export const Wizard: React.FC<WizardProps> = ({
       portfolioStyle: 'modern',
       iconStyleModern: 'lumine-ubuntu-style',
       iconStyleRetro: 'classic-windows-95',
-      fontSizeScale: 1.0,
+      fontSizeScale: 2.0,
       glassBlur: 'medium',
       borderStyle: 'thick',
       systemFont: 'apple'

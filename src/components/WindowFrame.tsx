@@ -302,7 +302,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           layoutMode === 'full' ? 'sm:absolute sm:top-4 sm:left-4 sm:right-4 sm:bottom-16 sm:rounded-2xl sm:border sm:w-auto sm:h-auto sm:max-w-none' :
           layoutMode === 'left-half' ? 'sm:absolute sm:top-4 sm:left-4 sm:right-1/2 sm:bottom-16 sm:rounded-2xl sm:border sm:w-auto sm:h-auto sm:max-w-none mr-2' :
           layoutMode === 'right-half' ? 'sm:absolute sm:top-4 sm:left-1/2 sm:right-4 sm:bottom-16 sm:rounded-2xl sm:border sm:w-auto sm:h-auto sm:max-w-none ml-2' :
-          'sm:absolute sm:top-[12%] sm:left-[15%] sm:w-[70%] sm:h-[70vh] sm:max-w-4xl sm:rounded-2xl sm:border'
+          'sm:absolute sm:top-[12%] sm:left-[15%] sm:w-[70%] sm:h-[70vh] sm:min-w-[320px] sm:min-h-[400px] sm:max-w-4xl sm:rounded-2xl sm:border sm:resize sm:overflow-hidden'
         }
         flex flex-col
         ${borderClass}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Project, Certificate, TimelineItem, OSConfig } from '../types';
 import { User, Briefcase, Award, Settings, Sparkles } from 'lucide-react';
 import { DesktopIcon } from './DesktopIcon';
@@ -277,10 +277,10 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
                </div>
              </div>
              <p className="text-xs leading-relaxed font-semibold">
-               Witaj w moim pikselowym systemie operacyjnym! Tworzę interaktywne aplikacje łączące retro estetykę z nowoczesną wydajnością.
+               Witaj w moim pikselowym systemie operacyjnym! TworzÄ™ interaktywne aplikacje Ĺ‚Ä…czÄ…ce retro estetykÄ™ z nowoczesnÄ… wydajnoĹ›ciÄ….
              </p>
              <div className="bg-black/5 p-3 rounded border border-black/10">
-               <h3 className="text-[10px] font-bold uppercase text-gray-600 mb-1">Główne umiejętności:</h3>
+               <h3 className="text-[10px] font-bold uppercase text-gray-600 mb-1">GĹ‚Ăłwne umiejÄ™tnoĹ›ci:</h3>
                <div className="flex flex-wrap gap-1">
                  {['React', 'TypeScript', 'Node.js', 'Vite', 'Tailwind CSS', 'D3.js', 'Firestore'].map(skill => (
                    <span key={skill} className="text-[9px] bg-white border border-black px-1.5 py-0.5 rounded font-bold">{skill}</span>
@@ -294,7 +294,7 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
       {activeWindows.includes('projects') && (
         <RetroWindow title="Moje Projekty" onClose={() => handleCloseWindow('projects')} config={config} className="left-20 top-36 w-[450px]">
           <div className="space-y-4">
-            <h3 className="text-sm font-bold border-b-2 border-black/10 pb-1">Ukończone Projekty</h3>
+            <h3 className="text-sm font-bold border-b-2 border-black/10 pb-1">UkoĹ„czone Projekty</h3>
             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
               {projects.slice(0, 3).map((proj) => (
                 <div key={proj.id} className="p-3 bg-white border-2 border-black rounded shadow-[2px_2px_0px_rgba(0,0,0,0.2)]">
@@ -320,7 +320,7 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
                   <Award className="text-amber-600 shrink-0" size={18} />
                   <div className="leading-none">
                     <div className="font-bold text-xs text-amber-950">{cert.title}</div>
-                    <span className="text-[8px] text-gray-500 font-bold">{cert.issuer} • {cert.date}</span>
+                    <span className="text-[8px] text-gray-500 font-bold">{cert.issuer} â€˘ {cert.date}</span>
                   </div>
                 </div>
               ))}
@@ -401,7 +401,7 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
               className="relative group pb-2 flex flex-col items-center cursor-pointer transition-transform duration-150 hover:-translate-y-2 active:translate-y-0 z-10"
             >
               <div className="absolute bottom-16 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all pointer-events-none bg-yellow-400 text-black px-2.5 py-0.5 rounded text-[9px] border border-black font-black whitespace-nowrap shadow-md uppercase">
-                ⚡ Zarządzanie OS
+                âšˇ ZarzÄ…dzanie OS
               </div>
               <div 
                 className="text-yellow-400 hover:text-yellow-300 p-1 relative flex items-center justify-center animate-pulse"

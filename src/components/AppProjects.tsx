@@ -5,22 +5,47 @@
 
 import React, { useState } from 'react';
 import { Project } from '../types';
-import { Search, FolderGit2, Star, Link, Plus, Trash2, Edit2, Check, RefreshCw, Github, Sparkles } from 'lucide-react';
-import { WindowsFixerSimulator } from './WindowsFixerSimulator';
+import { Search, FolderGit2, Star, Link, Plus, Trash2, Edit2, Check, RefreshCw, Github, Sparkles, X, Maximize2 } from 'lucide-react';
+import { lazy, Suspense } from 'react';
+const WindowsFixerSimulator = lazy(() => import('./WindowsFixerSimulator').then(m => ({ default: m.WindowsFixerSimulator })));
 
 interface AppProjectsProps {
   projects: Project[];
   setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
+  config?: any; // OSConfig type but keeping it simple or I can import OSConfig
 }
 
 export const AppProjects: React.FC<AppProjectsProps> = ({
   projects,
-  setProjects
+  setProjects,
+  config
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'github' | 'manual'>('all');
   const [isSyncingId, setIsSyncingId] = useState<string | null>(null);
   const [showWinFixer, setShowWinFixer] = useState(false);
+
+  // Quick Look & Focus Mode
+  const [hoveredProject, setHoveredProject] = useState<Project | null>(null);
+  const [focusedProject, setFocusedProject] = useState<Project | null>(null);
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        if (!focusedProject && hoveredProject) {
+          e.preventDefault();
+          setFocusedProject(hoveredProject);
+        } else if (focusedProject) {
+          e.preventDefault();
+          setFocusedProject(null);
+        }
+      } else if (e.code === 'Escape' && focusedProject) {
+        setFocusedProject(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hoveredProject, focusedProject]);
 
   // New project creation state
   const [isAddingProject, setIsAddingProject] = useState(false);
@@ -36,6 +61,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
   // Github Import simulator state
   const [githubRepoInput, setGithubRepoInput] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   // Filtered list
   const filteredProjects = projects.filter(project => {
@@ -178,8 +204,9 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
     if (!githubRepoInput.trim()) return;
 
     setIsImporting(true);
+    setImportError(null);
     
-    let owner = 'krymszuch-stack';
+    let owner = config?.githubUsername?.trim() || '';
     let repoName = githubRepoInput.trim();
     
     if (githubRepoInput.includes('/')) {
@@ -188,6 +215,12 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
       repoName = parts[1].trim();
     }
     
+    if (!owner) {
+      setImportError('Wpisz pełną nazwę w formacie uzytkownik/repozytorium lub ustaw nazwę użytkownika GitHub w Ustawieniach.');
+      setIsImporting(false);
+      return;
+    }
+
     try {
       const response = await fetch(`https://api.github.com/repos/${owner}/${repoName}`);
       if (!response.ok) throw new Error('Repository not found');
@@ -211,21 +244,8 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
       });
       setGithubRepoInput('');
     } catch (err) {
-      console.warn('Could not import real repo from GitHub:', err);
-      // Fallback
-      const imported: Project = {
-        id: `proj-${Date.now()}`,
-        title: repoName.toLowerCase().replace(/\s+/g, '-'),
-        description: `Importowane repozytorium GitHub. Szybka synchronizacja kodu i statusów projektu.`,
-        stars: Math.floor(Math.random() * 150) + 5,
-        lastSync: 'Zsynchronizowano przed chwilą',
-        tags: ['GitHub', 'TypeScript', 'Synced'],
-        type: 'github',
-        link: `https://github.com/krymszuch-stack/${repoName}`
-      };
-
-      setProjects(prev => [imported, ...prev]);
-      setGithubRepoInput('');
+      console.warn('Could not import repo from GitHub:', err);
+      setImportError(`Nie udało się pobrać repo ${owner}/${repoName} — sprawdź nazwę lub spróbuj ponownie za chwilę.`);
     } finally {
       setIsImporting(false);
     }
@@ -315,6 +335,11 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
             </button>
           </div>
         </form>
+        {importError && (
+          <div className="mt-3 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-2 rounded-lg font-sans">
+            {importError}
+          </div>
+        )}
       </div>
 
       {/* Manual creation dialog / panel inline */}
@@ -428,7 +453,9 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
         {filteredProjects.map((project) => (
           <div
             key={project.id}
-            className="p-5 rounded-2xl bg-slate-900/20 hover:bg-slate-900/40 border border-slate-800/80 hover:border-cyan-500/20 transition-all duration-300 flex flex-col justify-between group"
+            onMouseEnter={() => setHoveredProject(project)}
+            onMouseLeave={() => setHoveredProject(null)}
+            className="p-5 rounded-2xl bg-slate-900/20 hover:bg-slate-900/40 border border-slate-800/80 hover:border-cyan-500/20 transition-all duration-300 flex flex-col justify-between group relative"
           >
             <div className="space-y-3">
               <div className="flex items-start justify-between">
@@ -510,17 +537,26 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
                     onClick={() => setShowWinFixer(true)}
                     className="flex items-center gap-1.5 text-[11px] font-sans font-bold text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/20"
                   >
-                    <Sparkles size={11} className="text-cyan-400 animate-pulse" /> Uruchom demo (AI Simulator)
+                    <Sparkles size={11} className="text-cyan-400 animate-pulse" /> Uruchom demo
                   </button>
                 ) : (
-                  <a
-                    href={project.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1 text-[11px] font-sans font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
-                  >
-                    <Link size={11} /> Uruchom demo
-                  </a>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setFocusedProject(project)}
+                      className="flex items-center gap-1 text-[11px] font-sans font-medium text-slate-400 hover:text-cyan-400 transition-colors"
+                      title="Focus Mode (Space)"
+                    >
+                      <Maximize2 size={11} />
+                    </button>
+                    <a
+                      href={project.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1 text-[11px] font-sans font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
+                    >
+                      <Link size={11} /> Uruchom demo
+                    </a>
+                  </div>
                 )
               )}
             </div>
@@ -540,9 +576,75 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
         </button>
       </div>
 
+      {/* Focus Mode / Quick Look Modal */}
+      {focusedProject && (
+        <div 
+          className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[9999] flex items-center justify-center p-4 md:p-12 animate-fadeIn"
+          onClick={() => setFocusedProject(null)}
+        >
+          <div 
+            className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-900 border border-cyan-500/20 rounded-3xl p-8 shadow-[0_0_50px_rgba(6,182,212,0.1)] relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setFocusedProject(null)}
+              className="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-all"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="flex items-start gap-4 mb-6">
+              <div className={`p-4 rounded-2xl ${
+                focusedProject.type === 'github' 
+                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                  : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+              }`}>
+                <FolderGit2 size={32} />
+              </div>
+              <div>
+                <h2 className="text-3xl font-sans font-black text-white">{focusedProject.title}</h2>
+                <div className="flex items-center gap-3 mt-2 text-sm text-slate-400 font-mono">
+                  <span>{focusedProject.type === 'github' ? 'Synchronizacja GitHub' : 'Ręczna prezentacja'}</span>
+                  {focusedProject.type === 'github' && (
+                    <span className="flex items-center gap-1">
+                      <Star size={14} className="text-amber-400 fill-amber-400/20" /> {focusedProject.stars}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <p className="text-lg text-slate-300 leading-relaxed font-sans font-light mb-8 max-w-2xl">
+              {focusedProject.description}
+            </p>
+
+            <div className="flex flex-wrap gap-2 mb-8">
+              {focusedProject.tags.map((tag, idx) => (
+                <span key={idx} className="text-xs font-mono bg-slate-950 border border-slate-800 text-slate-300 px-3 py-1 rounded-md">
+                  {tag}
+                </span>
+              ))}
+            </div>
+
+            {focusedProject.link && (
+              <a 
+                href={focusedProject.link} 
+                target="_blank" 
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl font-bold font-sans transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] hover:-translate-y-0.5"
+              >
+                <Link size={16} /> Uruchom Projekt
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       {showWinFixer && (
         <div className="absolute inset-0 bg-[#060b13]/98 backdrop-blur-md rounded-2xl border border-slate-800/80 z-[60] flex flex-col overflow-hidden animate-fadeIn">
-          <WindowsFixerSimulator onClose={() => setShowWinFixer(false)} />
+          <Suspense fallback={<div className="flex items-center justify-center h-full text-slate-400 font-mono text-sm">Ładowanie interfejsu diagnostycznego...</div>}>
+            <WindowsFixerSimulator onClose={() => setShowWinFixer(false)} />
+          </Suspense>
         </div>
       )}
     </div>

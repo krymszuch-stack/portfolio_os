@@ -45,14 +45,14 @@ export interface ActiveSprint {
 export interface DesktopIcon {
   id: string;
   label: string;
-  appId: string; // Opens specific application windows ('bio' | 'projects' | 'lab' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'planned')
+  appId: string; // Opens specific application windows ('bio' | 'projects' | 'dashboard' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'terminal')
   icon: string; // Lucide icon identifier or name
   color: string; // Gradient color theme for the 3D glass icon
   x: number; // Row index (0-based) on grid or fractional X
   y: number; // Col index (0-based) on grid or fractional Y
   url?: string; // Optional URL for direct opening (e.g. social media profiles)
   isWidget?: boolean; // If true, render inline desktop widget
-  widgetType?: 'weather' | 'clock' | 'notes' | 'bio' | 'projects' | 'lab' | 'certificates' | 'contact' | 'planned'; // Type of widget
+  widgetType?: 'weather' | 'clock' | 'notes' | 'bio' | 'projects' | 'dashboard' | 'certificates' | 'contact' | 'tech-radar' | 'github-activity' | 'quick-contact' | 'inbox'; // Type of widget
 }
 
 export interface OSConfig {
@@ -102,6 +102,17 @@ export interface OSConfig {
   avatarUrl?: string;
   professionalRole?: string;
   emailProvider?: 'google' | 'microsoft' | 'smtp';
+  customSlug?: string;
 }
 
-export type ActiveAppId = 'bio' | 'projects' | 'lab' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'gdrive' | 'calendar' | 'planned' | null;
+export type ActiveAppId = 'bio' | 'projects' | 'dashboard' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'terminal' | null;
+
+export interface InboxMessage {
+  id: string;
+  sender: string;
+  senderEmail: string;
+  subject: string;
+  message: string;
+  date: string;
+  read: boolean;
+}

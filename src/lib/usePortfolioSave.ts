@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { auth, googleSignIn } from './googleAuth';
 import { savePortfolioConfig } from './firestoreStore';
 import { OSConfig, Project, Certificate, TimelineItem, DesktopIcon } from '../types';
@@ -6,6 +6,15 @@ import { OSConfig, Project, Certificate, TimelineItem, DesktopIcon } from '../ty
 export function usePortfolioSave() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [publicSlug, setPublicSlug] = useState<string | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const saveToCloud = async (
     config: OSConfig,
@@ -42,12 +51,14 @@ export function usePortfolioSave() {
       
       setSaveStatus('success');
       // Reset status after a few seconds
-      setTimeout(() => setSaveStatus('idle'), 3000);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
       return { success: true, publicSlug: slugToReturn };
     } catch (error) {
       console.error('Save error:', error);
       setSaveStatus('error');
-      setTimeout(() => setSaveStatus('idle'), 4000);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setSaveStatus('idle'), 4000);
       return { success: false };
     }
   };

@@ -7,6 +7,28 @@ const getDb = () => {
   return getFirestore(app);
 };
 
+export const checkSlugAvailability = async (slug: string, currentUserId?: string): Promise<boolean> => {
+  try {
+    const db = getDb();
+    const portfoliosRef = collection(db, 'portfolios');
+    const q = query(portfoliosRef, where('publicSlug', '==', slug), limit(1));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return true; // Available
+    }
+    
+    if (currentUserId && querySnapshot.docs[0].id === currentUserId) {
+      return true; // Taken, but belongs to the current user
+    }
+    
+    return false; // Taken by someone else
+  } catch (error) {
+    console.error('Error checking slug availability:', error);
+    return false;
+  }
+};
+
 export const savePortfolioConfig = async (
   userId: string,
   config: OSConfig,
@@ -23,15 +45,38 @@ export const savePortfolioConfig = async (
     const existingSnap = await getDoc(docRef);
     let publicSlug = '';
     
-    if (existingSnap.exists() && existingSnap.data().publicSlug) {
+    if (config.customSlug) {
+      const isValid = /^[a-z0-9-]{3,32}$/.test(config.customSlug);
+      if (!isValid) throw new Error("Invalid custom slug format.");
+      
+      const isAvailable = await checkSlugAvailability(config.customSlug, userId);
+      if (!isAvailable) throw new Error("Custom slug is already taken.");
+      
+      publicSlug = config.customSlug;
+    } else if (existingSnap.exists() && existingSnap.data().publicSlug) {
       publicSlug = existingSnap.data().publicSlug;
     } else {
       // Generate new public slug only if it doesn't exist
-      const suffix = Math.random().toString(36).substring(2, 6);
       const slugBase = config.portfolioName 
         ? config.portfolioName.toLowerCase().replace(/[^a-z0-9]+/g, '-') 
         : 'portfolio';
-      publicSlug = `${slugBase}-${suffix}`;
+      
+      let attempts = 0;
+      let generatedSlug = '';
+      let isAvailable = false;
+      
+      while (attempts < 5 && !isAvailable) {
+        const suffix = Math.random().toString(36).substring(2, 6);
+        generatedSlug = `${slugBase}-${suffix}`;
+        isAvailable = await checkSlugAvailability(generatedSlug, userId);
+        attempts++;
+      }
+      
+      if (!isAvailable) {
+        throw new Error("Could not generate a unique public slug. Please try setting a custom one.");
+      }
+      
+      publicSlug = generatedSlug;
     }
 
     const data = {

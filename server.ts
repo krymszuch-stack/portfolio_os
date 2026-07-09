@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
 
@@ -33,8 +34,17 @@ async function startServer() {
     res.json({ status: "ok", gemini: !!ai, nodeEnv: process.env.NODE_ENV || "(unset)" });
   });
 
+  // Rate limiting for the Gemini API proxy endpoint
+  const cvParseLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // Limit each IP to 10 requests per windowMs
+    message: { error: "Przekroczono limit zapytań (rate limit). Spróbuj ponownie później." },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
   // CV / LinkedIn profile AI parsing compiler route with OCR & synonym bounding
-  app.post("/api/parse-cv", async (req: express.Request, res: express.Response): Promise<any> => {
+  app.post("/api/parse-cv", cvParseLimiter, async (req: express.Request, res: express.Response): Promise<any> => {
     try {
       if (!ai) {
         return res.status(503).json({ error: "AI service unavailable. Set GEMINI_API_KEY in environment." });

@@ -5,13 +5,19 @@ import './index.css';
 import { MsalProvider } from '@azure/msal-react';
 import { msalInstance } from './lib/microsoftAuth';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { AuthProvider } from './contexts/AuthContext';
+import { WindowProvider } from './contexts/WindowContext';
 
 msalInstance.initialize().then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <ErrorBoundary>
         <MsalProvider instance={msalInstance}>
-          <App />
+          <AuthProvider>
+            <WindowProvider>
+              <App />
+            </WindowProvider>
+          </AuthProvider>
         </MsalProvider>
       </ErrorBoundary>
     </StrictMode>,
@@ -22,7 +28,11 @@ msalInstance.initialize().then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <ErrorBoundary>
-        <App />
+        <AuthProvider>
+          <WindowProvider>
+            <App />
+          </WindowProvider>
+        </AuthProvider>
       </ErrorBoundary>
     </StrictMode>,
   );
