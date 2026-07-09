@@ -127,13 +127,10 @@ async function startServer() {
   });
 
   // Serve static assets or use Vite's development middleware
-  if (process.env.NODE_ENV === "production") {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  } else {
+  // Default to production mode unless NODE_ENV is explicitly set to 'development'
+  const isDev = process.env.NODE_ENV === "development";
+
+  if (isDev) {
     // Dynamic import so vite is not required in production builds
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
@@ -141,6 +138,14 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
+    console.log("[MODE] Development - Vite middleware active");
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+    console.log(`[MODE] Production - serving static files from ${distPath}`);
   }
 
   app.listen(PORT, "0.0.0.0", () => {
