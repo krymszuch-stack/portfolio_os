@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { motion, useDragControls, useMotionValue, animate, useReducedMotion } from 'motion/react';
+import { motion, useDragControls, useMotionValue, animate, useReducedMotion, Variants } from 'motion/react';
 import { Minus, Square, X, RotateCcw, ChevronLeft } from 'lucide-react';
 import { OSConfig } from '../types';
 import { triggerHaptic } from '../lib/haptics';
@@ -177,7 +177,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       : 'none'
   };
 
-  const windowVariants: any = {
+  const windowVariants: Variants = {
     initial: {
       opacity: 0,
       scale: 0.92,
@@ -189,8 +189,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       scale: isMinimized ? 0.4 : 1,
       y: isMinimized ? window.innerHeight / 2 : 0,
       x: 0,
-      pointerEvents: isMinimized ? "none" : "auto" as any,
-      transition: { type: 'spring', damping: 25, stiffness: 350, duration: shouldReduceMotion ? 0.01 : undefined } as any
+      pointerEvents: isMinimized ? "none" : "auto",
+      transition: { type: 'spring', damping: 25, stiffness: 350, duration: shouldReduceMotion ? 0.01 : undefined }
     },
     exit: () => {
       const dockBtn = document.getElementById(`dock-btn-${id}`);
@@ -215,7 +215,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           opacity: 0,
           transition: {
             duration: 0.45,
-            ease: [0.25, 1, 0.5, 1] // Smooth bezier curve for organic snapping
+            ease: [0.25, 1, 0.5, 1] as const // Smooth bezier curve for organic snapping
           }
         };
       }

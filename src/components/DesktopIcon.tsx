@@ -60,7 +60,7 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({ label, icon, onClick }
         }}
       >
         <div className="text-yellow-400 group-hover:text-amber-300 transition-colors">
-          {React.cloneElement(icon as React.ReactElement<any>, { size: 56, strokeWidth: 2.5 })}
+          {React.cloneElement(icon as React.ReactElement<{ size?: number; strokeWidth?: number }>, { size: 56, strokeWidth: 2.5 })}
         </div>
       </motion.div>
 
