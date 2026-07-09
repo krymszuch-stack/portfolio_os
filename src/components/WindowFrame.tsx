@@ -190,7 +190,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       y: isMinimized ? window.innerHeight / 2 : 0,
       x: 0,
       pointerEvents: isMinimized ? "none" : "auto" as any,
-      transition: { type: 'spring', damping: 25, stiffness: 350, duration: shouldReduceMotion ? 0.01 : undefined }
+      transition: { type: 'spring', damping: 25, stiffness: 350, duration: shouldReduceMotion ? 0.01 : undefined } as any
     },
     exit: () => {
       const dockBtn = document.getElementById(`dock-btn-${id}`);

@@ -483,8 +483,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
       setGitHubSyncStatus('error');
     }
   };
-
-  const [activeCategory, setActiveCategory] = useState<'main' | 'appearance' | 'system' | 'integrations'>('main');
+
 
   return (
     <div className="p-4 text-black space-y-6 select-none max-h-full flex flex-col justify-between">

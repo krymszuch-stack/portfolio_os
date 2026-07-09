@@ -443,17 +443,6 @@ export default function App() {
     }, 450);
   };
 
-  const handleFocusApp = (appId: string) => {
-    setZIndices(prev => {
-      const values = Object.values(prev) as number[];
-      const maxZ = Math.max(...values, 10);
-      return {
-        ...prev,
-        [appId]: maxZ + 1
-      };
-    });
-    setActiveApp(appId as any);
-  };
 
   const handleSystemReset = () => {
     if (confirm('Czy na pewno chcesz zresetować system? Spowoduje to przywrócenie domyślnych danych demonstracyjnych.')) {

@@ -18,7 +18,7 @@ vi.mock('./googleAuth', () => ({
   app: {}, // Mock app initialized
 }));
 
-import { getDoc, setDoc } from 'firebase/firestore';
+import { getDoc, setDoc, getDocs } from 'firebase/firestore';
 
 describe('firestoreStore slug logic', () => {
   beforeEach(() => {

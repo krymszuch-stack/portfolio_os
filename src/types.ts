@@ -52,7 +52,7 @@ export interface DesktopIcon {
   y: number; // Col index (0-based) on grid or fractional Y
   url?: string; // Optional URL for direct opening (e.g. social media profiles)
   isWidget?: boolean; // If true, render inline desktop widget
-  widgetType?: 'weather' | 'clock' | 'notes' | 'bio' | 'projects' | 'dashboard' | 'certificates' | 'contact' | 'tech-radar' | 'github-activity' | 'quick-contact' | 'inbox'; // Type of widget
+  widgetType?: 'weather' | 'clock' | 'notes' | 'bio' | 'projects' | 'lab' | 'certificates' | 'contact' | 'planned' | 'dashboard' | 'tech-radar' | 'github-activity' | 'quick-contact' | 'inbox'; // Type of widget
 }
 
 export interface OSConfig {
@@ -87,7 +87,7 @@ export interface OSConfig {
   particles?: 'sparkles' | 'leaves' | 'bubbles' | 'none';
   clockFormat?: '24h' | '12h';
   windowStyle?: 'curved-classic' | 'sharp-chunky';
-  portfolioStyle?: 'modern' | 'retro';
+  portfolioStyle?: string;
   iconStyleModern?: string;
   iconStyleRetro?: string;
   fontSizeScale?: number;
@@ -103,6 +103,16 @@ export interface OSConfig {
   professionalRole?: string;
   emailProvider?: 'google' | 'microsoft' | 'smtp';
   customSlug?: string;
+  fullName?: string;
+  biography?: string;
+  title?: string;
+  skills?: string[];
+  frontendSkills?: string[];
+  backendSkills?: string[];
+  designSkills?: string[];
+  coreValues?: string[];
+  ownerName?: string;
+  portfolioRole?: string;
 }
 
 export type ActiveAppId = 'bio' | 'projects' | 'dashboard' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'terminal' | null;

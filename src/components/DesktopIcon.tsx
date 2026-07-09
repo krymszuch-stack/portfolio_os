@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 
 interface DesktopIconProps {
   label: string;
-  icon: React.ReactNode;
+  icon: React.ReactElement;
   onClick: () => void;
 }
 

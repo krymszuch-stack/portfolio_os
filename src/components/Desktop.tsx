@@ -11,6 +11,10 @@ import * as Lucide from 'lucide-react';
 import { Edit2, Sparkles, X, Check } from 'lucide-react';
 import { playXpClick, playXpError, playXpBalloon } from '../lib/sounds';
 import { triggerHaptic } from '../lib/haptics';
+import { DesktopIconGrid } from './desktop/DesktopIconGrid';
+import { DesktopContextMenu } from './desktop/DesktopContextMenu';
+import { useDesktopContextMenu } from './desktop/useDesktopContextMenu';
+import { useDesktopIconLayout } from './desktop/useDesktopIconLayout';
 
 interface DesktopProps {
   icons: DesktopIcon[];
@@ -36,6 +40,8 @@ export const Desktop: React.FC<DesktopProps> = ({
   const [showHeatmap, setShowHeatmap] = useState(false);
   
   const isDraggingRef = useRef(false);
+  const hasLongPressed = useRef(false);
+  const longPressTimer = useRef<any>(null);
   
   const handleWidgetClick = (appId: any, e: React.MouseEvent) => {
     e.stopPropagation();
