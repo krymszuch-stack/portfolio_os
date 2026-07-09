@@ -9,29 +9,7 @@ interface DesktopIconProps {
 
 // 8-Bit descending square wave click synth (Terraria pickup style)
 const playPixelBeep = () => {
-  try {
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    
-    // Classic 8-bit retro sound using square wave
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(800, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.1);
-    
-    gain.gain.setValueAtTime(0.05, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-    
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    
-    osc.start();
-    osc.stop(ctx.currentTime + 0.1);
-  } catch (e) {
-    // Graceful fallback if block/not allowed
-  }
+  // Sound disabled
 };
 
 const Pedestal: React.FC<{ hover: boolean }> = ({ hover }) => {

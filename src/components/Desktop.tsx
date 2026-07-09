@@ -493,6 +493,57 @@ export const Desktop: React.FC<DesktopProps> = ({
     }
   };
 
+  const getWidgetStyleClasses = (widgetType: string) => {
+    const styles: Record<string, { card: string; iconBg: string; text: string }> = {
+      weather: {
+        card: 'bg-gradient-to-br from-amber-500/10 via-slate-900/60 to-slate-950/80 border-amber-500/20 hover:border-amber-400/40 shadow-[0_4px_20px_rgba(245,158,11,0.05)] hover:shadow-[0_4px_30px_rgba(245,158,11,0.15)]',
+        iconBg: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
+        text: 'text-amber-400'
+      },
+      clock: {
+        card: 'bg-gradient-to-br from-indigo-500/10 via-slate-900/60 to-slate-950/80 border-indigo-500/20 hover:border-indigo-400/40 shadow-[0_4px_20px_rgba(124,58,237,0.05)] hover:shadow-[0_4px_30px_rgba(124,58,237,0.15)]',
+        iconBg: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400',
+        text: 'text-indigo-400'
+      },
+      notes: {
+        card: 'bg-gradient-to-br from-emerald-500/10 via-slate-900/60 to-slate-950/80 border-emerald-500/20 hover:border-emerald-400/40 shadow-[0_4px_20px_rgba(16,185,129,0.05)] hover:shadow-[0_4px_30px_rgba(16,185,129,0.15)]',
+        iconBg: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+        text: 'text-emerald-400'
+      },
+      bio: {
+        card: 'bg-gradient-to-br from-purple-500/10 via-slate-900/60 to-slate-950/80 border-purple-500/20 hover:border-purple-400/40 shadow-[0_4px_20px_rgba(168,85,247,0.05)] hover:shadow-[0_4px_30px_rgba(168,85,247,0.15)]',
+        iconBg: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
+        text: 'text-purple-400'
+      },
+      projects: {
+        card: 'bg-gradient-to-br from-blue-500/10 via-slate-900/60 to-slate-950/80 border-blue-500/20 hover:border-blue-400/40 shadow-[0_4px_20px_rgba(59,130,246,0.05)] hover:shadow-[0_4px_30px_rgba(59,130,246,0.15)]',
+        iconBg: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
+        text: 'text-blue-400'
+      },
+      lab: {
+        card: 'bg-gradient-to-br from-amber-500/10 via-slate-900/60 to-slate-950/80 border-amber-500/20 hover:border-amber-400/40 shadow-[0_4px_20px_rgba(245,158,11,0.05)] hover:shadow-[0_4px_30px_rgba(245,158,11,0.15)]',
+        iconBg: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
+        text: 'text-amber-400'
+      },
+      certificates: {
+        card: 'bg-gradient-to-br from-emerald-500/10 via-slate-900/60 to-slate-950/80 border-emerald-500/20 hover:border-emerald-400/40 shadow-[0_4px_20px_rgba(16,185,129,0.05)] hover:shadow-[0_4px_30px_rgba(16,185,129,0.15)]',
+        iconBg: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+        text: 'text-emerald-400'
+      },
+      contact: {
+        card: 'bg-gradient-to-br from-rose-500/10 via-slate-900/60 to-slate-950/80 border-rose-500/20 hover:border-rose-400/40 shadow-[0_4px_20px_rgba(244,63,94,0.05)] hover:shadow-[0_4px_30px_rgba(244,63,94,0.15)]',
+        iconBg: 'bg-rose-500/10 border-rose-500/20 text-rose-400',
+        text: 'text-rose-400'
+      },
+      planned: {
+        card: 'bg-gradient-to-br from-cyan-500/10 via-slate-900/60 to-slate-950/80 border-cyan-500/20 hover:border-cyan-400/40 shadow-[0_4px_20px_rgba(6,182,212,0.05)] hover:shadow-[0_4px_30px_rgba(6,182,212,0.15)]',
+        iconBg: 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400',
+        text: 'text-cyan-400'
+      }
+    };
+    return styles[widgetType] || styles.bio;
+  };
+
   // HTML5 Drag-and-Drop Handlers for Icon Movement
   
   
@@ -971,8 +1022,35 @@ export const Desktop: React.FC<DesktopProps> = ({
               key={`${r}-${c}`}
               data-grid-r={r}
               data-grid-c={c}
-              className="flex items-center justify-center relative rounded-xl border border-transparent transition-all desktop-grid-cell"
-            />
+              className={`flex items-center justify-center relative rounded-2xl border border-dashed transition-all duration-300 desktop-grid-cell group/cell h-full min-h-[110px] ${
+                isWiggling 
+                  ? 'border-purple-500/25 bg-purple-500/5 shadow-[inset_0_0_12px_rgba(168,85,247,0.05)]' 
+                  : 'border-white/[0.02] hover:border-white/[0.08] hover:bg-white/[0.01]'
+              }`}
+            >
+              {isWiggling && (
+                <button
+                  type="button"
+                  aria-label="Dodaj element"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenAddElement(r, c);
+                  }}
+                  className="w-8 h-8 rounded-full bg-purple-500/15 hover:bg-purple-500/30 flex items-center justify-center text-purple-400 hover:text-purple-300 border border-purple-500/20 hover:border-purple-500/40 transition-all opacity-0 group-hover/cell:opacity-100 duration-200"
+                >
+                  <Lucide.Plus size={14} />
+                </button>
+              )}
+              {/* Subtle futuristic corner accents */}
+              {!isWiggling && (
+                <div className="absolute inset-0 pointer-events-none opacity-[0.03] group-hover/cell:opacity-[0.1] transition-opacity">
+                  <div className="absolute top-2 left-2 w-1.5 h-1.5 border-t border-l border-white" />
+                  <div className="absolute top-2 right-2 w-1.5 h-1.5 border-t border-r border-white" />
+                  <div className="absolute bottom-2 left-2 w-1.5 h-1.5 border-b border-l border-white" />
+                  <div className="absolute bottom-2 right-2 w-1.5 h-1.5 border-b border-r border-white" />
+                </div>
+              )}
+            </div>
           );
         }
 
@@ -981,7 +1059,11 @@ export const Desktop: React.FC<DesktopProps> = ({
             key={isGridCell ? `${r}-${c}` : icon.id}
             data-grid-r={isGridCell ? r : undefined}
             data-grid-c={isGridCell ? c : undefined}
-            className={`flex relative rounded-xl border border-transparent transition-all desktop-grid-cell ${isMobile ? 'w-full max-w-md mx-auto items-center justify-start h-auto' : 'items-center justify-center'}`}
+            className={`flex relative rounded-2xl border transition-all duration-300 desktop-grid-cell ${
+              isMobile 
+                ? 'w-full max-w-md mx-auto items-center justify-start h-auto border-transparent' 
+                : 'items-center justify-center border-white/[0.01] hover:border-white/[0.06] hover:bg-white/[0.01]'
+            }`}
           >
             {icon ? (
               icon.isWidget ? (
@@ -992,12 +1074,12 @@ export const Desktop: React.FC<DesktopProps> = ({
                   dragElastic={0}
                   dragSnapToOrigin={true}
                   whileDrag={{ 
-                    scale: 1.06, 
-                    boxShadow: '0 15px 30px rgba(0,0,0,0.6)', 
+                    scale: 1.1, 
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.7)', 
                     zIndex: 100,
                     cursor: 'grabbing',
                     opacity: 0.95,
-                    filter: 'brightness(1.1) contrast(1.05)'
+                    filter: 'brightness(1.15) contrast(1.05)'
                   }}
                   onDragStart={() => {
                     isDraggingRef.current = true;
@@ -1006,13 +1088,24 @@ export const Desktop: React.FC<DesktopProps> = ({
                     handleDragEnd(e, info, icon.id);
                     setTimeout(() => {
                       isDraggingRef.current = false;
-                    }, 50);
+                    }, 250);
                   }}
                   onPointerDown={(e) => startPress(icon.id, e)}
                   onPointerUp={endPress}
                   onPointerLeave={endPress}
-                  className={`group flex flex-col justify-between p-3.5 rounded-2xl w-40 h-28 text-left bg-slate-900/60 border border-white/10 hover:border-white/25 backdrop-blur-md shadow-xl transition-[background-color,border-color,box-shadow,opacity] duration-200 relative ${!isMobile ? 'cursor-grab active:cursor-grabbing' : 'w-full !w-full !h-32 mb-1'} ${
-                    isWiggling ? 'animate-wiggle border-dashed border-purple-500/55' : ''
+                  onTap={(e) => {
+                    if (icon.widgetType === 'notes' || icon.widgetType === 'weather' || icon.widgetType === 'clock') {
+                      return;
+                    }
+                    triggerHaptic('light');
+                    if (isWiggling) {
+                      handleOpenEdit(icon, e as any);
+                    } else {
+                      openApp(icon.appId as any);
+                    }
+                  }}
+                  className={`group flex flex-col justify-between p-3.5 rounded-2xl w-40 h-28 text-left backdrop-blur-md transition-all duration-300 relative ${!isMobile ? 'cursor-grab active:cursor-grabbing' : 'w-full !w-full !h-32 mb-1'} ${
+                    isWiggling ? 'animate-wiggle border-dashed border-purple-500/55' : getWidgetStyleClasses(icon.widgetType).card
                   }`}
                   animate={isWiggling ? { rotate: [-2, 2, -2] } : { rotate: 0 }}
                   transition={isWiggling ? { repeat: Infinity, duration: 0.3 } : {}}
@@ -1056,12 +1149,9 @@ export const Desktop: React.FC<DesktopProps> = ({
                   )}
 
                   {icon.widgetType === 'bio' && (
-                    <div 
-                      onClick={(e) => handleWidgetClick('bio', e)}
-                      className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
-                    >
+                    <div className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full">
                       <div className="flex gap-1.5 items-center">
-                        <div className="w-6 h-6 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20 text-purple-400">
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${getWidgetStyleClasses(icon.widgetType).iconBg}`}>
                           <Lucide.User size={12} />
                         </div>
                         <div className="truncate">
@@ -1079,13 +1169,10 @@ export const Desktop: React.FC<DesktopProps> = ({
                   )}
 
                   {icon.widgetType === 'projects' && (
-                    <div 
-                      onClick={(e) => handleWidgetClick('projects', e)}
-                      className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
-                    >
+                    <div className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full">
                       <div className="flex justify-between items-start">
                         <div className="flex gap-1.5 items-center">
-                          <div className="w-6 h-6 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400">
+                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${getWidgetStyleClasses(icon.widgetType).iconBg}`}>
                             <Lucide.FolderGit2 size={12} />
                           </div>
                           <div>
@@ -1105,12 +1192,9 @@ export const Desktop: React.FC<DesktopProps> = ({
                   )}
 
                   {icon.widgetType === 'lab' && (
-                    <div 
-                      onClick={(e) => handleWidgetClick('lab', e)}
-                      className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
-                    >
+                    <div className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full">
                       <div className="flex gap-1.5 items-center">
-                        <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-400">
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${getWidgetStyleClasses(icon.widgetType).iconBg}`}>
                           <Lucide.Flame size={12} />
                         </div>
                         <div>
@@ -1128,12 +1212,9 @@ export const Desktop: React.FC<DesktopProps> = ({
                   )}
 
                   {icon.widgetType === 'certificates' && (
-                    <div 
-                      onClick={(e) => handleWidgetClick('certificates', e)}
-                      className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
-                    >
+                    <div className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full">
                       <div className="flex gap-1.5 items-center">
-                        <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400">
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${getWidgetStyleClasses(icon.widgetType).iconBg}`}>
                           <Lucide.Award size={12} />
                         </div>
                         <div>
@@ -1151,12 +1232,9 @@ export const Desktop: React.FC<DesktopProps> = ({
                   )}
 
                   {icon.widgetType === 'contact' && (
-                    <div 
-                      onClick={(e) => handleWidgetClick('contact', e)}
-                      className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
-                    >
+                    <div className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full">
                       <div className="flex gap-1.5 items-center">
-                        <div className="w-6 h-6 rounded-lg bg-rose-500/10 flex items-center justify-center border border-rose-500/20 text-rose-400">
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${getWidgetStyleClasses(icon.widgetType).iconBg}`}>
                           <Lucide.Mail size={12} />
                         </div>
                         <div>
@@ -1174,12 +1252,9 @@ export const Desktop: React.FC<DesktopProps> = ({
                   )}
 
                   {icon.widgetType === 'planned' && (
-                    <div 
-                      onClick={(e) => handleWidgetClick('planned', e)}
-                      className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
-                    >
+                    <div className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full">
                       <div className="flex gap-1.5 items-center">
-                        <div className="w-6 h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 text-cyan-400">
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border ${getWidgetStyleClasses(icon.widgetType).iconBg}`}>
                           <Lucide.Compass size={12} />
                         </div>
                         <div>
@@ -1210,15 +1285,15 @@ export const Desktop: React.FC<DesktopProps> = ({
                   dragElastic={0}
                   dragSnapToOrigin={true}
                   whileDrag={{ 
-                    scale: 1.1, 
-                    boxShadow: '0 15px 30px rgba(0,0,0,0.6)', 
+                    scale: 1.12, 
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.7)', 
                     zIndex: 100,
                     cursor: 'grabbing',
                     opacity: 0.95,
-                    filter: 'brightness(1.1) contrast(1.05)'
+                    filter: 'brightness(1.15) contrast(1.05)'
                   }}
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.92 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onDragStart={() => {
                     isDraggingRef.current = true;
                   }}
@@ -1226,17 +1301,21 @@ export const Desktop: React.FC<DesktopProps> = ({
                     handleDragEnd(e, info, icon.id);
                     setTimeout(() => {
                       isDraggingRef.current = false;
-                    }, 50);
+                    }, 250);
                   }}
                   onPointerDown={(e) => startPress(icon.id, e)}
                   onPointerUp={endPress}
                   onPointerLeave={endPress}
                   onContextMenu={(e) => handleContextMenu(e, icon)}
-                  onClick={(e) => {
+                  onTap={(e) => {
                     triggerHaptic('light');
-                    handleIconClick(icon, e);
+                    handleIconClick(icon, e as any);
                   }}
-                  className={`group flex ${isMobile ? 'flex-row items-center justify-start w-full gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 shadow-lg backdrop-blur-md' : 'flex-col items-center justify-center p-3 rounded-2xl w-28 h-28 text-center cursor-grab active:cursor-grabbing hover:bg-white/5 border border-transparent hover:border-white/5 hover:backdrop-blur-sm'} transition-[background-color,border-color,box-shadow,opacity] duration-200 relative ${
+                  className={`group flex ${
+                    isMobile 
+                      ? 'flex-row items-center justify-start w-full gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 shadow-lg backdrop-blur-md' 
+                      : 'flex-col items-center justify-center p-3 rounded-[24px] w-[108px] h-[108px] text-center cursor-grab active:cursor-grabbing hover:bg-white/[0.06] hover:border-white/10 hover:shadow-2xl hover:shadow-black/40 border border-transparent'
+                  } transition-all duration-300 relative ${
                     isWiggling ? 'animate-wiggle' : ''
                   }`}
                   animate={isWiggling ? { rotate: [-2, 2, -2] } : { rotate: 0 }}

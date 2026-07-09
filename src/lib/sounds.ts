@@ -7,7 +7,7 @@
 // Designed to be lightweight, zero-dependency, and extremely faithful!
 
 let audioCtx: AudioContext | null = null;
-let isSoundEnabled = true;
+let isSoundEnabled = false;
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
