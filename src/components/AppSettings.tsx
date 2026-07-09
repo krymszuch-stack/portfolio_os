@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { OSConfig, DesktopIcon } from '../types';
+import { triggerHaptic } from '../lib/haptics';
 import { useMsal } from '@azure/msal-react';
 import { loginRequest, isMicrosoftConfigured } from '../lib/microsoftAuth';
 import { googleSignIn, logout as logoutGoogle } from '../lib/googleAuth';
 import { getAuth, onAuthStateChanged, linkWithPopup, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
 import { Download, Upload, Cpu, FileText, Linkedin, Loader2, Sparkles, RefreshCw, Check, AlertCircle } from 'lucide-react';
+import { THEME_ICONS_MAP } from '../lib/themeIcons';
 
 interface AppSettingsProps {
   config: OSConfig;
@@ -171,7 +174,23 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
   };
 
   const handleSave = () => {
+    triggerHaptic('success');
     onSave(localConfig);
+    
+    // Apply theme icon pack if system theme has changed
+    if (localConfig.systemTheme !== config.systemTheme && setIcons && icons) {
+      const themeId = localConfig.systemTheme || 'terraria';
+      const iconPack = THEME_ICONS_MAP[themeId];
+      if (iconPack) {
+        setIcons(prev => prev.map(icon => {
+          if (iconPack[icon.appId]) {
+            return { ...icon, icon: iconPack[icon.appId] };
+          }
+          return icon;
+        }));
+      }
+    }
+    
     setShowSavedMsg(true);
     setTimeout(() => setShowSavedMsg(false), 2500);
     // Custom audio confirmation
@@ -729,13 +748,18 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
                           }
                         }
                       }
+                      const activeThemeId = localConfig.systemTheme || 'terraria';
+                      const themePackIcons = THEME_ICONS_MAP[activeThemeId];
+                      const defaultIconStr = app.appId === 'gdrive' ? 'hardDrive' : app.appId === 'planned' ? 'phone' : app.appId === 'contact' ? 'mail' : app.appId === 'wizard' ? 'sparkles' : app.appId === 'certificates' ? 'award' : app.appId === 'lab' ? 'flask' : app.appId === 'projects' ? 'folder' : app.appId === 'bio' ? 'user' : app.appId;
+                      const selectedIconStr = themePackIcons ? (themePackIcons[app.appId] || defaultIconStr) : defaultIconStr;
+
                       setIcons(prev => [
                         ...prev,
                         {
                           id: `icon-${app.appId}`,
                           label: app.label,
                           appId: app.appId,
-                          icon: app.appId === 'gdrive' ? 'hardDrive' : app.appId === 'planned' ? 'phone' : app.appId === 'contact' ? 'mail' : app.appId === 'wizard' ? 'sparkles' : app.appId === 'certificates' ? 'award' : app.appId === 'lab' ? 'flask' : app.appId === 'projects' ? 'folder' : app.appId === 'bio' ? 'user' : app.appId,
+                          icon: selectedIconStr,
                           color: app.color,
                           x: nextX,
                           y: nextY
@@ -819,7 +843,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#F5F5F5] p-3 border-2 border-black rounded">
           {/* Połączenie Google */}
-          <div className="p-2.5 bg-white border border-gray-300 rounded flex flex-col justify-between">
+          <div className="p-2 p-2.5 bg-white border border-gray-300 rounded flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-sm">🔵</span>
@@ -838,7 +862,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
                   </span>
                   <button
                     onClick={handleDisconnectGoogle}
-                    className="text-[0.65rem] font-bold text-red-600 hover:underline cursor-pointer"
+                    className="text-[0.65rem] font-bold text-red-600 hover:underline cursor-pointer min-h-[44px]"
                   >
                     Rozłącz
                   </button>
@@ -846,7 +870,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
               ) : (
                 <button
                   onClick={handleConnectGoogle}
-                  className="w-full py-1 text-center bg-blue-600 hover:bg-blue-700 text-[0.65rem] font-bold text-white rounded cursor-pointer transition-colors uppercase"
+                  className="w-full py-1 text-center bg-blue-600 hover:bg-blue-700 text-[0.65rem] font-bold text-white rounded cursor-pointer transition-colors uppercase min-h-[44px]"
                 >
                   Połącz z Google
                 </button>
@@ -855,7 +879,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
           </div>
 
           {/* Połączenie Microsoft */}
-          <div className="p-2.5 bg-white border border-gray-300 rounded flex flex-col justify-between">
+          <div className="p-2 p-2.5 bg-white border border-gray-300 rounded flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-sm">🔷</span>
@@ -878,7 +902,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
                   </span>
                   <button
                     onClick={handleDisconnectMicrosoft}
-                    className="text-[0.65rem] font-bold text-red-600 hover:underline cursor-pointer"
+                    className="text-[0.65rem] font-bold text-red-600 hover:underline cursor-pointer min-h-[44px]"
                   >
                     Rozłącz
                   </button>
@@ -886,7 +910,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
               ) : (
                 <button
                   onClick={handleConnectMicrosoft}
-                  className="w-full py-1 text-center bg-sky-600 hover:bg-sky-700 text-[0.65rem] font-bold text-white rounded cursor-pointer transition-colors uppercase"
+                  className="w-full py-1 text-center bg-sky-600 hover:bg-sky-700 text-[0.65rem] font-bold text-white rounded cursor-pointer transition-colors uppercase min-h-[44px]"
                 >
                   Połącz z Microsoft
                 </button>
@@ -896,7 +920,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
         </div>
 
         {/* Wybór domyślnego dostawcy poczty */}
-        <div className="p-2.5 bg-[#F5F5F5] border-2 border-black rounded flex items-center justify-between gap-4">
+        <div className="p-2 p-2.5 bg-[#F5F5F5] border-2 border-black rounded flex items-center justify-between gap-4">
           <div className="space-y-0.5">
             <span className="text-[10px] font-bold text-blue-900 uppercase">Dostawca Poczty Formularza:</span>
             <p className="text-[0.65rem] text-gray-500 font-semibold uppercase leading-tight">
@@ -955,7 +979,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
           <button
             onClick={handleForceSyncGitHub}
             disabled={gitHubSyncStatus === 'syncing'}
-            className="px-3.5 py-1.5 flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-200 text-slate-950 disabled:text-gray-400 font-sans font-bold text-xs rounded border border-black cursor-pointer transition-all uppercase select-none"
+            className="px-3.5 py-1.5 flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-200 text-slate-950 disabled:text-gray-400 font-sans font-bold text-xs rounded border border-black cursor-pointer transition-all uppercase select-none min-h-[44px]"
           >
             <RefreshCw size={12} className={gitHubSyncStatus === 'syncing' ? 'animate-spin' : ''} />
             <span>Wymuś Odświeżenie (Force Sync)</span>
@@ -977,20 +1001,20 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-blue-100">
           <button
             onClick={handleExportBackup}
-            className="p-2 flex items-center justify-center gap-2 bg-white hover:bg-blue-50 border border-blue-300 hover:border-blue-400 text-blue-700 font-sans font-bold text-xs rounded cursor-pointer transition-all uppercase"
+            className="p-2 min-h-[44px] flex items-center justify-center gap-2 bg-white hover:bg-blue-50 border border-blue-300 hover:border-blue-400 text-blue-700 font-sans font-bold text-xs rounded cursor-pointer transition-all uppercase"
           >
             <Download size={13} />
             <span>Pobierz Kopię Zapasową (JSON)</span>
           </button>
 
-          <label className="p-2 flex items-center justify-center gap-2 bg-white hover:bg-blue-50 border border-dashed border-blue-300 hover:border-blue-400 text-blue-700 font-sans font-bold text-xs rounded cursor-pointer transition-all uppercase text-center select-none">
+          <label className="p-2 min-h-[44px] flex items-center justify-center gap-2 bg-white hover:bg-blue-50 border border-dashed border-blue-300 hover:border-blue-400 text-blue-700 font-sans font-bold text-xs rounded cursor-pointer transition-all uppercase text-center select-none">
             <Upload size={13} />
             <span>Przywróć z pliku JSON</span>
             <input
               type="file"
               accept=".json"
               onChange={handleImportBackup}
-              className="hidden"
+              className="hidden min-h-[44px]"
             />
           </label>
         </div>
@@ -1021,7 +1045,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
               onChange={(e) => setCvText(e.target.value)}
               placeholder="Wklej tutaj surowy tekst profilu zawodowego lub CV..."
               rows={3}
-              className="w-full p-2 bg-white border border-gray-300 rounded text-xs focus:outline-none focus:border-orange-500"
+              className="w-full p-2 min-h-[44px] bg-white border border-gray-300 rounded text-xs focus:outline-none focus:border-orange-500"
             />
           </div>
 
@@ -1061,14 +1085,14 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
 
           {/* Feedback alerts */}
           {parseError && (
-            <div className="p-2 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded flex items-start gap-1.5">
+            <div className="p-2 min-h-[44px] bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded flex items-start gap-1.5">
               <AlertCircle size={14} className="shrink-0 mt-0.5" />
               <span>{parseError}</span>
             </div>
           )}
 
           {parseSuccess && (
-            <div className="p-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded flex items-start gap-1.5">
+            <div className="p-2 min-h-[44px] bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded flex items-start gap-1.5">
               <Check size={14} className="shrink-0 mt-0.5" />
               <span>Kompilacja i import zakończone sukcesem! Twoje Bio, Projekty i inne sekcje zostały natychmiastowo zaktualizowane o wykryte atrybuty.</span>
             </div>
@@ -1078,7 +1102,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
           <button
             onClick={handleParseCV}
             disabled={parsingLoading || (!cvText.trim() && !cvFile)}
-            className="w-full py-2.5 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:from-gray-200 disabled:to-gray-200 text-white disabled:text-gray-400 font-sans font-extrabold text-xs rounded border border-black cursor-pointer transition-all uppercase select-none tracking-wider shadow-[0_2px_4px_rgba(249,115,22,0.2)]"
+            className="w-full py-2.5 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:from-gray-200 disabled:to-gray-200 text-white disabled:text-gray-400 font-sans font-extrabold text-xs rounded border border-black cursor-pointer transition-all uppercase select-none tracking-wider shadow-[0_2px_4px_rgba(249,115,22,0.2)] min-h-[44px]"
           >
             {parsingLoading ? (
               <>
@@ -1097,22 +1121,45 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
 
       {/* 5. Modern Glassmorphism Styled Save Button */}
       <div className="flex justify-center pt-2">
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
           onClick={handleSave}
-          className="w-full max-w-xs min-h-[48px] h-12 px-6 flex items-center justify-center gap-2 rounded-xl bg-emerald-500/80 hover:bg-emerald-500 border border-emerald-400/30 text-white font-sans font-bold text-xs uppercase tracking-widest cursor-pointer shadow-[0_4px_12px_rgba(16,185,129,0.25),inset_0_1px_1px_rgba(255,255,255,0.2)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.4),inset_0_1px_1px_rgba(255,255,255,0.3)] hover:scale-[1.02] active:scale-[0.98] active:translate-y-0 transition-all duration-200 backdrop-blur-md select-none"
+          className="w-full max-w-xs min-h-[48px] h-12 px-6 flex items-center justify-center gap-2 rounded-xl bg-emerald-500/80 hover:bg-emerald-500 border border-emerald-400/30 text-white font-sans font-bold text-xs uppercase tracking-widest shadow-lg cursor-pointer backdrop-blur-md select-none relative overflow-hidden"
         >
-          {showSavedMsg ? (
-            <>
-              <span className="animate-bounce">✅</span>
-              <span>ZAPISANO Pomyślnie</span>
-            </>
-          ) : (
-            <>
-              <span>💾</span>
-              <span>ZAPISZ USTAWIENIA</span>
-            </>
-          )}
-        </button>
+          <AnimatePresence mode="wait">
+            {showSavedMsg ? (
+              <motion.div
+                key="saved"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex items-center gap-2"
+              >
+                <motion.span 
+                  initial={{ scale: 0 }} 
+                  animate={{ scale: 1, rotate: [0, 15, -10, 0] }} 
+                  transition={{ type: "spring", delay: 0.1 }}
+                >
+                  ✅
+                </motion.span>
+                <span>ZAPISANO</span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="save"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex items-center gap-2"
+              >
+                <span>💾</span>
+                <span>ZAPISZ USTAWIENIA</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.button>
       </div>
     </div>
   );

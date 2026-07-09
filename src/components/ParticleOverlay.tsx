@@ -22,8 +22,9 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    let animationId: number;
+    let animationId: number | null = null;
     let particles: any[] = [];
+    let isLooping = false;
     
     const handleResize = () => {
       canvas.width = window.innerWidth;
@@ -33,8 +34,9 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
     window.addEventListener('resize', handleResize);
     
     const initContinuousParticles = () => {
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       particles = [];
-      if (variant === 'none') return;
+      if (variant === 'none' || reducedMotion) return;
       
       const isMobile = window.innerWidth < 768;
       // Limit count: max 30 on mobile, 50 on desktop to keep the background clean and legible
@@ -70,11 +72,16 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
     initContinuousParticles();
     
     const tick = () => {
-      if (variant === 'none' && particlesRef.current.length === 0) {
+      const sparks = particlesRef.current;
+      
+      if (variant === 'none' && sparks.length === 0) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        animationId = requestAnimationFrame(tick);
+        isLooping = false;
+        animationId = null;
         return;
       }
+      
+      isLooping = true;
       
       if (variant === 'matrix-rain') {
         ctx.fillStyle = 'rgba(5, 5, 7, 0.08)'; // slightly fade previous frames
@@ -119,7 +126,6 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
       }
       
       // Draw triggerRef sparks (retro click effects)
-      const sparks = particlesRef.current;
       for (let i = sparks.length - 1; i >= 0; i--) {
         const p = sparks[i];
         p.x += p.vx;
@@ -140,17 +146,13 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
       animationId = requestAnimationFrame(tick);
     };
     
-    animationId = requestAnimationFrame(tick);
+    if (variant !== 'none' || particlesRef.current.length > 0) {
+      isLooping = true;
+      animationId = requestAnimationFrame(tick);
+    }
     
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationId);
-    };
-  }, [variant]);
-
-  
-  useEffect(() => {
     triggerRef.current = (x: number, y: number, count = 12) => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const finalCount = count + Math.floor(Math.random() * 8);
       for (let i = 0; i < finalCount; i++) {
         const angle = Math.random() * Math.PI * 2;
@@ -166,8 +168,23 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
           maxLife: 40
         });
       }
+      
+      if (!isLooping) {
+        isLooping = true;
+        if (!animationId) {
+          animationId = requestAnimationFrame(tick);
+        }
+      }
     };
-  }, [triggerRef]);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+      triggerRef.current = null;
+    };
+  }, [variant]);
 
 
   return (

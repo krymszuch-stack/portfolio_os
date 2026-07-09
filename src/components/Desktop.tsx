@@ -10,6 +10,7 @@ import { initialDesktopIcons } from '../data';
 import * as Lucide from 'lucide-react';
 import { Edit2, Sparkles, X, Check } from 'lucide-react';
 import { playXpClick, playXpError, playXpBalloon } from '../lib/sounds';
+import { triggerHaptic } from '../lib/haptics';
 
 const ClockWidgetComponent: React.FC<{ config: OSConfig }> = ({ config }) => {
   const [time, setTime] = useState(new Date());
@@ -101,19 +102,24 @@ export const Desktop: React.FC<DesktopProps> = ({
   const [isPortrait, setIsPortrait] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  useEffect(() => {
-    const checkOrientation = () => {
-      setIsPortrait(window.innerHeight > window.innerWidth);
+    let animationFrameId: number;
+    const handleResize = () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      animationFrameId = requestAnimationFrame(() => {
+        setIsMobile(window.innerWidth < 768);
+        setIsPortrait(window.innerHeight > window.innerWidth);
+      });
     };
-    checkOrientation();
-    window.addEventListener('resize', checkOrientation);
-    return () => window.removeEventListener('resize', checkOrientation);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -666,7 +672,7 @@ export const Desktop: React.FC<DesktopProps> = ({
   return (
     <div 
       onClick={() => toggleWiggling(false)}
-      className={`absolute inset-0 pt-16 pb-28 px-4 ${isMobile ? 'overflow-y-auto flex flex-col gap-3 content-start' : 'overflow-hidden grid grid-cols-6 grid-rows-5 gap-3 p-4'}`}
+      className={`absolute inset-0 pb-28 px-4 ${isMobile ? 'overflow-y-auto flex flex-col gap-3 content-start pt-24' : 'pt-16 overflow-hidden grid grid-cols-6 grid-rows-5 gap-3 p-4'}`}
       
     >
       {/* Wiggle mode edit overlay banner */}
@@ -888,9 +894,15 @@ export const Desktop: React.FC<DesktopProps> = ({
                 key={icon.id}
                 className="col-span-1 flex flex-col items-center justify-center text-center relative rounded-xl border border-transparent transition-all"
               >
-                <div
-                  onClick={(e) => handleIconClick(icon, e)}
+                <motion.div
+                  onClick={(e) => {
+                    triggerHaptic('light');
+                    handleIconClick(icon, e);
+                  }}
                   onContextMenu={(e) => handleContextMenu(e, icon)}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
                   className="group flex flex-col items-center justify-center p-2 rounded-2xl w-20 h-24 text-center cursor-pointer hover:bg-white/5 border border-transparent transition-all duration-200 relative"
                 >
                   {/* Dynamic Style variant wrapper container */}
@@ -926,7 +938,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                       <X size={12} strokeWidth={3} />
                     </button>
                   )}
-                </div>
+                </motion.div>
               </div>
             );
           })}
@@ -1172,12 +1184,17 @@ export const Desktop: React.FC<DesktopProps> = ({
                   dragElastic={0.1}
                   dragSnapToOrigin={true}
                   whileDrag={{ scale: 1.08, boxShadow: '0 10px 25px rgba(0,0,0,0.5)', zIndex: 50 }}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.92 }}
                   onDragEnd={(e, info) => handleDragEnd(e, info, icon.id)}
                   onPointerDown={(e) => startPress(icon.id, e)}
                   onPointerUp={endPress}
                   onPointerLeave={endPress}
                   onContextMenu={(e) => handleContextMenu(e, icon)}
-                  onClick={(e) => handleIconClick(icon, e)}
+                  onClick={(e) => {
+                    triggerHaptic('light');
+                    handleIconClick(icon, e);
+                  }}
                   className={`group flex ${isMobile ? 'flex-row items-center justify-start w-full gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 shadow-lg backdrop-blur-md' : 'flex-col items-center justify-center p-3 rounded-2xl w-28 h-28 text-center cursor-grab active:cursor-grabbing hover:bg-white/5 border border-transparent hover:border-white/5 hover:backdrop-blur-sm'} transition-all duration-200 relative ${
                     isWiggling ? 'animate-wiggle' : ''
                   }`}

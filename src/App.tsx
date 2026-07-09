@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { AnimatePresence } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { ParticleOverlay } from './components/ParticleOverlay';
 import { Desktop } from './components/Desktop';
 import { WindowFrame } from './components/WindowFrame';
@@ -39,6 +39,7 @@ import { auth } from './lib/googleAuth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { usePortfolioSave } from './lib/usePortfolioSave';
 import { Check, Loader2, CloudUpload, Eye } from 'lucide-react';
+import { triggerHaptic } from './lib/haptics';
 import { loadPortfolioConfig, loadPortfolioBySlug, savePortfolioConfig } from './lib/firestoreStore';
 import { playXpStartup, playXpShutdown, playXpError, playXpBalloon, playXpClick, setSoundsEnabled } from './lib/sounds';
 import { AuthScreen } from './components/AuthScreen';
@@ -141,6 +142,7 @@ export default function App() {
           if (firebaseUser) {
             setCurrentUser(firebaseUser);
             setSyncStatus('saving');
+      triggerHaptic('light');
             try {
               const cloudData = await loadPortfolioConfig(firebaseUser.uid);
               if (cloudData) {
@@ -151,9 +153,11 @@ export default function App() {
                 if (cloudData.icons) setIcons(cloudData.icons);
               }
               setSyncStatus('synced');
+        triggerHaptic('success');
             } catch (err) {
               console.error("Failed to load cloud config", err);
               setSyncStatus('error');
+      triggerHaptic('error');
             } finally {
               setIsDataLoaded(true);
             }
@@ -765,25 +769,41 @@ export default function App() {
           ) : (
             <>
               {currentUser ? (
-                <div className="flex items-center gap-1.5 text-[11px] font-sans font-bold uppercase tracking-widest">
-                  {syncStatus === 'saving' && (
-                    <span className="text-yellow-400 animate-pulse flex items-center gap-1">
-                      <Loader2 size={11} className="animate-spin" /> Zapisywanie...
-                    </span>
-                  )}
-                  {syncStatus === 'synced' && (
-                    <span className="text-emerald-400 flex items-center gap-1" title="Automatycznie zsynchronizowano z chmurą">
-                      <Lucide.Cloud size={11} /> Zsynchronizowano
-                    </span>
-                  )}
-                  {syncStatus === 'error' && (
-                    <button 
-                      onClick={handleSaveToCloud}
-                      className="text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <Lucide.CloudOff size={11} /> Błąd synchronizacji (Ponów)
-                    </button>
-                  )}
+                <div className="flex items-center gap-1.5 text-[11px] font-sans font-bold uppercase tracking-widest min-h-[16px]">
+                  <AnimatePresence mode="wait">
+                    {syncStatus === 'saving' && (
+                      <motion.span 
+                        key="saving"
+                        initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
+                        className="text-yellow-400 flex items-center gap-1"
+                      >
+                        <Loader2 size={11} className="animate-spin" /> Zapisywanie...
+                      </motion.span>
+                    )}
+                    {syncStatus === 'synced' && (
+                      <motion.span 
+                        key="synced"
+                        initial={{ opacity: 0, y: -5, scale: 0.8 }} 
+                        animate={{ opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 400, damping: 20 } }} 
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="text-emerald-400 flex items-center gap-1" 
+                        title="Automatycznie zsynchronizowano z chmurą"
+                      >
+                        <Check size={11} className="drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]" /> Zsynchronizowano
+                      </motion.span>
+                    )}
+                    {syncStatus === 'error' && (
+                      <motion.button 
+                        key="error"
+                        initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
+                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                        onClick={handleSaveToCloud}
+                        className="text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Lucide.CloudOff size={11} /> Błąd synchronizacji (Ponów)
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                 </div>
               ) : guestMode ? (
                 <button
@@ -845,6 +865,17 @@ export default function App() {
 
       {/* Interactive Desktop Grid Area */}
       <main className="relative w-full h-full">
+        {/* Mobile Spotlight Search Bar Button */}
+        <div className="md:hidden absolute top-4 left-0 right-0 px-4 w-full z-[100]">
+          <button 
+            onClick={(e) => { e.stopPropagation(); setShowSpotlight(true); }}
+            className="w-full flex items-center gap-3 px-4 py-3 min-h-[48px] bg-black/40 border border-white/20 rounded-2xl backdrop-blur-md shadow-lg text-slate-300 hover:text-white transition-all active:scale-95"
+          >
+            <Search size={20} className="text-slate-400" />
+            <span className="font-sans text-sm tracking-wide">Szukaj w systemie...</span>
+          </button>
+        </div>
+
         <Desktop
           icons={icons}
           setIcons={setIcons}

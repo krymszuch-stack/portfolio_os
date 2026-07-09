@@ -49,6 +49,8 @@ import { googleSignIn, auth } from '../lib/googleAuth';
 
 import { Loader2, Copy, ExternalLink } from 'lucide-react';
 import { playXpClick, playXpStartup, playXpBalloon, playXpError, playPixelBeep } from '../lib/sounds';
+import { triggerHaptic } from '../lib/haptics';
+import Confetti from 'react-confetti';
 import { 
   classifyIndustry, 
   industryCategories, 
@@ -130,6 +132,15 @@ export const Wizard: React.FC<WizardProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationLogs, setGenerationLogs] = useState<string[]>([]);
   const [isFinished, setIsFinished] = useState(false);
+  const [shouldReduceMotion, setShouldReduceMotion] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setShouldReduceMotion(mediaQuery.matches);
+    const listener = (e: MediaQueryListEvent) => setShouldReduceMotion(e.matches);
+    mediaQuery.addEventListener('change', listener);
+    return () => mediaQuery.removeEventListener('change', listener);
+  }, []);
   
 
   // Step 1 states
@@ -281,10 +292,12 @@ export const Wizard: React.FC<WizardProps> = ({
       return;
     }
     setStep(prev => prev + 1);
+    triggerHaptic('medium');
   };
 
   const handleBack = () => {
     setStep(prev => prev - 1);
+    triggerHaptic('light');
   };
 
   const handleAnswerChange = (questionId: string, val: string) => {
@@ -356,6 +369,7 @@ export const Wizard: React.FC<WizardProps> = ({
 
       setIsGenerating(false);
       setIsFinished(true);
+    triggerHaptic('success');
     });
   };
 
@@ -469,7 +483,7 @@ export const Wizard: React.FC<WizardProps> = ({
             <input 
               readOnly 
               value={`${window.location.origin}/p/${publishedSlug}`}
-              className="flex-1 bg-transparent text-[11px] text-white font-mono outline-none"
+              className="flex-1 bg-transparent text-[11px] text-white font-mono outline-none min-h-[44px]"
             />
             <button 
               onClick={() => {
@@ -509,7 +523,7 @@ export const Wizard: React.FC<WizardProps> = ({
             <CheckCircle size={32} className="animate-pulse" />
           </div>
 
-          <div className="space-y-2">
+          {!shouldReduceMotion && <Confetti recycle={false} numberOfPieces={200} colors={['#fbbf24', '#f59e0b', '#d97706', '#3b82f6', '#10b981']} />}<div className="space-y-2">
             <h3 className="text-lg md:text-xl font-sans font-bold text-white">
               Instalacja Zakończona Pomyślnie
             </h3>
@@ -546,7 +560,7 @@ export const Wizard: React.FC<WizardProps> = ({
             id="btn-finish-wizard"
             onClick={handleFinishAndExplore}
             disabled={saveStatus === 'saving'}
-            className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center gap-1.5 mx-auto shadow-lg shadow-amber-500/20 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed animate-scaleIn"
+            className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center gap-1.5 mx-auto shadow-lg shadow-amber-500/20 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed animate-scaleIn min-h-[44px]"
           >
             {saveStatus === 'saving' ? <><Loader2 className="animate-spin" size={14} /> Zapisywanie w chmurze...</> : <><Eye size={14} /> {isZeroState ? 'Uruchom System' : 'Przejdź do pulpitu'}</>}
           </button>
@@ -817,13 +831,13 @@ export const Wizard: React.FC<WizardProps> = ({
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer min-h-[44px]"
                 >
                   <ArrowLeft size={13} /> Wstecz
                 </button>
                 <button
                   onClick={handleResetWizard}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400 hover:text-red-300 transition-colors font-medium cursor-pointer border border-red-500/10 rounded-lg hover:bg-red-500/5"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400 hover:text-red-300 transition-colors font-medium cursor-pointer border border-red-500/10 rounded-lg hover:bg-red-500/5 min-h-[44px]"
                   title="Wyczyść wszystkie pola i wróć do kroku 1"
                 >
                   🔄 Wyczyść kreator
@@ -834,7 +848,7 @@ export const Wizard: React.FC<WizardProps> = ({
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-sans font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95"
+                  className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-sans font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95 min-h-[44px]"
                 >
                   Dalej <ArrowRight size={13} />
                 </button>
@@ -842,7 +856,7 @@ export const Wizard: React.FC<WizardProps> = ({
                 <button
                   id="btn-trigger-generate"
                   onClick={handleGenerate}
-                  className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center gap-1.5 shadow-lg shadow-amber-500/10 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center gap-1.5 shadow-lg shadow-amber-500/10 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all min-h-[44px]"
                 >
                   <Sparkles size={13} /> Instaluj system i przejdź do pulpitu
                 </button>

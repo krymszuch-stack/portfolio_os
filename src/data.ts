@@ -123,7 +123,8 @@ export const defaultOSConfig: OSConfig = {
   fontSizeScale: 1.0,
   glassBlur: 'medium',
   borderStyle: 'thin',
-  systemFont: 'apple'
+  systemFont: 'apple',
+  systemTheme: 'terraria'
 };
 
 export const wallpaperOptions = [

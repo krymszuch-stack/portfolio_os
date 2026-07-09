@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { motion, useDragControls, useMotionValue, animate } from 'motion/react';
-import { Minus, Square, X, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, useDragControls, useMotionValue, animate, useReducedMotion } from 'motion/react';
+import { Minus, Square, X, RotateCcw, ChevronLeft } from 'lucide-react';
 import { OSConfig } from '../types';
+import { triggerHaptic } from '../lib/haptics';
 
 interface WindowFrameProps {
   id: string;
@@ -35,10 +36,44 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 }) => {
   const [layoutMode, setLayoutMode] = useState<'floating' | 'full' | 'left-half' | 'right-half'>('floating');
   const [showLayoutMenu, setShowLayoutMenu] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const hoverTimer = React.useRef<NodeJS.Timeout | null>(null);
+  const touchStartX = React.useRef<number>(0);
+  const touchStartY = React.useRef<number>(0);
   const dragControls = useDragControls();
+  const shouldReduceMotion = useReducedMotion();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const dx = touchEndX - touchStartX.current;
+    const dy = touchEndY - touchStartY.current;
+
+    // Edge swipe right to close (like iOS back)
+    if (touchStartX.current < 40 && dx > 80 && Math.abs(dy) < 50) {
+      onClose();
+    }
+    
+    // Global swipe down from top edge to close (only if content is at top, or started from top edge)
+    if (touchStartY.current < 100 && dy > 100 && Math.abs(dx) < 50) {
+      onClose();
+    }
+  };
 
   const handleMinimize = (e: React.MouseEvent) => {
     if (onMinimize) onMinimize();
@@ -47,12 +82,21 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   
   const handleSnap = (mode: 'floating' | 'full' | 'left-half' | 'right-half') => {
     setLayoutMode(mode);
-    animate(x, 0, { type: 'spring', stiffness: 300, damping: 30 });
-    animate(y, 0, { type: 'spring', stiffness: 300, damping: 30 });
+    animate(x, 0, { type: 'spring', stiffness: 350, damping: 25, duration: shouldReduceMotion ? 0.01 : undefined });
+    animate(y, 0, { type: 'spring', stiffness: 350, damping: 25, duration: shouldReduceMotion ? 0.01 : undefined });
     setShowLayoutMenu(false);
   };
 
   const handleDragEnd = (e: any, info: any) => {
+    if (isMobile) {
+      if (info.offset.y > 100) {
+        onClose();
+      } else {
+        animate(y, 0, { type: 'spring', stiffness: 350, damping: 25, duration: shouldReduceMotion ? 0.01 : undefined });
+      }
+      return;
+    }
+
     const { x: pointerX, y: pointerY } = info.point;
     const screenW = window.innerWidth;
     
@@ -146,11 +190,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       y: isMinimized ? window.innerHeight / 2 : 0,
       x: 0,
       pointerEvents: isMinimized ? "none" : "auto" as any,
-      transition: { 
-        type: 'spring',
-        damping: 24,
-        stiffness: 240
-      }
+      transition: { type: 'spring', damping: 25, stiffness: 350, duration: shouldReduceMotion ? 0.01 : undefined }
     },
     exit: () => {
       const dockBtn = document.getElementById(`dock-btn-${id}`);
@@ -247,21 +287,22 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       animate="animate"
       exit="exit"
       style={{ zIndex, x, y, ...glowStyle }}
-      drag={layoutMode === "floating"}
+      drag={isMobile ? "y" : (layoutMode === "floating")}
       dragControls={dragControls}
       dragListener={false}
       dragMomentum={false}
       onDragEnd={handleDragEnd}
       onClick={onFocus}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       className={`
         fixed
-        top-12 left-0 right-0 bottom-0 rounded-t-[28px] rounded-b-none border-t border-x border-white/10 border-b-0
-        max-[480px]:max-h-[90dvh] max-[480px]:top-auto max-[480px]:bottom-0
+        top-0 left-0 right-0 bottom-0 rounded-none border-0
         ${
-          layoutMode === 'full' ? 'sm:absolute sm:top-4 sm:left-4 sm:right-4 sm:bottom-16 sm:rounded-2xl sm:border-b sm:w-auto sm:h-auto sm:max-w-none' :
-          layoutMode === 'left-half' ? 'sm:absolute sm:top-4 sm:left-4 sm:right-1/2 sm:bottom-16 sm:rounded-2xl sm:border-b sm:w-auto sm:h-auto sm:max-w-none mr-2' :
-          layoutMode === 'right-half' ? 'sm:absolute sm:top-4 sm:left-1/2 sm:right-4 sm:bottom-16 sm:rounded-2xl sm:border-b sm:w-auto sm:h-auto sm:max-w-none ml-2' :
-          'sm:absolute sm:top-[12%] sm:left-[15%] sm:w-[70%] sm:h-[70vh] sm:max-w-4xl sm:rounded-2xl sm:border-b'
+          layoutMode === 'full' ? 'sm:absolute sm:top-4 sm:left-4 sm:right-4 sm:bottom-16 sm:rounded-2xl sm:border sm:w-auto sm:h-auto sm:max-w-none' :
+          layoutMode === 'left-half' ? 'sm:absolute sm:top-4 sm:left-4 sm:right-1/2 sm:bottom-16 sm:rounded-2xl sm:border sm:w-auto sm:h-auto sm:max-w-none mr-2' :
+          layoutMode === 'right-half' ? 'sm:absolute sm:top-4 sm:left-1/2 sm:right-4 sm:bottom-16 sm:rounded-2xl sm:border sm:w-auto sm:h-auto sm:max-w-none ml-2' :
+          'sm:absolute sm:top-[12%] sm:left-[15%] sm:w-[70%] sm:h-[70vh] sm:max-w-4xl sm:rounded-2xl sm:border'
         }
         flex flex-col
         ${borderClass}
@@ -278,40 +319,64 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
 
       {/* Title Bar */}
       <div 
-        className={`absolute top-0 left-0 right-0 z-30 flex h-12 items-center justify-between px-4 select-none cursor-grab active:cursor-grabbing ${titleBarClass}`}
-        onPointerDown={(e) => { if (layoutMode === "floating") dragControls.start(e); }}
-        onDoubleClick={() => handleSnap(layoutMode === "full" ? "floating" : "full")}
+        className={`absolute top-0 left-0 right-0 z-30 flex h-14 sm:h-12 items-center justify-between px-4 select-none cursor-grab active:cursor-grabbing ${titleBarClass}`}
+        onPointerDown={(e) => { if (layoutMode === "floating" || isMobile) dragControls.start(e); }}
+        onDoubleClick={() => { if (!isMobile) handleSnap(layoutMode === "full" ? "floating" : "full"); }}
       >
         <div className="flex items-center space-x-2">
-          {/* Active indicator dot */}
-          <span className={`w-2 h-2 rounded-full ${
-            isWhiteClean ? 'bg-slate-600 shadow-[0_0_8px_rgba(100,116,139,0.6)]' :
-            isBlackGold ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]' :
-            config.accentColor === 'purple' ? 'bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.6)]' :
-            config.accentColor === 'cyan' ? 'bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]' :
-            config.accentColor === 'orange' ? 'bg-orange-400 shadow-[0_0_8px_rgba(249,115,22,0.6)]' :
-            config.accentColor === 'amber-retro' ? 'bg-yellow-400 shadow-[0_0_8px_rgba(234,179,8,0.6)]' :
-            config.accentColor === 'mono-terminal' ? 'bg-green-400 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
-            'bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]'
-          }`} />
-          <span className={config.pixelTheme ? `pixel-heading uppercase ${isWhiteClean ? 'text-slate-800' : isBlackGold ? 'text-amber-400' : 'text-slate-300'}` : `font-sans font-medium text-xs tracking-wide ${titleTextClass}`}>
+          {/* Back button on mobile, Active indicator dot on desktop */}
+          {isMobile ? (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={(e) => {
+                triggerHaptic('light');
+                handleControlClick(e);
+                onClose();
+              }}
+              className={`p-2 -ml-2 rounded-lg transition-colors flex items-center justify-center ${isWhiteClean ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200' : isBlackGold ? 'text-amber-500 hover:text-amber-300 hover:bg-amber-500/10' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}
+              title="Wstecz"
+            >
+              <ChevronLeft size={24} />
+            </motion.button>
+          ) : (
+            <span className={`w-2 h-2 rounded-full ${
+              isWhiteClean ? 'bg-slate-600 shadow-[0_0_8px_rgba(100,116,139,0.6)]' :
+              isBlackGold ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]' :
+              config.accentColor === 'purple' ? 'bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.6)]' :
+              config.accentColor === 'cyan' ? 'bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]' :
+              config.accentColor === 'orange' ? 'bg-orange-400 shadow-[0_0_8px_rgba(249,115,22,0.6)]' :
+              config.accentColor === 'amber-retro' ? 'bg-yellow-400 shadow-[0_0_8px_rgba(234,179,8,0.6)]' :
+              config.accentColor === 'mono-terminal' ? 'bg-green-400 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
+              'bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]'
+            }`} />
+          )}
+          <span className={config.pixelTheme ? `pixel-heading uppercase ${isWhiteClean ? 'text-slate-800' : isBlackGold ? 'text-amber-400' : 'text-slate-300'}` : `font-sans font-medium text-sm sm:text-xs tracking-wide ${titleTextClass}`}>
             {title}
           </span>
         </div>
 
         {/* Windows Control Actions */}
         <div className="flex items-center space-x-2">
-          <button
+          <motion.button
             id={`btn-minimize-${id}`}
-            onClick={handleMinimize}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={(e) => {
+              triggerHaptic('light');
+              handleMinimize(e);
+            }}
             className={`p-1.5 rounded-lg transition-colors hidden sm:inline-flex ${isWhiteClean ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200' : isBlackGold ? 'text-amber-500 hover:text-amber-300 hover:bg-amber-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
             title="Minimalizuj"
           >
             <Minus size={14} />
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             id={`btn-maximize-${id}`}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={(e) => {
+              triggerHaptic('light');
               handleControlClick(e);
               handleSnap(layoutMode === 'full' ? 'floating' : 'full');
             }}
@@ -319,42 +384,46 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
             onMouseLeave={() => { if (hoverTimer.current) clearTimeout(hoverTimer.current); setShowLayoutMenu(false); }}
             className={`p-1.5 rounded-lg transition-colors hidden sm:inline-flex relative ${isWhiteClean ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200' : isBlackGold ? 'text-amber-500 hover:text-amber-300 hover:bg-amber-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
             title={layoutMode === 'full' ? "Przywróć" : "Maksymalizuj"}
-
           >
             {layoutMode === 'full' ? <RotateCcw size={14} /> : <Square size={13} />}
             {showLayoutMenu && (
               <div className="absolute top-full right-0 mt-2 p-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl flex gap-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                 <div 
-                  onClick={(e) => { e.stopPropagation(); handleSnap('left-half'); }}
+                  onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); handleSnap('left-half'); }}
                   className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer flex"
                 ><div className="w-1/2 h-full bg-white/20"></div></div>
                 <div 
-                  onClick={(e) => { e.stopPropagation(); handleSnap('full'); }}
+                  onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); handleSnap('full'); }}
                   className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer bg-white/20"
                 ></div>
                 <div 
-                  onClick={(e) => { e.stopPropagation(); handleSnap('right-half'); }}
+                  onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); handleSnap('right-half'); }}
                   className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer flex justify-end"
                 ><div className="w-1/2 h-full bg-white/20"></div></div>
               </div>
             )}
-          </button>
-          <button
-            id={`btn-close-${id}`}
-            onClick={(e) => {
-              handleControlClick(e);
-              onClose();
-            }}
-            className={`p-1.5 sm:p-1 rounded-full transition-all flex items-center justify-center ${isWhiteClean ? 'bg-slate-100 hover:bg-rose-500/10 text-slate-600 hover:text-rose-600 border border-slate-200' : isBlackGold ? 'bg-amber-500/5 hover:bg-rose-500/20 text-amber-500 hover:text-amber-400 border border-amber-500/30' : 'bg-white/5 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-white/10 sm:border-transparent'}`}
-            title="Zamknij"
-          >
-            <X size={14} className="sm:w-3.5 sm:h-3.5" />
-          </button>
+          </motion.button>
+          {!isMobile && (
+            <motion.button
+              id={`btn-close-${id}`}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={(e) => {
+                triggerHaptic('medium');
+                handleControlClick(e);
+                onClose();
+              }}
+              className={`p-1.5 sm:p-1 rounded-full transition-all flex items-center justify-center ${isWhiteClean ? 'bg-slate-100 hover:bg-rose-500/10 text-slate-600 hover:text-rose-600 border border-slate-200' : isBlackGold ? 'bg-amber-500/5 hover:bg-rose-500/20 text-amber-500 hover:text-amber-400 border border-amber-500/30' : 'bg-white/5 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-white/10 sm:border-transparent'}`}
+              title="Zamknij"
+            >
+              <X size={14} className="sm:w-3.5 sm:h-3.5" />
+            </motion.button>
+          )}
         </div>
       </div>
 
       {/* Content Space with custom scrollbar */}
-      <div className={`flex-1 overflow-y-auto px-5 md:px-6 pb-5 md:pb-6 custom-scrollbar ${contentTextClass}`} style={{ paddingTop: '48px' }}>
+      <div className={`flex-1 overflow-y-auto px-5 md:px-6 pb-5 md:pb-6 custom-scrollbar ${contentTextClass}`} style={{ paddingTop: isMobile ? '56px' : '48px' }}>
         {children}
       </div>
     </motion.div>
