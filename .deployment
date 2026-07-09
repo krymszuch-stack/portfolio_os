@@ -1,0 +1,3 @@
+PRE_BUILD_COMMAND=echo "Installing all dependencies..."
+CUSTOM_BUILD_COMMAND=npm install --include=dev && npm run build
+POST_BUILD_COMMAND=echo "Build completed successfully."
