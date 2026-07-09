@@ -65,6 +65,8 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({ label, icon, onClick }
 
   return (
     <motion.button
+      type="button"
+      aria-label={label}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onHoverStart={() => setIsHovered(true)}

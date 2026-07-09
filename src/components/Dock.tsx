@@ -83,6 +83,8 @@ export const Dock: React.FC<DockProps> = ({
             return (
               <button
                 key={item.id}
+                type="button"
+                aria-label={item.label}
                 onClick={() => {
                   triggerHaptic('light');
                   openApp(item.id as any);
@@ -116,6 +118,8 @@ export const Dock: React.FC<DockProps> = ({
               {/* Icon Button wrapper */}
               <motion.button
                 id={`dock-btn-${item.id}`}
+                type="button"
+                aria-label={item.label}
                 whileHover={{ scale: 1.12 }}
                 whileTap={{ scale: 0.88 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}

@@ -327,9 +327,12 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           {/* Back button on mobile, Active indicator dot on desktop */}
           {isMobile ? (
             <motion.button
+              type="button"
+              aria-label="Wstecz"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={(e) => {
+                e.stopPropagation();
                 triggerHaptic('light');
                 handleControlClick(e);
                 onClose();
@@ -360,9 +363,12 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         <div className="flex items-center space-x-2">
           <motion.button
             id={`btn-minimize-${id}`}
+            type="button"
+            aria-label="Minimalizuj"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={(e) => {
+              e.stopPropagation();
               triggerHaptic('light');
               handleMinimize(e);
             }}
@@ -373,9 +379,12 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           </motion.button>
           <motion.button
             id={`btn-maximize-${id}`}
+            type="button"
+            aria-label={layoutMode === 'full' ? "Przywróć" : "Maksymalizuj"}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={(e) => {
+              e.stopPropagation();
               triggerHaptic('light');
               handleControlClick(e);
               handleSnap(layoutMode === 'full' ? 'floating' : 'full');
@@ -388,27 +397,36 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
             {layoutMode === 'full' ? <RotateCcw size={14} /> : <Square size={13} />}
             {showLayoutMenu && (
               <div className="absolute top-full right-0 mt-2 p-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl flex gap-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                <div 
+                <button 
+                  type="button"
+                  aria-label="Przypnij do lewej"
                   onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); handleSnap('left-half'); }}
-                  className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer flex"
-                ><div className="w-1/2 h-full bg-white/20"></div></div>
-                <div 
+                  className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer flex bg-transparent"
+                ><div className="w-1/2 h-full bg-white/20"></div></button>
+                <button 
+                  type="button"
+                  aria-label="Maksymalizuj"
                   onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); handleSnap('full'); }}
                   className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer bg-white/20"
-                ></div>
-                <div 
+                ></button>
+                <button 
+                  type="button"
+                  aria-label="Przypnij do prawej"
                   onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); handleSnap('right-half'); }}
-                  className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer flex justify-end"
-                ><div className="w-1/2 h-full bg-white/20"></div></div>
+                  className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer flex justify-end bg-transparent"
+                ><div className="w-1/2 h-full bg-white/20"></div></button>
               </div>
             )}
           </motion.button>
           {!isMobile && (
             <motion.button
               id={`btn-close-${id}`}
+              type="button"
+              aria-label="Zamknij"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={(e) => {
+                e.stopPropagation();
                 triggerHaptic('medium');
                 handleControlClick(e);
                 onClose();

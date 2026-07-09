@@ -89,6 +89,14 @@ export const Desktop: React.FC<DesktopProps> = ({
   const [isMobile, setIsMobile] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
   
+  const isDraggingRef = useRef(false);
+  
+  const handleWidgetClick = (appId: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isDraggingRef.current) return;
+    openApp(appId);
+  };
+  
   const displayedIcons = isPublicView 
     ? icons.filter(i => i.appId !== 'wizard' && i.appId !== 'settings') 
     : icons.filter(i => i.appId !== 'settings');
@@ -600,6 +608,9 @@ export const Desktop: React.FC<DesktopProps> = ({
 
   const handleIconClick = (icon: DesktopIcon, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isDraggingRef.current) {
+      return;
+    }
     if (hasLongPressed.current) {
       hasLongPressed.current = false;
       return;
@@ -980,8 +991,23 @@ export const Desktop: React.FC<DesktopProps> = ({
                   drag={!isMobile}
                   dragElastic={0}
                   dragSnapToOrigin={true}
-                  whileDrag={{ scale: 1.08, boxShadow: '0 10px 25px rgba(0,0,0,0.5)', zIndex: 50 }}
-                  onDragEnd={(e, info) => handleDragEnd(e, info, icon.id)}
+                  whileDrag={{ 
+                    scale: 1.06, 
+                    boxShadow: '0 15px 30px rgba(0,0,0,0.6)', 
+                    zIndex: 100,
+                    cursor: 'grabbing',
+                    opacity: 0.95,
+                    filter: 'brightness(1.1) contrast(1.05)'
+                  }}
+                  onDragStart={() => {
+                    isDraggingRef.current = true;
+                  }}
+                  onDragEnd={(e, info) => {
+                    handleDragEnd(e, info, icon.id);
+                    setTimeout(() => {
+                      isDraggingRef.current = false;
+                    }, 50);
+                  }}
                   onPointerDown={(e) => startPress(icon.id, e)}
                   onPointerUp={endPress}
                   onPointerLeave={endPress}
@@ -1031,7 +1057,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
                   {icon.widgetType === 'bio' && (
                     <div 
-                      onClick={() => openApp('bio')}
+                      onClick={(e) => handleWidgetClick('bio', e)}
                       className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
                     >
                       <div className="flex gap-1.5 items-center">
@@ -1054,7 +1080,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
                   {icon.widgetType === 'projects' && (
                     <div 
-                      onClick={() => openApp('projects')}
+                      onClick={(e) => handleWidgetClick('projects', e)}
                       className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
                     >
                       <div className="flex justify-between items-start">
@@ -1080,7 +1106,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
                   {icon.widgetType === 'lab' && (
                     <div 
-                      onClick={() => openApp('lab')}
+                      onClick={(e) => handleWidgetClick('lab', e)}
                       className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
                     >
                       <div className="flex gap-1.5 items-center">
@@ -1103,7 +1129,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
                   {icon.widgetType === 'certificates' && (
                     <div 
-                      onClick={() => openApp('certificates')}
+                      onClick={(e) => handleWidgetClick('certificates', e)}
                       className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
                     >
                       <div className="flex gap-1.5 items-center">
@@ -1126,7 +1152,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
                   {icon.widgetType === 'contact' && (
                     <div 
-                      onClick={() => openApp('contact')}
+                      onClick={(e) => handleWidgetClick('contact', e)}
                       className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
                     >
                       <div className="flex gap-1.5 items-center">
@@ -1149,7 +1175,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
                   {icon.widgetType === 'planned' && (
                     <div 
-                      onClick={() => openApp('planned')}
+                      onClick={(e) => handleWidgetClick('planned', e)}
                       className="flex flex-col h-full justify-between select-none cursor-pointer group/widget w-full"
                     >
                       <div className="flex gap-1.5 items-center">
@@ -1183,10 +1209,25 @@ export const Desktop: React.FC<DesktopProps> = ({
                   drag={!isMobile}
                   dragElastic={0}
                   dragSnapToOrigin={true}
-                  whileDrag={{ scale: 1.08, boxShadow: '0 10px 25px rgba(0,0,0,0.5)', zIndex: 50 }}
+                  whileDrag={{ 
+                    scale: 1.1, 
+                    boxShadow: '0 15px 30px rgba(0,0,0,0.6)', 
+                    zIndex: 100,
+                    cursor: 'grabbing',
+                    opacity: 0.95,
+                    filter: 'brightness(1.1) contrast(1.05)'
+                  }}
                   whileHover={{ scale: 1.08 }}
                   whileTap={{ scale: 0.92 }}
-                  onDragEnd={(e, info) => handleDragEnd(e, info, icon.id)}
+                  onDragStart={() => {
+                    isDraggingRef.current = true;
+                  }}
+                  onDragEnd={(e, info) => {
+                    handleDragEnd(e, info, icon.id);
+                    setTimeout(() => {
+                      isDraggingRef.current = false;
+                    }, 50);
+                  }}
                   onPointerDown={(e) => startPress(icon.id, e)}
                   onPointerUp={endPress}
                   onPointerLeave={endPress}
