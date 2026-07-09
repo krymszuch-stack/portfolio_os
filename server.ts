@@ -12,19 +12,34 @@ async function startServer() {
   // Increase body size limit to support file uploads for OCR (PDF, PNG, etc.)
   app.use(express.json({ limit: "25mb" }));
 
-  // Initialize GoogleGenAI client (Telemetry requires User-Agent header)
-  const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
+  // Initialize GoogleGenAI client only if API key is available
+  let ai: GoogleGenAI | null = null;
+  if (process.env.GEMINI_API_KEY) {
+    ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
       }
-    }
+    });
+    console.log("[GEMINI] API key configured, AI features enabled.");
+  } else {
+    console.warn("[GEMINI] No GEMINI_API_KEY found. AI features (CV parsing) will be disabled.");
+  }
+
+  // Health check endpoint
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", gemini: !!ai, nodeEnv: process.env.NODE_ENV || "(unset)" });
   });
 
   // CV / LinkedIn profile AI parsing compiler route with OCR & synonym bounding
   app.post("/api/parse-cv", async (req: express.Request, res: express.Response): Promise<any> => {
     try {
+      if (!ai) {
+        return res.status(503).json({ error: "AI service unavailable. Set GEMINI_API_KEY in environment." });
+      }
+
       const { text, fileData, mimeType } = req.body;
 
       if (!text && !fileData) {
@@ -153,4 +168,7 @@ async function startServer() {
   });
 }
 
-startServer();
+startServer().catch((err) => {
+  console.error("[FATAL] Server failed to start:", err);
+  process.exit(1);
+});
