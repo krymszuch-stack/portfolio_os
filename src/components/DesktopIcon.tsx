@@ -7,10 +7,6 @@ interface DesktopIconProps {
   onClick: () => void;
 }
 
-// 8-Bit descending square wave click synth (Terraria pickup style)
-const playPixelBeep = () => {
-  // Sound disabled
-};
 
 const Pedestal: React.FC<{ hover: boolean }> = ({ hover }) => {
   return (
@@ -49,10 +45,7 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({ label, icon, onClick }
       whileTap={{ scale: 0.95 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      onClick={() => {
-        playPixelBeep();
-        onClick();
-      }}
+      onClick={onClick}
       className="flex flex-col items-center justify-between w-36 h-40 group relative transition-all focus:outline-none"
     >
       {/* Floating 8-bit styled Icon */}
