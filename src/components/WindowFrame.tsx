@@ -177,7 +177,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       : 'none'
   };
 
-  const windowVariants = {
+  const windowVariants: any = {
     initial: {
       opacity: 0,
       scale: 0.92,
