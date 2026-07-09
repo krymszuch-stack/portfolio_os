@@ -4,13 +4,16 @@ import App from './App.tsx';
 import './index.css';
 import { MsalProvider } from '@azure/msal-react';
 import { msalInstance } from './lib/microsoftAuth';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 msalInstance.initialize().then(() => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <MsalProvider instance={msalInstance}>
-        <App />
-      </MsalProvider>
+      <ErrorBoundary>
+        <MsalProvider instance={msalInstance}>
+          <App />
+        </MsalProvider>
+      </ErrorBoundary>
     </StrictMode>,
   );
 }).catch((err) => {
@@ -18,7 +21,9 @@ msalInstance.initialize().then(() => {
   // Rezerwowe renderowanie na wypadek problemów z MSAL
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <App />
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     </StrictMode>,
   );
 });
