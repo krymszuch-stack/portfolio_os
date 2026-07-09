@@ -308,7 +308,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         ${borderClass}
         ${blurClass}
         overflow-hidden
-        transition-all duration-300
+        transition-[width,height,opacity,background-color,border-color,box-shadow] duration-300
         window-box
         ${isWhiteClean ? 'theme-white-clean' : ''}
         ${isBlackGold ? 'theme-black-gold' : ''}
@@ -423,7 +423,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       </div>
 
       {/* Content Space with custom scrollbar */}
-      <div className={`flex-1 overflow-y-auto px-5 md:px-6 pb-5 md:pb-6 custom-scrollbar ${contentTextClass}`} style={{ paddingTop: isMobile ? '56px' : '48px' }}>
+      <div className={`flex-1 overflow-y-auto px-5 md:px-6 pb-5 md:pb-6 custom-scrollbar ${contentTextClass}`} style={{ paddingTop: isMobile ? '72px' : '68px' }}>
         {children}
       </div>
     </motion.div>

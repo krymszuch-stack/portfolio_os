@@ -30,10 +30,10 @@ export const AppBio: React.FC<AppBioProps> = ({
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [avatarInput, setAvatarInput] = useState(config.avatarUrl || '');
 
-  const [frontendSkills, setFrontendSkills] = useState<string[]>([]);
-  const [backendSkills, setBackendSkills] = useState<string[]>([]);
-  const [designSkills, setDesignSkills] = useState<string[]>([]);
-  const [coreValues, setCoreValues] = useState<string[]>([]);
+  const [frontendSkills, setFrontendSkills] = useState<string[]>(() => config.frontendSkills || []);
+  const [backendSkills, setBackendSkills] = useState<string[]>(() => config.backendSkills || []);
+  const [designSkills, setDesignSkills] = useState<string[]>(() => config.designSkills || []);
+  const [coreValues, setCoreValues] = useState<string[]>(() => config.coreValues || []);
   const [isAddingValue, setIsAddingValue] = useState(false);
   const [newValueInput, setNewValueInput] = useState('');
 
@@ -53,6 +53,27 @@ export const AppBio: React.FC<AppBioProps> = ({
     company: '',
     description: ''
   });
+
+  // Sync skills and core values back to global config
+  useEffect(() => {
+    setConfig(prev => {
+      if (
+        JSON.stringify(prev.frontendSkills) === JSON.stringify(frontendSkills) &&
+        JSON.stringify(prev.backendSkills) === JSON.stringify(backendSkills) &&
+        JSON.stringify(prev.designSkills) === JSON.stringify(designSkills) &&
+        JSON.stringify(prev.coreValues) === JSON.stringify(coreValues)
+      ) {
+        return prev;
+      }
+      return {
+        ...prev,
+        frontendSkills,
+        backendSkills,
+        designSkills,
+        coreValues
+      };
+    });
+  }, [frontendSkills, backendSkills, designSkills, coreValues, setConfig]);
 
   const handleSaveProfile = () => {
     if (!profileForm.name.trim() || !profileForm.role.trim()) return;

@@ -330,12 +330,32 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
 
       // Apply result to bio
       if (result.bio) {
+        const parsedSkills = result.bio.skills || [];
+        const fSkills: string[] = [];
+        const bSkills: string[] = [];
+        const dSkills: string[] = [];
+        
+        parsedSkills.forEach((s: any) => {
+          const name = s.name;
+          const nameLower = name.toLowerCase();
+          if (nameLower.includes('css') || nameLower.includes('html') || nameLower.includes('react') || nameLower.includes('vue') || nameLower.includes('angular') || nameLower.includes('javascript') || nameLower.includes('typescript') || nameLower.includes('frontend') || nameLower.includes('ui') || nameLower.includes('tailwind')) {
+            fSkills.push(name);
+          } else if (nameLower.includes('design') || nameLower.includes('figma') || nameLower.includes('photoshop') || nameLower.includes('illustrator') || nameLower.includes('ux') || nameLower.includes('graphics')) {
+            dSkills.push(name);
+          } else {
+            bSkills.push(name);
+          }
+        });
+
         const updatedConfig = {
           ...localConfig,
           fullName: result.bio.fullName || localConfig.fullName,
           title: result.bio.title || localConfig.title,
           biography: result.bio.biography || localConfig.biography,
-          skills: result.bio.skills || localConfig.skills
+          skills: result.bio.skills || localConfig.skills,
+          frontendSkills: fSkills.length > 0 ? fSkills : localConfig.frontendSkills,
+          backendSkills: bSkills.length > 0 ? bSkills : localConfig.backendSkills,
+          designSkills: dSkills.length > 0 ? dSkills : localConfig.designSkills
         };
         setLocalConfig(updatedConfig);
         onSave(updatedConfig);
@@ -370,7 +390,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
       if (result.timeline && setTimeline) {
         const parsedTimeline = result.timeline.map((t: any, idx: number) => ({
           id: `time-ai-${idx}-${Date.now()}`,
-          year: t.year || '2025',
+          period: t.year || t.period || '2025',
           role: t.role || '',
           company: t.company || '',
           description: t.description || ''

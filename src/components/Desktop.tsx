@@ -978,14 +978,14 @@ export const Desktop: React.FC<DesktopProps> = ({
                   layout
                   layoutId={icon.id}
                   drag={!isMobile}
-                  dragElastic={0.1}
+                  dragElastic={0}
                   dragSnapToOrigin={true}
                   whileDrag={{ scale: 1.08, boxShadow: '0 10px 25px rgba(0,0,0,0.5)', zIndex: 50 }}
                   onDragEnd={(e, info) => handleDragEnd(e, info, icon.id)}
                   onPointerDown={(e) => startPress(icon.id, e)}
                   onPointerUp={endPress}
                   onPointerLeave={endPress}
-                  className={`group flex flex-col justify-between p-3.5 rounded-2xl w-40 h-28 text-left bg-slate-900/60 border border-white/10 hover:border-white/25 backdrop-blur-md shadow-xl transition-all duration-200 relative ${!isMobile ? 'cursor-grab active:cursor-grabbing' : 'w-full !w-full !h-32 mb-1'} ${
+                  className={`group flex flex-col justify-between p-3.5 rounded-2xl w-40 h-28 text-left bg-slate-900/60 border border-white/10 hover:border-white/25 backdrop-blur-md shadow-xl transition-[background-color,border-color,box-shadow,opacity] duration-200 relative ${!isMobile ? 'cursor-grab active:cursor-grabbing' : 'w-full !w-full !h-32 mb-1'} ${
                     isWiggling ? 'animate-wiggle border-dashed border-purple-500/55' : ''
                   }`}
                   animate={isWiggling ? { rotate: [-2, 2, -2] } : { rotate: 0 }}
@@ -1181,7 +1181,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                   layout
                   layoutId={icon.id}
                   drag={!isMobile}
-                  dragElastic={0.1}
+                  dragElastic={0}
                   dragSnapToOrigin={true}
                   whileDrag={{ scale: 1.08, boxShadow: '0 10px 25px rgba(0,0,0,0.5)', zIndex: 50 }}
                   whileHover={{ scale: 1.08 }}
@@ -1195,7 +1195,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                     triggerHaptic('light');
                     handleIconClick(icon, e);
                   }}
-                  className={`group flex ${isMobile ? 'flex-row items-center justify-start w-full gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 shadow-lg backdrop-blur-md' : 'flex-col items-center justify-center p-3 rounded-2xl w-28 h-28 text-center cursor-grab active:cursor-grabbing hover:bg-white/5 border border-transparent hover:border-white/5 hover:backdrop-blur-sm'} transition-all duration-200 relative ${
+                  className={`group flex ${isMobile ? 'flex-row items-center justify-start w-full gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 shadow-lg backdrop-blur-md' : 'flex-col items-center justify-center p-3 rounded-2xl w-28 h-28 text-center cursor-grab active:cursor-grabbing hover:bg-white/5 border border-transparent hover:border-white/5 hover:backdrop-blur-sm'} transition-[background-color,border-color,box-shadow,opacity] duration-200 relative ${
                     isWiggling ? 'animate-wiggle' : ''
                   }`}
                   animate={isWiggling ? { rotate: [-2, 2, -2] } : { rotate: 0 }}

@@ -1538,9 +1538,9 @@ export function getSeedDataForCategory(
 
   return {
     portfolioBio,
-    projects: [],
-    certificates: [],
-    timeline: [],
+    projects,
+    certificates,
+    timeline,
     icons,
     additionalConfig
   };
