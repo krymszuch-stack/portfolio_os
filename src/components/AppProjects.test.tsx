@@ -28,7 +28,7 @@ describe('AppProjects Github Import', () => {
     );
 
     // Enter a repo name
-    const input = screen.getByPlaceholderText(/np\. krymszuch-stack\/portfolio/i);
+    const input = screen.getByPlaceholderText('nazwa-repozytorium');
     fireEvent.change(input, { target: { value: 'missing-repo' } });
 
     // Submit form
@@ -56,7 +56,7 @@ describe('AppProjects Github Import', () => {
       />
     );
 
-    const input = screen.getByPlaceholderText(/np\. krymszuch-stack\/portfolio/i);
+    const input = screen.getByPlaceholderText('nazwa-repozytorium');
     fireEvent.change(input, { target: { value: 'just-repo' } });
 
     const importButton = screen.getByText('Importuj');

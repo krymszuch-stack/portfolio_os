@@ -16,16 +16,16 @@ content = content.replace(
 content = content.replace(/const getInitialWindowState = \(\) => \{[\s\S]*?\};\r?\n\r?\n/, '');
 
 // 3. initialWindowState in App
-content = content.replace(/  const initialWindowState = getInitialWindowState\(\);\r?\n\r?\n/, "");
+content = content.replace(/ {2}const initialWindowState = getInitialWindowState\(\);\r?\n\r?\n/, "");
 
 // 4. Auth States
 content = content.replace(
-  /  const \[currentUser, setCurrentUser\] = useState<any>\(null\);\r?\n  const \[guestMode, setGuestMode\] = useState<boolean>\(\(\) => \{\r?\n    return localStorage\.getItem\('portfolio_os_guest_mode'\) === 'true';\r?\n  \}\);\r?\n  const \[authLoading, setAuthLoading\] = useState<boolean>\(true\);\r?\n/,
+  / {2}const \[currentUser, setCurrentUser\] = useState<any>\(null\);\r?\n {2}const \[guestMode, setGuestMode\] = useState<boolean>\(\(\) => \{\r?\n {4}return localStorage\.getItem\('portfolio_os_guest_mode'\) === 'true';\r?\n {2}\}\);\r?\n {2}const \[authLoading, setAuthLoading\] = useState<boolean>\(true\);\r?\n/,
   "  const { currentUser, guestMode, setGuestMode, authLoading, setAuthLoading } = useAuthContext();\n"
 );
 
 // 5. Auth Failsafe
-content = content.replace(/\r?\n  \/\/ Firebase Auth timeout failsafe[\s\S]*?\}, \[authLoading\]\);\r?\n/, '');
+content = content.replace(/\r?\n {2}\/\/ Firebase Auth timeout failsafe[\s\S]*?\}, \[authLoading\]\);\r?\n/, '');
 
 // 6. onAuthStateChanged listener
 const fetchCloudDataCode = `  useEffect(() => {
@@ -84,19 +84,19 @@ const fetchCloudDataCode = `  useEffect(() => {
     fetchCloudData();
   }, [currentUser, authLoading, isPublicView]);`;
 
-content = content.replace(/  useEffect\(\(\) => \{\r?\n    const path = window\.location\.pathname;[\s\S]*?  \}, \[\]\);/, fetchCloudDataCode);
+content = content.replace(/ {2}useEffect\(\(\) => \{\r?\n {4}const path = window\.location\.pathname;[\s\S]*? {2}\}, \[\]\);/, fetchCloudDataCode);
 
 // 7. Window States
 content = content.replace(
-  /  const \[activeApp, setActiveApp\] = useState<ActiveAppId>\(initialWindowState\.focus\);\r?\n  const \[openApps, setOpenApps\] = useState<\{ \[key: string\]: boolean \}>\(initialWindowState\.open\);\r?\n  const \[minimizedApps, setMinimizedApps\] = useState<\{ \[key: string\]: boolean \}>\(\{\}\);\r?\n/,
+  / {2}const \[activeApp, setActiveApp\] = useState<ActiveAppId>\(initialWindowState\.focus\);\r?\n {2}const \[openApps, setOpenApps\] = useState<\{ \[key: string\]: boolean \}>\(initialWindowState\.open\);\r?\n {2}const \[minimizedApps, setMinimizedApps\] = useState<\{ \[key: string\]: boolean \}>\(\{\}\);\r?\n/,
   "  const { activeApp, openApps, minimizedApps, zIndices, handleOpenApp: _handleOpenApp, handleCloseApp: _handleCloseApp, handleMinimizeApp, handleFocusApp, handleSystemReset: _handleSystemReset } = useWindowContext();\n"
 );
 
 // 8. zIndices state
-content = content.replace(/  \/\/ Depth layering manager for window focus[\s\S]*?\}\);\r?\n\r?\n/, '');
+content = content.replace(/ {2}\/\/ Depth layering manager for window focus[\s\S]*?\}\);\r?\n\r?\n/, '');
 
 // 9. Sync state to URL and popstate
-content = content.replace(/  \/\/ Synchronize state to URL[\s\S]*?\}, \[\]\);\r?\n\r?\n/, '');
+content = content.replace(/ {2}\/\/ Synchronize state to URL[\s\S]*?\}, \[\]\);\r?\n\r?\n/, '');
 
 // 10. Window actions
 const windowActionsCode = `  const handleOpenApp = (appId: ActiveAppId | string) => {
@@ -126,7 +126,7 @@ const windowActionsCode = `  const handleOpenApp = (appId: ActiveAppId | string)
     _handleSystemReset();
   };`;
 
-content = content.replace(/  \/\/ System actions[\s\S]*?  const handleFocusApp = \(appId: string\) => \{[\s\S]*?  \};\r?\n/g, '  // System actions\n' + windowActionsCode + '\n');
+content = content.replace(/ {2}\/\/ System actions[\s\S]*? {2}const handleFocusApp = \(appId: string\) => \{[\s\S]*? {2}\};\r?\n/g, '  // System actions\n' + windowActionsCode + '\n');
 
 fs.writeFileSync('src/App.tsx', content);
 console.log("Replaced successfully");

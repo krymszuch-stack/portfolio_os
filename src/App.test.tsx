@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import App from './App';
+import { AuthProvider } from './contexts/AuthContext';
+import { WindowProvider } from './contexts/WindowContext';
 
 // Mock Firebase and other external dependencies
 vi.mock('./lib/googleAuth', () => ({
@@ -30,7 +32,7 @@ vi.mock('./lib/sounds', () => ({
 
 describe('App Component', () => {
   it('renders without crashing', () => {
-    const { container } = render(<App />);
+    const { container } = render(<AuthProvider><WindowProvider><App /></WindowProvider></AuthProvider>);
     expect(container).toBeTruthy();
     // Verify that the desktop or some generic element renders
     expect(container.querySelector('.system-font-apple')).toBeTruthy();

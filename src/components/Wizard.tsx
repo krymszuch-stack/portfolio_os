@@ -136,8 +136,9 @@ export const Wizard: React.FC<WizardProps> = ({
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setShouldReduceMotion(mediaQuery.matches);
-    const listener = (e: MediaQueryListEvent) => setShouldReduceMotion(e.matches);
+    const isForcedReduced = document.documentElement.classList.contains('reduce-motion');
+    setShouldReduceMotion(mediaQuery.matches || isForcedReduced);
+    const listener = (e: MediaQueryListEvent) => setShouldReduceMotion(e.matches || document.documentElement.classList.contains('reduce-motion'));
     mediaQuery.addEventListener('change', listener);
     return () => mediaQuery.removeEventListener('change', listener);
   }, []);

@@ -45,6 +45,7 @@ import { loadPortfolioConfig, loadPortfolioBySlug, savePortfolioConfig } from '.
 import { playXpStartup, playXpShutdown, playXpError, playXpBalloon, playXpClick, setSoundsEnabled } from './lib/sounds';
 import { AuthScreen } from './components/AuthScreen';
 import { useDynamicFonts } from './hooks/useDynamicFonts';
+import { useDeviceOptimization } from './hooks/useDeviceOptimization';
 
 const ALL_SOCIALS = [
   { id: 'linkedin', label: 'LinkedIn', icon: 'Linkedin', color: 'text-[#0a66c2] hover:bg-[#0a66c2]/10', url: 'https://linkedin.com' },
@@ -63,6 +64,8 @@ const ALL_SOCIALS = [
 ];
 
 export default function App() {
+
+  useDeviceOptimization();
 
   // Config & Core System states
   const [config, setConfig] = useState<OSConfig>(() => {
