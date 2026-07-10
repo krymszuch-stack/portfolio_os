@@ -97,7 +97,7 @@ export default function App() {
   const [projects, setProjects] = useState(initialProjects);
   const [certificates, setCertificates] = useState(initialCertificates);
   const [timeline, setTimeline] = useState(initialTimeline);
-  const [sprints, setSprints] = useState(initialSprints);
+  const [, setSprints] = useState(initialSprints);
   const [icons, setIcons] = useState<DesktopIcon[]>(() => {
     const saved = localStorage.getItem('adrianDesktopIcons');
     if (saved) {
@@ -122,7 +122,7 @@ export default function App() {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {}
+      } catch (e) { /* ignore */ }
     }
     return ['linkedin', 'mail'];
   });
