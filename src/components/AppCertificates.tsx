@@ -106,7 +106,7 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-[10px] text-slate-400 uppercase font-mono">Wystawca</label>
+              <label htmlFor="addCertIssuer" className="text-[10px] text-slate-400 uppercase font-mono">Wystawca</label>
               <input
                 type="text"
                 placeholder="np. Linux Foundation / Google / Meta"
@@ -129,7 +129,7 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
 
             <div className="space-y-1 col-span-2">
               <div className="flex justify-between items-center mb-0.5">
-                <label className="text-[10px] text-slate-400 uppercase font-mono">Krótki opis</label>
+                <label htmlFor="addCertDescription" className="text-[10px] text-slate-400 uppercase font-mono">Krótki opis</label>
                 <span className={`text-[10px] font-mono ${newCert.description.length > 500 ? 'text-rose-500 font-bold animate-pulse' : 'text-slate-400'}`}>
                   {newCert.description.length} / 500
                 </span>

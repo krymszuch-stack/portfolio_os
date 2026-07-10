@@ -56,7 +56,7 @@ async function startServer() {
         return res.status(400).json({ error: "Brak danych tekstowych lub pliku CV do analizy." });
       }
 
-      let contents: any[] = [];
+      const contents: any[] = [];
 
       const systemInstruction = `
         Jesteś zaawansowanym asystentem i kompilatorem PortfolioOS. Twój cel to przeanalizowanie CV (tekstu, profilu LinkedIn, pliku PDF lub zrzutu ekranu/obrazu) i przygotowanie ustrukturyzowanych danych do bazy systemu operacyjnego portfolio.

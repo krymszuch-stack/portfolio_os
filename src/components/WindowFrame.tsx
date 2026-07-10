@@ -41,7 +41,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   const touchStartX = React.useRef<number>(0);
   const touchStartY = React.useRef<number>(0);
   const dragControls = useDragControls();
-  const shouldReduceMotion = useReducedMotion();
+  const prefersReducedMotion = useReducedMotion();
+  const shouldReduceMotion = prefersReducedMotion || (typeof document !== 'undefined' && document.documentElement.classList.contains('reduce-motion'));
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 

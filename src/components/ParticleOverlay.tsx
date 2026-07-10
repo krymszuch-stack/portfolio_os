@@ -34,7 +34,7 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
     window.addEventListener('resize', handleResize);
     
     const initContinuousParticles = () => {
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduce-motion');
       particles = [];
       if (variant === 'none' || reducedMotion) return;
       
@@ -152,7 +152,7 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
     }
     
     triggerRef.current = (x: number, y: number, count = 12) => {
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('reduce-motion')) return;
       const finalCount = count + Math.floor(Math.random() * 8);
       for (let i = 0; i < finalCount; i++) {
         const angle = Math.random() * Math.PI * 2;

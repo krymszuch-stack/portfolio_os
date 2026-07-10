@@ -1191,7 +1191,7 @@ export function getSeedDataForCategory(
   let projects: Project[] = [];
   let certificates: Certificate[] = [];
   let timeline: TimelineItem[] = [];
-  let additionalConfig: any = {};
+  const additionalConfig: any = {};
 
   // Try matching a highly specific sub-profession from the dictionary or use custom overridden profession id
   const matchedProf = customProfessionId 
