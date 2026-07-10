@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 const ParticleOverlay = lazy(() => import('./components/ParticleOverlay').then(m => ({ default: m.ParticleOverlay })));
 import { Desktop } from './components/Desktop';
 import { BentoHub } from './components/BentoHub';
 import { WindowFrame } from './components/WindowFrame';
-import { lazy, Suspense } from 'react';
 const AppBio = lazy(() => import('./components/AppBio').then(m => ({ default: m.AppBio })));
 const AppProjects = lazy(() => import('./components/AppProjects').then(m => ({ default: m.AppProjects })));
 const AppCertificates = lazy(() => import('./components/AppCertificates').then(m => ({ default: m.AppCertificates })));
@@ -42,7 +41,7 @@ import { usePortfolioSave } from './lib/usePortfolioSave';
 import { Check, Loader2, CloudUpload, Eye } from 'lucide-react';
 import { triggerHaptic } from './lib/haptics';
 import { loadPortfolioConfig, loadPortfolioBySlug, savePortfolioConfig } from './lib/firestoreStore';
-import { playXpStartup, playXpShutdown, playXpError, playXpBalloon, playXpClick, setSoundsEnabled } from './lib/sounds';
+import { playXpStartup, playXpShutdown, playXpBalloon, playXpClick, setSoundsEnabled } from './lib/sounds';
 import { AuthScreen } from './components/AuthScreen';
 import { useDynamicFonts } from './hooks/useDynamicFonts';
 
@@ -119,7 +118,9 @@ export default function App() {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {}
+      } catch (e) {
+       // Ignore parse error - use default
+      }
     }
     return ['linkedin', 'mail'];
   });
