@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ParticleOverlay } from './components/ParticleOverlay';
+const ParticleOverlay = lazy(() => import('./components/ParticleOverlay').then(m => ({ default: m.ParticleOverlay })));
 import { Desktop } from './components/Desktop';
 import { BentoHub } from './components/BentoHub';
 import { WindowFrame } from './components/WindowFrame';
@@ -1057,8 +1057,10 @@ export default function App() {
 
       {/* Terraria-like retro pixel sparks rendering canvas */}
       {config.particles !== 'none' && getParticleVariant() !== 'none' && (
-        <ParticleOverlay triggerRef={triggerSparksRef} variant={getParticleVariant()} />
-      )}
+              <Suspense fallback={null}>
+                <ParticleOverlay triggerRef={triggerSparksRef} variant={getParticleVariant()} />
+              </Suspense>
+            )}
 
       {/* Free watermark and helper banner at desktop base */}
       {!config.proMode && (
