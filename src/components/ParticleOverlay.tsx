@@ -31,7 +31,16 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
       canvas.height = window.innerHeight;
     };
     handleResize();
-    window.addEventListener('resize', handleResize);
+    // Debounced resize via RAF to avoid layout thrash during rapid window resizes
+    let resizeRaf: number | null = null;
+    const onResize = () => {
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(() => {
+        handleResize();
+        resizeRaf = null;
+      });
+    };
+    window.addEventListener('resize', onResize);
     
     const initContinuousParticles = () => {
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -178,7 +187,8 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
     };
     
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', onResize);
+      if (resizeRaf) cancelAnimationFrame(resizeRaf);
       if (animationId) {
         cancelAnimationFrame(animationId);
       }
@@ -195,3 +205,6 @@ export const ParticleOverlay: React.FC<ParticleOverlayProps> = ({ triggerRef, va
     />
   );
 };
+  
+// Default export is memoized to avoid unnecessary React re-renders when props don't change
+export default React.memo(ParticleOverlay);
