@@ -31,9 +31,9 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
     const created: Certificate = {
       id: `cert-${Date.now()}`,
       title: newCert.title.trim(),
-      issuer: newCert.issuer.trim() || 'Inny Wystawca',
-      date: newCert.date.trim() || '2026',
-      description: newCert.description.slice(0, 500) || 'Opis i zakres zweryfikowanych umiejętności.',
+      issuer: newCert.issuer.trim() || '',
+      date: newCert.date.trim() || '',
+      description: newCert.description.slice(0, 500) || '',
       verified: newCert.verified
     };
 

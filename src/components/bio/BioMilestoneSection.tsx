@@ -66,7 +66,7 @@ export const BioMilestoneSection: React.FC<BioMilestoneSectionProps> = ({ timeli
         </button>
       </div>
 
-      <div className="relative pl-4 border-l-2 border-slate-800/80 space-y-6">
+      <div className="relative pl-4 border-l-2 border-white/10/80 space-y-6">
         {timeline.length === 0 ? (
           <button
             onClick={handleAddMilestone}
@@ -82,17 +82,17 @@ export const BioMilestoneSection: React.FC<BioMilestoneSectionProps> = ({ timeli
           timeline.map((item) => (
             <div key={item.id} className="relative group">
               {/* Pointer Node */}
-              <div className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full bg-slate-950 border border-purple-500" />
+              <div className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full backdrop-blur-md bg-slate-950/60 border border-purple-500" />
 
               {editingMilestoneId === item.id ? (
-                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-3">
+                <div className="bg-slate-950/60 p-4 rounded-xl border border-white/10 space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <input
                       type="text"
                       value={milestoneForm.period}
                       placeholder="Okres (np. 2023 - Obecnie)"
                       onChange={(e) => setMilestoneForm(f => ({ ...f, period: e.target.value }))}
-                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white"
+                      className="backdrop-blur-md bg-slate-900/60 border border-white/10 rounded px-2 py-1 text-xs text-white"
                     />
                     <div>
                       <input
@@ -100,7 +100,7 @@ export const BioMilestoneSection: React.FC<BioMilestoneSectionProps> = ({ timeli
                         value={milestoneForm.company}
                         placeholder="Firma *"
                         onChange={(e) => setMilestoneForm(f => ({ ...f, company: e.target.value }))}
-                        className={`bg-slate-900 border ${!milestoneForm.company.trim() ? 'border-rose-500' : 'border-slate-700'} rounded px-2 py-1 text-xs text-white w-full`}
+                        className={`backdrop-blur-md bg-slate-900/60 border ${!milestoneForm.company.trim() ? 'border-rose-500' : 'border-white/10'} rounded px-2 py-1 text-xs text-white w-full`}
                       />
                       {!milestoneForm.company.trim() && (
                         <span className="text-[8px] text-rose-500 font-mono mt-0.5 block">Firma jest wymagana!</span>
@@ -113,7 +113,7 @@ export const BioMilestoneSection: React.FC<BioMilestoneSectionProps> = ({ timeli
                       value={milestoneForm.role}
                       placeholder="Rola zawodowa *"
                       onChange={(e) => setMilestoneForm(f => ({ ...f, role: e.target.value }))}
-                      className={`bg-slate-900 border ${!milestoneForm.role.trim() ? 'border-rose-500' : 'border-slate-700'} rounded px-2 py-1 text-xs text-white w-full`}
+                      className={`backdrop-blur-md bg-slate-900/60 border ${!milestoneForm.role.trim() ? 'border-rose-500' : 'border-white/10'} rounded px-2 py-1 text-xs text-white w-full`}
                     />
                     {!milestoneForm.role.trim() && (
                       <span className="text-[8px] text-rose-500 font-mono mt-0.5 block">Rola jest wymagana!</span>
@@ -132,7 +132,7 @@ export const BioMilestoneSection: React.FC<BioMilestoneSectionProps> = ({ timeli
                       rows={2}
                       maxLength={500}
                       onChange={(e) => setMilestoneForm(f => ({ ...f, description: e.target.value.slice(0, 500) }))}
-                      className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 w-full"
+                      className="backdrop-blur-md bg-slate-900/60 border border-white/10 rounded px-2 py-1 text-xs text-slate-300 w-full"
                     />
                   </div>
                   <div className="flex gap-2 justify-end">

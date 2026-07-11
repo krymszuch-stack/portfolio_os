@@ -20,7 +20,7 @@ interface IconTileProps {
   startPress: (id: string, e: any) => void;
   endPress: () => void;
   handleDragEnd: (e: any, info: any, id: string) => void;
-  openApp: (appId: string) => void;
+  openApp: (appId: 'bio' | 'projects' | 'dashboard' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'terminal') => void;
 }
 
 export const IconTile: React.FC<IconTileProps> = ({
@@ -47,7 +47,7 @@ export const IconTile: React.FC<IconTileProps> = ({
         layoutId={icon.id}
         drag={!isMobile}
         dragElastic={0}
-        dragSnapToOrigin={true}
+        dragSnapToOrigin={false}
         whileDrag={{ 
           scale: 1.1, 
           boxShadow: '0 20px 40px rgba(0,0,0,0.7)', 
@@ -259,7 +259,7 @@ export const IconTile: React.FC<IconTileProps> = ({
       layoutId={icon.id}
       drag={!isMobile}
       dragElastic={0}
-      dragSnapToOrigin={true}
+      dragSnapToOrigin={false}
       whileDrag={{ 
         scale: 1.12, 
         boxShadow: '0 20px 40px rgba(0,0,0,0.7)', 

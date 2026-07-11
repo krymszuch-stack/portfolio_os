@@ -48,7 +48,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
         </div>
         <button
           onClick={onResetSent}
-          className="px-4 py-1.5 bg-slate-900 text-xs font-sans font-medium text-slate-200 border border-slate-800 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+          className="px-4 py-1.5 backdrop-blur-md bg-slate-900/60 text-xs font-sans font-medium text-slate-200 border border-white/10 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
         >
           Wyślij kolejną wiadomość
         </button>
@@ -66,7 +66,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
             value={formData.name}
             onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
             placeholder="np. Jan Kowalski"
-            className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
+            className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
           />
         </div>
 
@@ -78,7 +78,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
             value={formData.email}
             onChange={(e) => setFormData(f => ({ ...f, email: e.target.value }))}
             placeholder="np. jan@domena.com"
-            className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
+            className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
           />
         </div>
       </div>
@@ -90,7 +90,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
           value={formData.subject}
           onChange={(e) => setFormData(f => ({ ...f, subject: e.target.value }))}
           placeholder="np. Zapytanie o projekt strony portfolio"
-          className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
+          className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
         />
       </div>
 
@@ -102,7 +102,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
           value={formData.message}
           onChange={(e) => setFormData(f => ({ ...f, message: e.target.value }))}
           placeholder="Napisz krótko nad jakim projektem pracujesz i czego potrzebujesz..."
-          className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
+          className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
         />
       </div>
 

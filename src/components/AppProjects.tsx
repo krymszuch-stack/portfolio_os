@@ -175,8 +175,8 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
     const created: Project = {
       id: `proj-${Date.now()}`,
       title: newProject.title.trim(),
-      description: newProject.description?.slice(0, 500) || 'Brak opisu projektu.',
-      tags: newProject.tags ? newProject.tags.split(',').map(t => t.trim()) : ['Inne'],
+      description: newProject.description?.slice(0, 500) || '',
+      tags: newProject.tags ? newProject.tags.split(',').map(t => t.trim()) : [],
       type: newProject.type,
       link: projectLink || undefined,
       stars: newProject.type === 'github' ? Number(newProject.stars) || 0 : undefined,

@@ -31,7 +31,7 @@ export const BioSocialSection: React.FC<BioSocialSectionProps> = ({ config, setC
       <div className="space-y-2">
         
         {/* GitHub */}
-        <div className="p-2.5 rounded-lg bg-slate-900/30 border border-slate-800/40 text-xs text-slate-300">
+        <div className="p-2.5 rounded-lg bg-slate-900/30 border border-white/10/40 text-xs text-slate-300">
           {editingSocial === 'github' ? (
             <div className="flex items-center justify-between gap-2">
               <input
@@ -39,7 +39,7 @@ export const BioSocialSection: React.FC<BioSocialSectionProps> = ({ config, setC
                 placeholder="Nazwa użytkownika GitHub"
                 value={socialInput}
                 onChange={(e) => setSocialInput(e.target.value)}
-                className="flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none"
+                className="flex-1 backdrop-blur-md bg-slate-950/60 border border-white/10 rounded px-2 py-1 text-xs text-white focus:outline-none"
               />
               <div className="flex gap-1 shrink-0">
                 <button
@@ -82,7 +82,7 @@ export const BioSocialSection: React.FC<BioSocialSectionProps> = ({ config, setC
         </div>
 
         {/* Instagram */}
-        <div className="p-2.5 rounded-lg bg-slate-900/30 border border-slate-800/40 text-xs text-slate-300">
+        <div className="p-2.5 rounded-lg bg-slate-900/30 border border-white/10/40 text-xs text-slate-300">
           {editingSocial === 'instagram' ? (
             <div className="flex items-center justify-between gap-2">
               <input
@@ -90,7 +90,7 @@ export const BioSocialSection: React.FC<BioSocialSectionProps> = ({ config, setC
                 placeholder="Nazwa użytkownika Instagram"
                 value={socialInput}
                 onChange={(e) => setSocialInput(e.target.value)}
-                className="flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none"
+                className="flex-1 backdrop-blur-md bg-slate-950/60 border border-white/10 rounded px-2 py-1 text-xs text-white focus:outline-none"
               />
               <div className="flex gap-1 shrink-0">
                 <button
@@ -133,7 +133,7 @@ export const BioSocialSection: React.FC<BioSocialSectionProps> = ({ config, setC
         </div>
 
         {/* LinkedIn */}
-        <div className="p-2.5 rounded-lg bg-slate-900/30 border border-slate-800/40 text-xs text-slate-300">
+        <div className="p-2.5 rounded-lg bg-slate-900/30 border border-white/10/40 text-xs text-slate-300">
           {editingSocial === 'linkedin' ? (
             <div className="flex items-center justify-between gap-2">
               <input
@@ -141,7 +141,7 @@ export const BioSocialSection: React.FC<BioSocialSectionProps> = ({ config, setC
                 placeholder="in/nazwa-profilu"
                 value={socialInput}
                 onChange={(e) => setSocialInput(e.target.value)}
-                className="flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none"
+                className="flex-1 backdrop-blur-md bg-slate-950/60 border border-white/10 rounded px-2 py-1 text-xs text-white focus:outline-none"
               />
               <div className="flex gap-1 shrink-0">
                 <button

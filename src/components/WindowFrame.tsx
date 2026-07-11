@@ -258,7 +258,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       : {
           none: 'border-0',
           thin: `border border-white/10 ${accentClasses.border}`,
-          thick: `border-4 border-slate-700/80 ${accentClasses.border}`,
+          thick: `border-4 border-white/10/80 ${accentClasses.border}`,
           double: `border-4 border-double border-slate-600/90 ${accentClasses.border}`
         }[config.borderStyle || 'thin'];
 
@@ -266,7 +266,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
     ? 'bg-slate-100 border-b border-slate-200 text-slate-800'
     : isBlackGold
       ? 'bg-black border-b border-amber-500/50 text-amber-400'
-      : 'bg-[#0e111a] border-b border-white/10 shadow-[0_2px_8px_rgba(0,0,0,0.5)]';
+      : 'backdrop-blur-xl bg-[#0e111a]/85 border-b border-white/10 shadow-[0_2px_8px_rgba(0,0,0,0.5)]';
 
   const titleTextClass = isWhiteClean
     ? 'text-slate-800'
@@ -397,7 +397,7 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
           >
             {layoutMode === 'full' ? <RotateCcw size={14} /> : <Square size={13} />}
             {showLayoutMenu && (
-              <div className="absolute top-full right-0 mt-2 p-2 bg-slate-900 border border-white/10 rounded-xl shadow-2xl flex gap-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+              <div className="absolute top-full right-0 mt-2 p-2 backdrop-blur-md bg-slate-900/60 border border-white/10 rounded-xl shadow-2xl flex gap-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                 <button 
                   type="button"
                   aria-label="Przypnij do lewej"
