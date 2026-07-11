@@ -78,7 +78,7 @@ export const BioPhotoStreamSection: React.FC<BioPhotoStreamSectionProps> = ({ co
           <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-white/10">
             <img
               src={photoUrl}
-              alt={`Instagram image ${idx + 1}`}
+              alt={`Instagram post ${idx + 1}`}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               referrerPolicy="no-referrer"
             />

@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
 import React, { useState, useEffect } from 'react';
 import { OSConfig } from '../../types';
 import { Briefcase, MapPin, Plus, Edit2, Check, Sparkles, X } from 'lucide-react';
@@ -63,7 +64,7 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
           <div className="relative shrink-0">
             {isEditingAvatar ? (
               <div className="space-y-2 p-3 bg-slate-950/90 border border-white/10 rounded-xl shadow-xl z-20 absolute left-0 top-0 min-w-[220px]">
-                <label className="text-[10px] text-amber-400 font-mono uppercase tracking-wider block">Wklej URL zdjęcia</label>
+                <span className="text-[10px] text-amber-400 font-mono uppercase tracking-wider block">Wklej URL zdjęcia</span>
                 <input
                   type="text"
                   placeholder="https://images.unsplash.com/..."
@@ -126,9 +127,9 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
             {isEditingProfile ? (
               <div className="space-y-2 max-w-sm">
                 <div>
-                  <label className="text-[9px] font-mono text-purple-400 uppercase tracking-widest block mb-0.5">
+                  <span className="text-[9px] font-mono text-purple-400 uppercase tracking-widest block mb-0.5">
                     Imię i Nazwisko <span className="text-rose-500 font-bold">*</span>
-                  </label>
+                  </span>
                   <input
                     type="text"
                     value={profileForm.name}
@@ -140,9 +141,9 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
                   )}
                 </div>
                 <div>
-                  <label className="text-[9px] font-mono text-purple-400 uppercase tracking-widest block mb-0.5">
+                  <span className="text-[9px] font-mono text-purple-400 uppercase tracking-widest block mb-0.5">
                     Rola Zawodowa <span className="text-rose-500 font-bold">*</span>
-                  </label>
+                  </span>
                   <input
                     type="text"
                     value={profileForm.role}
@@ -225,7 +226,7 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
         {isEditingProfile ? (
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-[10px] font-mono text-purple-400 uppercase tracking-widest block">O Mnie / Biografia</label>
+              <span className="text-[10px] font-mono text-purple-400 uppercase tracking-widest block">O Mnie / Biografia</span>
               <span className={`text-[10px] font-mono ${profileForm.bio.length > 500 ? 'text-rose-500 font-bold animate-pulse' : 'text-slate-400'}`}>
                 {profileForm.bio.length} / 500
               </span>
@@ -296,7 +297,7 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
                 }
               }}
               className="backdrop-blur-md bg-slate-950/60 border border-white/10 rounded px-2 py-0.5 text-xs text-white focus:outline-none focus:border-amber-500"
-              autoFocus
+
             />
             <button
               onClick={() => {

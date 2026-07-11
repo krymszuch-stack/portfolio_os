@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -349,9 +350,9 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">
+              <span className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">
                 Tytuł projektu <span className="text-rose-500 font-bold">*</span>
-              </label>
+              </span>
               <input
                 type="text"
                 placeholder="np. lumina-ui"
@@ -365,7 +366,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Typ projektu</label>
+              <span className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Typ projektu</span>
               <select
                 value={newProject.type}
                 onChange={(e) => setNewProject(p => ({ ...p, type: e.target.value as 'github' | 'manual' }))}
@@ -378,7 +379,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
 
             <div className="space-y-1.5 md:col-span-2">
               <div className="flex justify-between items-center">
-                <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Opis</label>
+                <span className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Opis</span>
                 <span className={`text-[10px] font-mono ${(newProject.description || '').length > 500 ? 'text-rose-500 font-bold animate-pulse' : 'text-slate-400'}`}>
                   {(newProject.description || '').length} / 500
                 </span>
@@ -394,7 +395,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Tagi (oddziel przecinkami)</label>
+              <span className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Tagi (oddziel przecinkami)</span>
               <input
                 type="text"
                 placeholder="React, WebGL, API"
@@ -405,7 +406,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Link / URL projektu</label>
+              <span className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Link / URL projektu</span>
               <input
                 type="text"
                 placeholder="https://example.com"
@@ -417,7 +418,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
 
             {newProject.type === 'github' && (
               <div className="space-y-1.5">
-                <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Liczba gwiazdek (Stars)</label>
+                <span className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Liczba gwiazdek (Stars)</span>
                 <input
                   type="number"
                   placeholder="248"

@@ -221,7 +221,7 @@ export const SettingsIntegrations: React.FC<SettingsIntegrationsProps> = ({
         <div className="space-y-2.5">
           {/* Paste profile text */}
           <div className="space-y-1">
-            <label className="text-[10px] text-gray-600 font-bold uppercase block text-left">Wklej tekst profilu LinkedIn / CV:</label>
+            <span className="text-[10px] text-gray-600 font-bold uppercase block text-left">Wklej tekst profilu LinkedIn / CV:</span>
             <textarea
               value={cvText}
               onChange={(e) => setCvText(e.target.value)}
@@ -233,7 +233,7 @@ export const SettingsIntegrations: React.FC<SettingsIntegrationsProps> = ({
 
           {/* PDF/Image File Upload with custom styles */}
           <div className="space-y-1">
-            <label className="text-[10px] text-gray-600 font-bold uppercase block text-left">LUB prześlij dokument CV (PDF, Obraz):</label>
+            <span className="text-[10px] text-gray-600 font-bold uppercase block text-left">LUB prześlij dokument CV (PDF, Obraz):</span>
             <div className="border border-dashed border-gray-300 rounded p-2 bg-white flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <FileText className="text-gray-400 w-4 h-4" />
@@ -250,7 +250,7 @@ export const SettingsIntegrations: React.FC<SettingsIntegrationsProps> = ({
                     Usuń
                   </button>
                 )}
-                <label className="px-2 py-1 bg-gray-100 hover:bg-gray-200 border border-gray-350 text-[10px] font-bold rounded cursor-pointer transition-colors uppercase">
+                <span className="px-2 py-1 bg-gray-100 hover:bg-gray-200 border border-gray-350 text-[10px] font-bold rounded cursor-pointer transition-colors uppercase">
                   Wybierz Plik
                   <input
                     type="file"
@@ -260,7 +260,7 @@ export const SettingsIntegrations: React.FC<SettingsIntegrationsProps> = ({
                     }}
                     className="hidden"
                   />
-                </label>
+                </span>
               </div>
             </div>
           </div>

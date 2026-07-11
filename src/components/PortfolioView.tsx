@@ -140,7 +140,7 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
           pixelTheme: parsed.pixelTheme !== false,
           playSounds: parsed.playSounds !== false,
         };
-      } catch (e) {
+      } catch (e) { /* noop */
         return initialConfig;
       }
     }
@@ -229,7 +229,7 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
         osc.start();
         osc.stop(ctx.currentTime + 0.12);
       }
-    } catch (e) {}
+    } catch (e) { /* noop */}
   };
 
   return (

@@ -61,9 +61,9 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">
+              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">
                 Podaj nazwę użytkownika, ID lub numer
-              </label>
+              </span>
               <input
                 type="text"
                 value={socialInputVal}

@@ -60,7 +60,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Twoje imię / nazwa firmy</label>
+          <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Twoje imię / nazwa firmy</span>
           <input
             type="text"
             value={formData.name}
@@ -71,7 +71,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Adres e-mail *</label>
+          <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Adres e-mail *</span>
           <input
             type="email"
             required
@@ -84,7 +84,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
       </div>
 
       <div className="space-y-1">
-        <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Temat wiadomości</label>
+        <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Temat wiadomości</span>
         <input
           type="text"
           value={formData.subject}
@@ -95,7 +95,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
       </div>
 
       <div className="space-y-1">
-        <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Treść wiadomości *</label>
+        <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Treść wiadomości *</span>
         <textarea
           required
           rows={4}

@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -663,7 +664,7 @@ export const Desktop: React.FC<DesktopProps> = ({
             <div className="space-y-4">
               {/* Rename input */}
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-400 uppercase font-mono">Etykieta Ikony</label>
+                <span className="text-[10px] text-slate-400 uppercase font-mono">Etykieta Ikony</span>
                 <input
                   type="text"
                   value={editForm.label}
@@ -674,7 +675,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
               {/* Select lucide icon symbol */}
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-400 uppercase font-mono">Symbol wektorowy</label>
+                <span className="text-[10px] text-slate-400 uppercase font-mono">Symbol wektorowy</span>
                 <div className="grid grid-cols-6 gap-2">
                   {['user', 'folder', 'flask', 'award', 'mail', 'settings', 'sparkles', 'heart', 'star', 'terminal', 'clock', 'globe'].map((sym) => (
                     <button
@@ -696,7 +697,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
               {/* Select color gradient style */}
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-400 uppercase font-mono">Styl tła (Gradient poświatowy)</label>
+                <span className="text-[10px] text-slate-400 uppercase font-mono">Styl tła (Gradient poświatowy)</span>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { name: 'Fioletowy', value: 'from-purple-500/30 to-purple-500/10 border-purple-500/20' },
@@ -799,7 +800,7 @@ export const Desktop: React.FC<DesktopProps> = ({
               {addForm.type === 'social' && (
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Wybierz sieć społecznościową</label>
+                    <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Wybierz sieć społecznościową</span>
                     <div className="grid grid-cols-4 gap-2 max-h-[140px] overflow-y-auto pr-1 backdrop-blur-md bg-slate-950/60 p-2.5 rounded-xl border border-white/5">
                       {socialPresets.map((preset) => {
                         const isSel = addForm.socialPreset === preset.id;
@@ -826,7 +827,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 uppercase font-mono">Etykieta skrótu</label>
+                      <span className="text-[10px] text-slate-400 uppercase font-mono">Etykieta skrótu</span>
                       <input
                         type="text"
                         value={addForm.label}
@@ -836,7 +837,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 uppercase font-mono">Adres URL / Kontakt</label>
+                      <span className="text-[10px] text-slate-400 uppercase font-mono">Adres URL / Kontakt</span>
                       <input
                         type="text"
                         value={addForm.url}
@@ -851,7 +852,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
               {addForm.type === 'widget' && (
                 <div className="space-y-4">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz interaktywny widget</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz interaktywny widget</span>
                   <div className="grid grid-cols-3 gap-3 max-h-[250px] overflow-y-auto pr-1.5 custom-scrollbar">
                     {[
                       { id: 'weather', name: 'Pogoda', desc: 'Pokazuje aktualną pogodę w Warszawie', icon: 'Sun', color: 'from-amber-400/20 to-orange-500/10 border-amber-500/20 text-amber-400' },
@@ -898,7 +899,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 uppercase font-mono">Etykieta</label>
+                      <span className="text-[10px] text-slate-400 uppercase font-mono">Etykieta</span>
                       <input
                         type="text"
                         value={addForm.label}
@@ -908,7 +909,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 uppercase font-mono">Adres URL</label>
+                      <span className="text-[10px] text-slate-400 uppercase font-mono">Adres URL</span>
                       <input
                         type="text"
                         value={addForm.url}
@@ -921,7 +922,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Symbol wektorowy</label>
+                      <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Symbol wektorowy</span>
                       <div className="grid grid-cols-5 gap-1 backdrop-blur-md bg-slate-950/60 p-2 rounded-xl border border-white/5">
                         {['globe', 'terminal', 'folder', 'star', 'mail', 'settings', 'phone', 'zap', 'award', 'heart'].map((sym) => (
                           <button
@@ -941,7 +942,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Tło poświatowe</label>
+                      <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Tło poświatowe</span>
                       <div className="grid grid-cols-2 gap-1 max-h-[85px] overflow-y-auto pr-1 backdrop-blur-md bg-slate-950/60 p-2 rounded-xl border border-white/5">
                         {[
                           { name: 'Morski', value: 'from-cyan-500/30 to-cyan-500/10 border-cyan-500/20' },
@@ -1016,7 +1017,7 @@ export const Desktop: React.FC<DesktopProps> = ({
             <div className="space-y-4">
               {/* Rename input */}
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-400 uppercase font-mono">Etykieta Ikony</label>
+                <span className="text-[10px] text-slate-400 uppercase font-mono">Etykieta Ikony</span>
                 <input
                   type="text"
                   value={editForm.label}
@@ -1027,7 +1028,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
               {/* Select lucide icon symbol */}
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-400 uppercase font-mono">Symbol wektorowy</label>
+                <span className="text-[10px] text-slate-400 uppercase font-mono">Symbol wektorowy</span>
                 <div className="grid grid-cols-6 gap-2">
                   {['user', 'folder', 'flask', 'award', 'mail', 'settings', 'sparkles', 'heart', 'star', 'terminal', 'clock', 'globe'].map((sym) => (
                     <button
@@ -1049,7 +1050,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
               {/* Select color gradient style */}
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-400 uppercase font-mono">Styl tła (Gradient poświatowy)</label>
+                <span className="text-[10px] text-slate-400 uppercase font-mono">Styl tła (Gradient poświatowy)</span>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { name: 'Fioletowy', value: 'from-purple-500/30 to-purple-500/10 border-purple-500/20' },

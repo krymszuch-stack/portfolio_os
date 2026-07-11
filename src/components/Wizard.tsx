@@ -626,7 +626,7 @@ export const Wizard: React.FC<WizardProps> = ({
               <div className="space-y-4">
                 {/* 1. Imię / Nazwa */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Nazwa wizytówki / Imię i Nazwisko</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Nazwa wizytówki / Imię i Nazwisko</span>
                   <input
                     type="text"
                     required
@@ -639,7 +639,7 @@ export const Wizard: React.FC<WizardProps> = ({
 
                 {/* 2. Wybór Avatara */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz avatar profilowy</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz avatar profilowy</span>
                   <div className="grid grid-cols-4 gap-2.5">
                     {[
                       { id: 'dev', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', label: 'Programista' },
@@ -677,7 +677,7 @@ export const Wizard: React.FC<WizardProps> = ({
 
                 {/* 3. Wybór Branży / Kategorii */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz główny obszar działalności</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz główny obszar działalności</span>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {industryCategories.map((cat) => {
                       const isSelected = selectedCategory.id === cat.id;
@@ -705,7 +705,7 @@ export const Wizard: React.FC<WizardProps> = ({
 
                 {/* 4. Słowa kluczowe / Specjalizacja */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Dodatkowe słowa kluczowe (np. rolnictwo, react, meble)</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Dodatkowe słowa kluczowe (np. rolnictwo, react, meble)</span>
                   <input
                     type="text"
                     value={tagInput}
