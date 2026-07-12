@@ -22,7 +22,7 @@ interface DesktopIconGridProps {
   endPress: () => void;
   handleDragEnd: (e: any, info: any, id: string) => void;
   handleMobileReorder: (newOrder: DesktopIcon[]) => void;
-  openApp: (appId: string) => void;
+  openApp: (appId: 'bio' | 'projects' | 'dashboard' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'terminal') => void;
 }
 
 export const DesktopIconGrid: React.FC<DesktopIconGridProps> = ({

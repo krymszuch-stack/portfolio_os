@@ -47,7 +47,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
       {/* Editor Modal Overlay for Social Platforms */}
       {editingPlatform && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
-          <div className="w-full max-w-sm bg-slate-950 border border-slate-800 rounded-2xl p-5 shadow-2xl space-y-4 animate-fadeIn">
+          <div className="w-full max-w-sm backdrop-blur-md bg-slate-950/60 border border-white/10 rounded-2xl p-5 shadow-2xl space-y-4 animate-fadeIn">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-mono font-bold text-amber-400 uppercase tracking-widest">
                 Konfiguruj: {editingPlatform.replace('Username', '').replace('Id', '').replace('Phone', '')}
@@ -61,15 +61,15 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">
+              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">
                 Podaj nazwę użytkownika, ID lub numer
-              </label>
+              </span>
               <input
                 type="text"
                 value={socialInputVal}
                 onChange={(e) => setSocialInputVal(e.target.value)}
                 placeholder="np. nazwa_uzytkownika"
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                className="w-full px-3 py-2 backdrop-blur-md bg-slate-900/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
               />
             </div>
 
@@ -102,7 +102,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
           
           {/* GitHub */}
           {config?.githubUsername ? (
-            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
+            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-white/10/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
               <a
                 href={getPlatformLink(config.githubUsername, 'https://github.com/')}
                 target="_blank"
@@ -140,7 +140,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
 
           {/* GitLab */}
           {config?.gitlabUsername ? (
-            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
+            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-white/10/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
               <a
                 href={getPlatformLink(config.gitlabUsername, 'https://gitlab.com/')}
                 target="_blank"
@@ -178,7 +178,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
 
           {/* LinkedIn */}
           {config?.linkedinUsername ? (
-            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
+            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-white/10/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
               <a
                 href={getPlatformLink(config.linkedinUsername, 'https://linkedin.com/in/')}
                 target="_blank"
@@ -216,7 +216,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
 
           {/* Instagram */}
           {config?.instagramUsername ? (
-            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
+            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-white/10/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
               <a
                 href={getPlatformLink(config.instagramUsername, 'https://instagram.com/')}
                 target="_blank"
@@ -254,7 +254,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
 
           {/* Facebook */}
           {config?.facebookUsername ? (
-            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
+            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-white/10/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
               <a
                 href={getPlatformLink(config.facebookUsername, 'https://facebook.com/')}
                 target="_blank"
@@ -292,7 +292,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
 
           {/* Messenger */}
           {config?.messengerUsername ? (
-            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
+            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-white/10/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
               <a
                 href={getPlatformLink(config.messengerUsername, 'https://m.me/')}
                 target="_blank"
@@ -330,7 +330,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
 
           {/* Telegram */}
           {config?.telegramUsername ? (
-            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
+            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-white/10/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
               <a
                 href={getPlatformLink(config.telegramUsername, 'https://t.me/')}
                 target="_blank"
@@ -368,7 +368,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
 
           {/* WhatsApp */}
           {config?.whatsappPhone ? (
-            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
+            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-900/40 border border-white/10/80 hover:border-slate-500/30 transition-all duration-300 group text-center relative">
               <a
                 href={getPlatformLink(config.whatsappPhone, 'https://wa.me/')}
                 target="_blank"
@@ -407,7 +407,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
         </div>
 
         {/* Offset Gaming Section */}
-        <div className="pt-4 border-t border-slate-800 space-y-3">
+        <div className="pt-4 border-t border-white/10 space-y-3">
           <div className="space-y-1">
             <span className="text-[9px] text-purple-400 font-mono uppercase tracking-widest font-bold">Strefa Rozrywki (Offset)</span>
             <p className="text-[10px] text-slate-500 font-sans">Moje oficjalne profile na platformach do grania oraz Discord.</p>
@@ -418,7 +418,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
             
             {/* Steam */}
             {config?.steamId ? (
-              <div className="p-3 rounded-xl bg-slate-900/15 border border-slate-800/60 hover:border-[#00adee]/30 flex items-center justify-between group relative">
+              <div className="p-3 rounded-xl bg-slate-900/15 border border-white/10/60 hover:border-[#00adee]/30 flex items-center justify-between group relative">
                 <div className="flex items-center space-x-3">
                   <span className="p-2 rounded-lg bg-white/5 text-[#00adee] transition-all">
                     <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -463,7 +463,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
 
             {/* EA */}
             {config?.eaId ? (
-              <div className="p-3 rounded-xl bg-slate-900/15 border border-slate-800/60 hover:border-[#ff134b]/30 flex items-center justify-between group relative">
+              <div className="p-3 rounded-xl bg-slate-900/15 border border-white/10/60 hover:border-[#ff134b]/30 flex items-center justify-between group relative">
                 <div className="flex items-center space-x-3">
                   <span className="p-2 rounded-lg bg-white/5 text-[#ff134b] transition-all">
                     <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -503,7 +503,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
 
             {/* Ubisoft */}
             {config?.ubiId ? (
-              <div className="p-3 rounded-xl bg-slate-900/15 border border-slate-800/60 hover:border-[#00ffff]/30 flex items-center justify-between group relative">
+              <div className="p-3 rounded-xl bg-slate-900/15 border border-white/10/60 hover:border-[#00ffff]/30 flex items-center justify-between group relative">
                 <div className="flex items-center space-x-3">
                   <span className="p-2 rounded-lg bg-white/5 text-[#00ffff] transition-all">
                     <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -543,7 +543,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
 
             {/* Discord */}
             {config?.discordId ? (
-              <div className="p-3 rounded-xl bg-slate-900/15 border border-slate-800/60 hover:border-[#5865F2]/30 flex items-center justify-between group relative">
+              <div className="p-3 rounded-xl bg-slate-900/15 border border-white/10/60 hover:border-[#5865F2]/30 flex items-center justify-between group relative">
                 <div className="flex items-center space-x-3">
                   <span className="p-2 rounded-lg bg-white/5 text-[#5865F2] transition-all">
                     <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -585,7 +585,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
         </div>
 
         {/* Secure verified badge */}
-        <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 text-center space-y-1 text-slate-400">
+        <div className="p-4 rounded-xl bg-slate-950/40 border border-white/10/80 text-center space-y-1 text-slate-400">
           <Sparkles size={14} className="text-purple-400 mx-auto mb-1 animate-pulse" />
           <h5 className="text-[11px] font-sans font-bold text-slate-200">Bezpieczna transmisja SSL</h5>
           <p className="text-[10px] leading-normal font-light">

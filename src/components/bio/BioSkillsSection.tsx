@@ -48,7 +48,7 @@ export const BioSkillsSection: React.FC<BioSkillsSectionProps> = ({ config, setC
         Stos Technologiczny
       </h3>
       
-      <div className="p-4 rounded-xl bg-slate-900/30 border border-slate-800/50 space-y-4">
+      <div className="p-4 rounded-xl bg-slate-900/30 border border-white/10/50 space-y-4">
         {/* Frontend Category */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -62,7 +62,7 @@ export const BioSkillsSection: React.FC<BioSkillsSectionProps> = ({ config, setC
                   placeholder="np. Svelte"
                   value={newSkillInput}
                   onChange={(e) => setNewSkillInput(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-white w-20 focus:outline-none"
+                  className="backdrop-blur-md bg-slate-950/60 border border-white/10 rounded px-1.5 py-0.5 text-[10px] text-white w-20 focus:outline-none"
                 />
                 <button
                   onClick={() => handleAddSkill('frontend')}
@@ -88,7 +88,7 @@ export const BioSkillsSection: React.FC<BioSkillsSectionProps> = ({ config, setC
           </div>
           <div className="flex flex-wrap gap-1.5">
             {frontendSkills.map((skill, idx) => (
-              <span key={idx} className="group/tag inline-flex items-center gap-1 text-xs bg-slate-950/60 hover:bg-purple-500/10 border border-slate-800 hover:border-purple-500/30 text-slate-300 hover:text-purple-300 px-2 py-1 rounded-md transition-all duration-200 cursor-default">
+              <span key={idx} className="group/tag inline-flex items-center gap-1 text-xs bg-slate-950/60 hover:bg-purple-500/10 border border-white/10 hover:border-purple-500/30 text-slate-300 hover:text-purple-300 px-2 py-1 rounded-md transition-all duration-200 cursor-default">
                 <span>{skill}</span>
                 <button
                   onClick={() => setFrontendSkills(prev => prev.filter(s => s !== skill))}
@@ -115,7 +115,7 @@ export const BioSkillsSection: React.FC<BioSkillsSectionProps> = ({ config, setC
                   placeholder="np. Redis"
                   value={newSkillInput}
                   onChange={(e) => setNewSkillInput(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-white w-20 focus:outline-none"
+                  className="backdrop-blur-md bg-slate-950/60 border border-white/10 rounded px-1.5 py-0.5 text-[10px] text-white w-20 focus:outline-none"
                 />
                 <button
                   onClick={() => handleAddSkill('backend')}
@@ -141,7 +141,7 @@ export const BioSkillsSection: React.FC<BioSkillsSectionProps> = ({ config, setC
           </div>
           <div className="flex flex-wrap gap-1.5">
             {backendSkills.map((skill, idx) => (
-              <span key={idx} className="group/tag inline-flex items-center gap-1 text-xs bg-slate-950/60 hover:bg-cyan-500/10 border border-slate-800 hover:border-cyan-500/30 text-slate-300 hover:text-cyan-300 px-2 py-1 rounded-md transition-all duration-200 cursor-default">
+              <span key={idx} className="group/tag inline-flex items-center gap-1 text-xs bg-slate-950/60 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-300 hover:text-cyan-300 px-2 py-1 rounded-md transition-all duration-200 cursor-default">
                 <span>{skill}</span>
                 <button
                   onClick={() => setBackendSkills(prev => prev.filter(s => s !== skill))}
@@ -168,7 +168,7 @@ export const BioSkillsSection: React.FC<BioSkillsSectionProps> = ({ config, setC
                   placeholder="np. Blender"
                   value={newSkillInput}
                   onChange={(e) => setNewSkillInput(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-white w-20 focus:outline-none"
+                  className="backdrop-blur-md bg-slate-950/60 border border-white/10 rounded px-1.5 py-0.5 text-[10px] text-white w-20 focus:outline-none"
                 />
                 <button
                   onClick={() => handleAddSkill('design')}
@@ -194,7 +194,7 @@ export const BioSkillsSection: React.FC<BioSkillsSectionProps> = ({ config, setC
           </div>
           <div className="flex flex-wrap gap-1.5">
             {designSkills.map((skill, idx) => (
-              <span key={idx} className="group/tag inline-flex items-center gap-1 text-xs bg-slate-950/60 hover:bg-orange-500/10 border border-slate-800 hover:border-orange-500/30 text-slate-300 hover:text-orange-300 px-2 py-1 rounded-md transition-all duration-200 cursor-default">
+              <span key={idx} className="group/tag inline-flex items-center gap-1 text-xs bg-slate-950/60 hover:bg-orange-500/10 border border-white/10 hover:border-orange-500/30 text-slate-300 hover:text-orange-300 px-2 py-1 rounded-md transition-all duration-200 cursor-default">
                 <span>{skill}</span>
                 <button
                   onClick={() => setDesignSkills(prev => prev.filter(s => s !== skill))}

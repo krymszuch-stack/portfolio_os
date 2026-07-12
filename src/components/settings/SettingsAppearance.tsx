@@ -315,7 +315,7 @@ export const SettingsAppearance: React.FC<SettingsAppearanceProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
           {/* Glass blur select */}
           <div className="space-y-1.5">
-            <label className="text-[10px] text-slate-500 font-extrabold uppercase block">Rozmycie tła szkła:</label>
+            <span className="text-[10px] text-slate-500 font-extrabold uppercase block">Rozmycie tła szkła:</span>
             <select
               value={localConfig.glassBlur || 'medium'}
               onChange={(e) => setLocalConfig({ ...localConfig, glassBlur: e.target.value as any })}
@@ -330,7 +330,7 @@ export const SettingsAppearance: React.FC<SettingsAppearanceProps> = ({
 
           {/* Border style select */}
           <div className="space-y-1.5">
-            <label className="text-[10px] text-slate-500 font-extrabold uppercase block">Obramowanie okien:</label>
+            <span className="text-[10px] text-slate-500 font-extrabold uppercase block">Obramowanie okien:</span>
             <select
               value={localConfig.borderStyle || 'thin'}
               onChange={(e) => setLocalConfig({ ...localConfig, borderStyle: e.target.value as any })}
@@ -346,10 +346,10 @@ export const SettingsAppearance: React.FC<SettingsAppearanceProps> = ({
 
         {/* Czcionka selection */}
         <div className="space-y-2 pt-4 border-t border-slate-100 mt-2">
-          <label className="text-[10px] text-slate-500 font-extrabold uppercase block flex items-center gap-1.5">
+          <span className="text-[10px] text-slate-500 font-extrabold uppercase block flex items-center gap-1.5">
             <Type size={12} className="text-purple-500" />
             <span>Czcionka Interfejsu (Font):</span>
-          </label>
+          </span>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {[
               { id: 'apple', name: '🍎 Apple SF', desc: 'System-ui' },
