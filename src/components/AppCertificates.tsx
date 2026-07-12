@@ -98,7 +98,7 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
                 placeholder="np. Certified Kubernetes Administrator (CKA)"
                 value={newCert.title}
                 onChange={(e) => setNewCert(c => ({ ...c, title: e.target.value }))}
-                className={`w-full px-2.5 py-1.5 bg-slate-950/60 border ${!newCert.title.trim() ? 'border-rose-500/80 focus:border-rose-500' : 'border-slate-800 focus:border-pink-500'} rounded-lg text-xs text-white focus:outline-none`}
+                className={`w-full px-2.5 py-1.5 bg-slate-950/60 border ${!newCert.title.trim() ? 'border-rose-500/80 focus:border-rose-500' : 'border-slate-800 focus:border-pink-500'} rounded-lg text-xs text-white focus:outline-none transition-colors`}
               />
               {!newCert.title.trim() && (
                 <span className="text-[9px] text-rose-500 font-mono mt-0.5 block">✦ Nazwa certyfikatu jest wymagana!</span>
@@ -106,8 +106,9 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
             </div>
 
             <div className="space-y-1">
-              <span htmlFor="addCertIssuer" className="text-[10px] text-slate-400 uppercase font-mono">Wystawca</span>
+              <label htmlFor="addCertIssuer" className="text-[10px] text-slate-400 uppercase font-mono">Wystawca</label>
               <input
+                id="addCertIssuer"
                 type="text"
                 placeholder="np. Linux Foundation / Google / Meta"
                 value={newCert.issuer}
@@ -129,12 +130,13 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
 
             <div className="space-y-1 col-span-2">
               <div className="flex justify-between items-center mb-0.5">
-                <span htmlFor="addCertDescription" className="text-[10px] text-slate-400 uppercase font-mono">Krótki opis</span>
+                <label htmlFor="addCertDescription" className="text-[10px] text-slate-400 uppercase font-mono">Krótki opis</label>
                 <span className={`text-[10px] font-mono ${newCert.description.length > 500 ? 'text-rose-500 font-bold animate-pulse' : 'text-slate-400'}`}>
                   {newCert.description.length} / 500
                 </span>
               </div>
               <textarea
+                id="addCertDescription"
                 placeholder="Zagadnienia objęte certyfikacją..."
                 value={newCert.description}
                 rows={2}
@@ -152,7 +154,7 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
                 onChange={(e) => setNewCert(c => ({ ...c, verified: e.target.checked }))}
                 className="rounded accent-pink-500 bg-slate-900 border-slate-700"
               />
-              <span htmlFor="check-verified" className="text-xs text-slate-300">Zweryfikowany (Sygnowany kryptograficznie)</span>
+              <label htmlFor="check-verified" className="text-xs text-slate-300">Zweryfikowany (Sygnowany kryptograficznie)</label>
             </div>
           </div>
 
@@ -180,7 +182,7 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
         {certificates.map((cert) => (
           <div
             key={cert.id}
-            className="p-5 rounded-2xl bg-slate-900/10 hover:bg-slate-900/25 border border-slate-800/80 hover:border-pink-500/20 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
+            className="p-5 rounded-2xl bg-slate-900/10 hover:bg-slate-900/25 border border-slate-800/80 hover:border-pink-500/20 transition-all duration-300 flex flex-col justify-between group relative"
           >
             {/* Decorative soft glowing bubble inside card */}
             {cert.verified && (
@@ -266,9 +268,9 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
         {/* Glowing "+" Certificate Card */}
         <button
           onClick={() => setIsAdding(true)}
-          className="p-5 rounded-2xl bg-pink-500/5 hover:bg-pink-500/10 border-2 border-dashed border-pink-500/20 hover:border-pink-400/50 transition-all duration-300 flex flex-col items-center justify-center min-h-[160px] shadow-[0_0_15px_rgba(236,72,153,0.05)] hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] group cursor-pointer"
+          className="p-5 rounded-2xl bg-pink-500/5 hover:bg-pink-500/10 border-2 border-dashed border-pink-500/20 hover:border-pink-400/50 transition-all duration-300 flex flex-col items-center justify-center group relative"
         >
-          <div className="w-10 h-10 rounded-full bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400 group-hover:scale-110 transition-transform shadow-[0_0_10px_rgba(236,72,153,0.15)]">
+          <div className="w-10 h-10 rounded-full bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400 group-hover:scale-110 transition-transform shadow-lg">
             <Plus className="w-6 h-6 animate-pulse" />
           </div>
           <span className="text-xs font-sans font-bold text-pink-300 uppercase tracking-widest mt-2">Dodaj Nowy Certyfikat</span>
