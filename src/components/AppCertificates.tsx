@@ -106,7 +106,7 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
             </div>
 
             <div className="space-y-1">
-              <span htmlFor="addCertIssuer" className="text-[10px] text-slate-400 uppercase font-mono">Wystawca</span>
+              <span  className="text-[10px] text-slate-400 uppercase font-mono">Wystawca</span>
               <input
                 type="text"
                 placeholder="np. Linux Foundation / Google / Meta"
@@ -129,7 +129,7 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
 
             <div className="space-y-1 col-span-2">
               <div className="flex justify-between items-center mb-0.5">
-                <span htmlFor="addCertDescription" className="text-[10px] text-slate-400 uppercase font-mono">Krótki opis</span>
+                <span  className="text-[10px] text-slate-400 uppercase font-mono">Krótki opis</span>
                 <span className={`text-[10px] font-mono ${newCert.description.length > 500 ? 'text-rose-500 font-bold animate-pulse' : 'text-slate-400'}`}>
                   {newCert.description.length} / 500
                 </span>
@@ -152,7 +152,7 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
                 onChange={(e) => setNewCert(c => ({ ...c, verified: e.target.checked }))}
                 className="rounded accent-pink-500 bg-slate-900 border-slate-700"
               />
-              <span htmlFor="check-verified" className="text-xs text-slate-300">Zweryfikowany (Sygnowany kryptograficznie)</span>
+              <span  className="text-xs text-slate-300">Zweryfikowany (Sygnowany kryptograficznie)</span>
             </div>
           </div>
 
