@@ -247,7 +247,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
         playBeep(440, 0);
         playBeep(880, 0.1);
       }
-    } catch (e) {}
+    } catch (e) { /* noop */ }
   };
 
   const handleExportBackup = () => {

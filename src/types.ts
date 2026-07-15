@@ -113,6 +113,7 @@ export interface OSConfig {
   coreValues?: string[];
   ownerName?: string;
   portfolioRole?: string;
+  cvUrl?: string;
 }
 
 export type ActiveAppId = 'bio' | 'projects' | 'dashboard' | 'certificates' | 'settings' | 'contact' | 'wizard' | 'terminal' | null;

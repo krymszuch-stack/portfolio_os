@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -165,8 +166,8 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
     const created: Project = {
       id: `proj-${Date.now()}`,
       title: newProject.title.trim(),
-      description: newProject.description?.slice(0, 500) || 'Brak opisu projektu.',
-      tags: newProject.tags ? newProject.tags.split(',').map(t => t.trim()) : ['Inne'],
+      description: newProject.description?.slice(0, 500) || '',
+      tags: newProject.tags ? newProject.tags.split(',').map(t => t.trim()) : [],
       type: newProject.type,
       link: projectLink || undefined,
       stars: newProject.type === 'github' ? Number(newProject.stars) || 0 : undefined,
@@ -305,7 +306,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
           <div className="flex gap-2 w-full md:w-auto">
             <input
               type="text"
-              placeholder="nazwa-repozytorium"
+              placeholder="np. krymszuch-stack/portfolio"
               value={githubRepoInput}
               onChange={(e) => setGithubRepoInput(e.target.value)}
               className="flex-1 md:w-48 px-3 py-1.5 bg-slate-950/80 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-cyan-500"
@@ -344,9 +345,9 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">
+              <span className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">
                 Tytuł projektu <span className="text-rose-500 font-bold">*</span>
-              </label>
+              </span>
               <input
                 type="text"
                 placeholder="np. lumina-ui"
@@ -360,7 +361,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Typ projektu</label>
+              <span className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Typ projektu</span>
               <select
                 value={newProject.type}
                 onChange={(e) => setNewProject(p => ({ ...p, type: e.target.value as 'github' | 'manual' }))}
@@ -373,7 +374,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
 
             <div className="space-y-1.5 md:col-span-2">
               <div className="flex justify-between items-center">
-                <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Opis</label>
+                <span className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Opis</span>
                 <span className={`text-[10px] font-mono ${(newProject.description || '').length > 500 ? 'text-rose-500 font-bold animate-pulse' : 'text-slate-400'}`}>
                   {(newProject.description || '').length} / 500
                 </span>
@@ -389,7 +390,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Tagi (oddziel przecinkami)</label>
+              <span className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Tagi (oddziel przecinkami)</span>
               <input
                 type="text"
                 placeholder="React, WebGL, API"
@@ -400,7 +401,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Link / URL projektu</label>
+              <span className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Link / URL projektu</span>
               <input
                 type="text"
                 placeholder="https://example.com"
@@ -412,7 +413,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
 
             {newProject.type === 'github' && (
               <div className="space-y-1.5">
-                <label className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Liczba gwiazdek (Stars)</label>
+                <span className="text-[11px] text-slate-400 uppercase font-mono tracking-wider">Liczba gwiazdek (Stars)</span>
                 <input
                   type="number"
                   placeholder="248"

@@ -1,0 +1,8 @@
+fix(ui): improve UX ecosystem, fix placeholders, buttons, and desktop D&D
+
+This PR improves the usability and aesthetics of the PortfolioOS dashboard:
+- Removes populated default string placeholders from project/certificate/bio forms.
+- Replaces 'bg-slate-900' hardcoded backgrounds with 'backdrop-blur-md' glassmorphism styling in forms and windows.
+- Resolves random form submission issues by globally fixing generic <button> tags missing `type="button"`.
+- Allows true Drag & Drop for Desktop icons by removing auto-snap constraint (`dragSnapToOrigin`).
+- Fixes Windows view boundaries on mobile (`layoutMode`) for quicker full-screen inspection by recruiters.

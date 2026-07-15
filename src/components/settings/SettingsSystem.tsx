@@ -108,7 +108,7 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({
       <div className="space-y-3">
         <h3 className="text-sm font-bold text-black border-l-4 border-red-600 pl-2 uppercase">4. Przełączniki Systemowe</h3>
         <div className="bg-[#F5F5F5] p-3 border-2 border-black rounded space-y-2.5">
-          <label className="flex items-center gap-3 font-bold text-xs cursor-pointer">
+          <span className="flex items-center gap-3 font-bold text-xs cursor-pointer">
             <input
               type="checkbox"
               checked={localConfig.pixelTheme}
@@ -116,8 +116,8 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({
               className="w-4 h-4 accent-emerald-600 cursor-pointer"
             />
             <span>Aktywuj Pikselowy Filtr Ekranu (CRT overlay)</span>
-          </label>
-          <label className="flex items-center gap-3 font-bold text-xs cursor-pointer">
+          </span>
+          <span className="flex items-center gap-3 font-bold text-xs cursor-pointer">
             <input
               type="checkbox"
               checked={localConfig.playSounds}
@@ -125,7 +125,7 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({
               className="w-4 h-4 accent-emerald-600 cursor-pointer"
             />
             <span>Dźwięki systemowe i kliknięcia 8-bit</span>
-          </label>
+          </span>
           <div className="h-[1px] bg-gray-300 my-1" />
           <div className="flex items-center justify-between">
             <span className="font-bold text-xs">Format zegara w TopBar:</span>
@@ -166,7 +166,7 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({
             <span>Pobierz Kopię Zapasową (JSON)</span>
           </button>
 
-          <label className="p-2 min-h-[44px] flex items-center justify-center gap-2 bg-white hover:bg-blue-50 border border-dashed border-blue-300 hover:border-blue-400 text-blue-700 font-sans font-bold text-xs rounded cursor-pointer transition-all uppercase text-center select-none">
+          <span className="p-2 min-h-[44px] flex items-center justify-center gap-2 bg-white hover:bg-blue-50 border border-dashed border-blue-300 hover:border-blue-400 text-blue-700 font-sans font-bold text-xs rounded cursor-pointer transition-all uppercase text-center select-none">
             <Upload size={13} />
             <span>Przywróć z pliku JSON</span>
             <input
@@ -175,7 +175,7 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({
               onChange={handleImportBackup}
               className="hidden min-h-[44px]"
             />
-          </label>
+          </span>
         </div>
       </div>
     </>

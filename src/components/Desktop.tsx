@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -646,7 +647,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 {/* Inline Icon Customize Modal */}
       {editingIcon && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5 animate-scaleIn">
+          <div className="w-full max-w-md backdrop-blur-md bg-slate-900/60 border border-white/10 rounded-2xl p-6 shadow-xl space-y-5 animate-scaleIn">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-sans font-bold text-white flex items-center gap-1.5">
                 <Sparkles size={16} className="text-amber-400" />
@@ -663,18 +664,18 @@ export const Desktop: React.FC<DesktopProps> = ({
             <div className="space-y-4">
               {/* Rename input */}
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-400 uppercase font-mono">Etykieta Ikony</label>
+                <span className="text-[10px] text-slate-400 uppercase font-mono">Etykieta Ikony</span>
                 <input
                   type="text"
                   value={editForm.label}
                   onChange={(e) => setEditForm(prev => ({ ...prev, label: e.target.value }))}
-                  className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                  className="w-full px-3 py-1.5 backdrop-blur-md bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               {/* Select lucide icon symbol */}
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-400 uppercase font-mono">Symbol wektorowy</label>
+                <span className="text-[10px] text-slate-400 uppercase font-mono">Symbol wektorowy</span>
                 <div className="grid grid-cols-6 gap-2">
                   {['user', 'folder', 'flask', 'award', 'mail', 'settings', 'sparkles', 'heart', 'star', 'terminal', 'clock', 'globe'].map((sym) => (
                     <button
@@ -685,7 +686,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                       className={`p-2 rounded-xl border flex items-center justify-center transition-all ${
                         editForm.icon === sym
                           ? 'bg-amber-500/10 border-amber-500 text-amber-400'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                          : 'backdrop-blur-md bg-slate-950/60 border-white/10 text-slate-400 hover:text-slate-200'
                       }`}
                     >
                       {renderIcon(sym, "w-4 h-4")}
@@ -696,7 +697,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
               {/* Select color gradient style */}
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-400 uppercase font-mono">Styl tła (Gradient poświatowy)</label>
+                <span className="text-[10px] text-slate-400 uppercase font-mono">Styl tła (Gradient poświatowy)</span>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { name: 'Fioletowy', value: 'from-purple-500/30 to-purple-500/10 border-purple-500/20' },
@@ -714,7 +715,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                       className={`p-2 rounded-lg border text-[10px] font-sans font-medium transition-all text-center ${
                         editForm.color === grad.value
                           ? 'border-amber-500 text-amber-400 bg-slate-950/60'
-                          : 'border-slate-800 text-slate-300 bg-slate-950/20'
+                          : 'border-white/10 text-slate-300 bg-slate-950/20'
                       }`}
                     >
                       {grad.name}
@@ -724,7 +725,7 @@ export const Desktop: React.FC<DesktopProps> = ({
               </div>
             </div>
 
-            <div className="flex gap-2 justify-end pt-2 border-t border-slate-800">
+            <div className="flex gap-2 justify-end pt-2 border-t border-white/10">
               <button
                 id="btn-save-icon-custom"
                 onClick={handleSaveEdit}
@@ -746,7 +747,7 @@ export const Desktop: React.FC<DesktopProps> = ({
       {/* Add Custom Element / Widget Modal */}
       {addingCell && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6 animate-scaleIn">
+          <div className="w-full max-w-lg backdrop-blur-md bg-slate-900/60 border border-white/10 rounded-3xl p-6 shadow-xl space-y-6 animate-scaleIn">
             <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-purple-500/20 flex items-center justify-center border border-purple-500/30 text-purple-400">
@@ -766,7 +767,7 @@ export const Desktop: React.FC<DesktopProps> = ({
             </div>
 
             {/* Mode selection tabs */}
-            <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-xl border border-white/5">
+            <div className="grid grid-cols-3 gap-1 backdrop-blur-md bg-slate-950/60 p-1 rounded-xl border border-white/5">
               {[
                 { id: 'social', label: 'Social Media', icon: 'Share2' },
                 { id: 'widget', label: 'Widgety OS', icon: 'LayoutGrid' },
@@ -799,8 +800,8 @@ export const Desktop: React.FC<DesktopProps> = ({
               {addForm.type === 'social' && (
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Wybierz sieć społecznościową</label>
-                    <div className="grid grid-cols-4 gap-2 max-h-[140px] overflow-y-auto pr-1 bg-slate-950 p-2.5 rounded-xl border border-white/5">
+                    <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Wybierz sieć społecznościową</span>
+                    <div className="grid grid-cols-4 gap-2 max-h-[140px] overflow-y-auto pr-1 backdrop-blur-md bg-slate-950/60 p-2.5 rounded-xl border border-white/5">
                       {socialPresets.map((preset) => {
                         const isSel = addForm.socialPreset === preset.id;
                         return (
@@ -811,7 +812,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                             className={`p-2 rounded-xl border text-[10px] font-sans font-medium transition-all flex flex-col items-center gap-1 text-center truncate ${
                               isSel
                                 ? 'bg-amber-500/10 border-amber-500 text-amber-400'
-                                : 'bg-slate-900 border-white/5 text-slate-400 hover:text-white'
+                                : 'backdrop-blur-md bg-slate-900/60 border-white/5 text-slate-400 hover:text-white'
                             }`}
                           >
                             <span className="w-5 h-5 flex items-center justify-center">
@@ -826,22 +827,22 @@ export const Desktop: React.FC<DesktopProps> = ({
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 uppercase font-mono">Etykieta skrótu</label>
+                      <span className="text-[10px] text-slate-400 uppercase font-mono">Etykieta skrótu</span>
                       <input
                         type="text"
                         value={addForm.label}
                         onChange={(e) => setAddForm(prev => ({ ...prev, label: e.target.value }))}
-                        className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                        className="w-full px-3 py-1.5 backdrop-blur-md bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
                         placeholder="np. Mój LinkedIn"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 uppercase font-mono">Adres URL / Kontakt</label>
+                      <span className="text-[10px] text-slate-400 uppercase font-mono">Adres URL / Kontakt</span>
                       <input
                         type="text"
                         value={addForm.url}
                         onChange={(e) => setAddForm(prev => ({ ...prev, url: e.target.value }))}
-                        className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                        className="w-full px-3 py-1.5 backdrop-blur-md bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
                         placeholder="https://..."
                       />
                     </div>
@@ -851,7 +852,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
               {addForm.type === 'widget' && (
                 <div className="space-y-4">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz interaktywny widget</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz interaktywny widget</span>
                   <div className="grid grid-cols-3 gap-3 max-h-[250px] overflow-y-auto pr-1.5 custom-scrollbar">
                     {[
                       { id: 'weather', name: 'Pogoda', desc: 'Pokazuje aktualną pogodę w Warszawie', icon: 'Sun', color: 'from-amber-400/20 to-orange-500/10 border-amber-500/20 text-amber-400' },
@@ -873,7 +874,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                           onClick={() => setAddForm(prev => ({ ...prev, widgetType: w.id as any }))}
                           className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between h-28 select-none relative cursor-pointer hover:scale-[1.02] active:scale-95 ${
                             isSel
-                              ? 'bg-slate-950 border-amber-500 text-white ring-1 ring-amber-500/20'
+                              ? 'backdrop-blur-md bg-slate-950/60 border-amber-500 text-white ring-1 ring-amber-500/20'
                               : 'bg-slate-950/40 border-white/5 text-slate-400 hover:text-slate-200'
                           }`}
                         >
@@ -898,22 +899,22 @@ export const Desktop: React.FC<DesktopProps> = ({
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 uppercase font-mono">Etykieta</label>
+                      <span className="text-[10px] text-slate-400 uppercase font-mono">Etykieta</span>
                       <input
                         type="text"
                         value={addForm.label}
                         onChange={(e) => setAddForm(prev => ({ ...prev, label: e.target.value }))}
-                        className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                        className="w-full px-3 py-1.5 backdrop-blur-md bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
                         placeholder="np. Mój Blog"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 uppercase font-mono">Adres URL</label>
+                      <span className="text-[10px] text-slate-400 uppercase font-mono">Adres URL</span>
                       <input
                         type="text"
                         value={addForm.url}
                         onChange={(e) => setAddForm(prev => ({ ...prev, url: e.target.value }))}
-                        className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                        className="w-full px-3 py-1.5 backdrop-blur-md bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
                         placeholder="https://..."
                       />
                     </div>
@@ -921,8 +922,8 @@ export const Desktop: React.FC<DesktopProps> = ({
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Symbol wektorowy</label>
-                      <div className="grid grid-cols-5 gap-1 bg-slate-950 p-2 rounded-xl border border-white/5">
+                      <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Symbol wektorowy</span>
+                      <div className="grid grid-cols-5 gap-1 backdrop-blur-md bg-slate-950/60 p-2 rounded-xl border border-white/5">
                         {['globe', 'terminal', 'folder', 'star', 'mail', 'settings', 'phone', 'zap', 'award', 'heart'].map((sym) => (
                           <button
                             key={sym}
@@ -941,8 +942,8 @@ export const Desktop: React.FC<DesktopProps> = ({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Tło poświatowe</label>
-                      <div className="grid grid-cols-2 gap-1 max-h-[85px] overflow-y-auto pr-1 bg-slate-950 p-2 rounded-xl border border-white/5">
+                      <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Tło poświatowe</span>
+                      <div className="grid grid-cols-2 gap-1 max-h-[85px] overflow-y-auto pr-1 backdrop-blur-md bg-slate-950/60 p-2 rounded-xl border border-white/5">
                         {[
                           { name: 'Morski', value: 'from-cyan-500/30 to-cyan-500/10 border-cyan-500/20' },
                           { name: 'Fioletowy', value: 'from-purple-500/30 to-purple-500/10 border-purple-500/20' },
@@ -970,7 +971,7 @@ export const Desktop: React.FC<DesktopProps> = ({
             </div>
 
             {/* Bottom action row */}
-            <div className="flex gap-2 justify-end pt-3 border-t border-slate-800">
+            <div className="flex gap-2 justify-end pt-3 border-t border-white/10">
               <button
                 onClick={handleAddElement}
                 className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center gap-1.5 shadow-lg shadow-amber-500/15 cursor-pointer active:scale-95 transition-all"
@@ -999,7 +1000,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 {/* Inline Icon Customize Modal */}
       {editingIcon && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5 animate-scaleIn">
+          <div className="w-full max-w-md backdrop-blur-md bg-slate-900/60 border border-white/10 rounded-2xl p-6 shadow-xl space-y-5 animate-scaleIn">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-sans font-bold text-white flex items-center gap-1.5">
                 <Sparkles size={16} className="text-amber-400" />
@@ -1016,18 +1017,18 @@ export const Desktop: React.FC<DesktopProps> = ({
             <div className="space-y-4">
               {/* Rename input */}
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-400 uppercase font-mono">Etykieta Ikony</label>
+                <span className="text-[10px] text-slate-400 uppercase font-mono">Etykieta Ikony</span>
                 <input
                   type="text"
                   value={editForm.label}
                   onChange={(e) => setEditForm(prev => ({ ...prev, label: e.target.value }))}
-                  className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
+                  className="w-full px-3 py-1.5 backdrop-blur-md bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               {/* Select lucide icon symbol */}
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-400 uppercase font-mono">Symbol wektorowy</label>
+                <span className="text-[10px] text-slate-400 uppercase font-mono">Symbol wektorowy</span>
                 <div className="grid grid-cols-6 gap-2">
                   {['user', 'folder', 'flask', 'award', 'mail', 'settings', 'sparkles', 'heart', 'star', 'terminal', 'clock', 'globe'].map((sym) => (
                     <button
@@ -1038,7 +1039,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                       className={`p-2 rounded-xl border flex items-center justify-center transition-all ${
                         editForm.icon === sym
                           ? 'bg-amber-500/10 border-amber-500 text-amber-400'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                          : 'backdrop-blur-md bg-slate-950/60 border-white/10 text-slate-400 hover:text-slate-200'
                       }`}
                     >
                       {renderIcon(sym, "w-4 h-4")}
@@ -1049,7 +1050,7 @@ export const Desktop: React.FC<DesktopProps> = ({
 
               {/* Select color gradient style */}
               <div className="space-y-1.5">
-                <label className="text-[10px] text-slate-400 uppercase font-mono">Styl tła (Gradient poświatowy)</label>
+                <span className="text-[10px] text-slate-400 uppercase font-mono">Styl tła (Gradient poświatowy)</span>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { name: 'Fioletowy', value: 'from-purple-500/30 to-purple-500/10 border-purple-500/20' },
@@ -1067,7 +1068,7 @@ export const Desktop: React.FC<DesktopProps> = ({
                       className={`p-2 rounded-lg border text-[10px] font-sans font-medium transition-all text-center ${
                         editForm.color === grad.value
                           ? 'border-amber-500 text-amber-400 bg-slate-950/60'
-                          : 'border-slate-800 text-slate-300 bg-slate-950/20'
+                          : 'border-white/10 text-slate-300 bg-slate-950/20'
                       }`}
                     >
                       {grad.name}
@@ -1077,7 +1078,7 @@ export const Desktop: React.FC<DesktopProps> = ({
               </div>
             </div>
 
-            <div className="flex gap-2 justify-end pt-2 border-t border-slate-800">
+            <div className="flex gap-2 justify-end pt-2 border-t border-white/10">
               <button
                 id="btn-save-icon-custom"
                 onClick={handleSaveEdit}

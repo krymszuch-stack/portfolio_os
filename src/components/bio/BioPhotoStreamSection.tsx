@@ -29,7 +29,7 @@ export const BioPhotoStreamSection: React.FC<BioPhotoStreamSectionProps> = ({ co
   };
 
   return (
-    <div className="space-y-4 pt-4 border-t border-slate-800/50">
+    <div className="space-y-4 pt-4 border-t border-white/10/50">
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
           <h3 className="text-sm font-sans font-semibold text-white flex items-center gap-1.5">
@@ -42,13 +42,13 @@ export const BioPhotoStreamSection: React.FC<BioPhotoStreamSectionProps> = ({ co
         </div>
 
         {isAddingPhoto ? (
-          <div className="flex items-center gap-1.5 p-2 bg-slate-950 border border-slate-800 rounded-xl max-w-xs animate-fadeIn">
+          <div className="flex items-center gap-1.5 p-2 backdrop-blur-md bg-slate-950/60 border border-white/10 rounded-xl max-w-xs animate-fadeIn">
             <input
               type="text"
               placeholder="Wklej URL zdjęcia..."
               value={newPhotoUrl}
               onChange={(e) => setNewPhotoUrl(e.target.value)}
-              className="px-2 py-1 bg-slate-900 border border-slate-700 rounded text-xs text-white focus:outline-none"
+              className="px-2 py-1 backdrop-blur-md bg-slate-900/60 border border-white/10 rounded text-xs text-white focus:outline-none"
             />
             <button
               onClick={handleAddPhoto}
@@ -75,10 +75,10 @@ export const BioPhotoStreamSection: React.FC<BioPhotoStreamSectionProps> = ({ co
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {(config.instagramPhotos || []).map((photoUrl, idx) => (
-          <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-slate-800">
+          <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-white/10">
             <img
               src={photoUrl}
-              alt={`Instagram image ${idx + 1}`}
+              alt={`Instagram post ${idx + 1}`}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               referrerPolicy="no-referrer"
             />

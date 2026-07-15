@@ -44,6 +44,7 @@ import { loadPortfolioConfig, loadPortfolioBySlug, savePortfolioConfig } from '.
 import { playXpStartup, playXpShutdown, playXpBalloon, playXpClick, setSoundsEnabled } from './lib/sounds';
 import { AuthScreen } from './components/AuthScreen';
 import { useDynamicFonts } from './hooks/useDynamicFonts';
+import { useDeviceOptimization } from './hooks/useDeviceOptimization';
 
 const ALL_SOCIALS = [
   { id: 'linkedin', label: 'LinkedIn', icon: 'Linkedin', color: 'text-[#0a66c2] hover:bg-[#0a66c2]/10', url: 'https://linkedin.com' },
@@ -62,6 +63,8 @@ const ALL_SOCIALS = [
 ];
 
 export default function App() {
+
+  useDeviceOptimization();
 
   // Config & Core System states
   const [config, setConfig] = useState<OSConfig>(() => {
@@ -93,7 +96,7 @@ export default function App() {
   const [projects, setProjects] = useState(initialProjects);
   const [certificates, setCertificates] = useState(initialCertificates);
   const [timeline, setTimeline] = useState(initialTimeline);
-  const [sprints, setSprints] = useState(initialSprints);
+  const [, setSprints] = useState(initialSprints);
   const [icons, setIcons] = useState<DesktopIcon[]>(() => {
     const saved = localStorage.getItem('adrianDesktopIcons');
     if (saved) {
@@ -136,8 +139,20 @@ export default function App() {
     const path = window.location.pathname;
     const match = path.match(/^\/p\/(.+)$/);
     
-    if (match) {
-      const slug = match[1];
+    // Explicit admin/login routes to open the AuthScreen for the owner
+    if (path === '/login' || path === '/admin') {
+      setIsPublicView(false);
+      setGuestMode(false);
+      setIsDataLoaded(true);
+      setAuthLoading(false);
+      return;
+    }
+    
+    // Default homepage slug to load on root domain "/"
+    const DEFAULT_SLUG = 'adrian';
+    
+    if (match || path === '/' || path === '') {
+      const slug = match ? match[1] : DEFAULT_SLUG;
       setIsPublicView(true);
       setConfig(prev => ({ ...prev, viewerMode: true, isInitialized: true }));
       setAuthLoading(false);
@@ -622,8 +637,24 @@ export default function App() {
         {/* Brand logo & Account mode indicator */}
         <div className="flex items-center space-x-3 md:space-x-5">
           {isPublicView ? (
-            <div className="flex items-center gap-1.5 px-3 md:px-4.5 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-sans text-xs md:text-sm font-semibold tracking-wide cursor-default shadow-sm">
-              <Lucide.Globe size={15} className="text-indigo-400 animate-pulse" /> <span className="hidden sm:inline">Wersja Publiczna</span><span className="inline sm:hidden">Publiczny</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 px-3 md:px-4.5 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-sans text-xs md:text-sm font-semibold tracking-wide cursor-default shadow-sm">
+                <Lucide.Globe size={15} className="text-indigo-400 animate-pulse" /> <span className="hidden sm:inline">Wersja Publiczna</span><span className="inline sm:hidden">Publiczny</span>
+              </div>
+              <button
+                onClick={() => {
+                  if (config.playSounds) {
+                    playXpStartup();
+                  }
+                  setCurrentView('generator');
+                  setIsKreatorMode(true);
+                  handleOpenApp('wizard'); // Open generator wizard automatically!
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/35 border border-yellow-500/30 text-yellow-400 font-sans text-xs md:text-sm font-bold tracking-wider transition-all uppercase duration-200 cursor-pointer hover:border-yellow-400 animate-pulse"
+                title="Stwórz własne portfolio"
+              >
+                <Sparkles size={15} className="text-yellow-400" /> <span className="hidden sm:inline">Stwórz Własne Portfolio</span><span className="inline sm:hidden">Stwórz</span>
+              </button>
             </div>
           ) : config.viewerMode ? (
             <div className="flex items-center gap-1.5 px-3 md:px-4.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-sans text-xs md:text-sm font-semibold tracking-wide cursor-default shadow-sm">

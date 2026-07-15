@@ -28,7 +28,7 @@ export const ContactIntegrations: React.FC<ContactIntegrationsProps> = ({
   return (
     <>
       {/* Intro info box */}
-      <div className="p-4 rounded-xl bg-slate-900/30 border border-slate-800/80 flex items-start gap-3 relative overflow-hidden">
+      <div className="p-4 rounded-xl bg-slate-900/30 border border-white/10/80 flex items-start gap-3 relative overflow-hidden">
         <MessageSquare className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
         <div className="space-y-1">
           <h4 className="text-xs font-sans font-bold text-white uppercase tracking-wider">
@@ -41,13 +41,13 @@ export const ContactIntegrations: React.FC<ContactIntegrationsProps> = ({
       </div>
 
       {/* Integracja Pocztowa Panel */}
-      <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 space-y-4">
+      <div className="p-4 rounded-xl bg-slate-950/40 border border-white/10/80 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="space-y-0.5">
             <span className="text-[9px] text-amber-400 font-mono uppercase tracking-widest font-bold">USTAWIENIA INTEGRACJI POCZTOWEJ</span>
             <h4 className="text-xs font-sans font-bold text-slate-200">Metoda dostarczania wiadomości z portfolio</h4>
           </div>
-          <span className="self-start sm:self-auto px-2 py-0.5 text-[8px] font-mono rounded bg-slate-900 text-slate-300 uppercase tracking-widest">
+          <span className="self-start sm:self-auto px-2 py-0.5 text-[8px] font-mono rounded backdrop-blur-md bg-slate-900/60 text-slate-300 uppercase tracking-widest">
             STATUS: {config?.emailProvider === 'google' ? 'GOOGLE API' : config?.emailProvider === 'microsoft' ? 'MS GRAPH API' : 'SIMULATED SMTP'}
           </span>
         </div>
@@ -72,7 +72,7 @@ export const ContactIntegrations: React.FC<ContactIntegrationsProps> = ({
             className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all duration-300 cursor-pointer ${
               (config?.emailProvider || 'smtp') === 'smtp'
                 ? 'bg-amber-500/10 border-amber-500/80 text-white shadow-[0_0_12px_rgba(245,158,11,0.15)]'
-                : 'bg-slate-900/40 border-slate-800 hover:border-slate-700 text-slate-400'
+                : 'bg-slate-900/40 border-white/10 hover:border-white/10 text-slate-400'
             }`}
           >
             <div>
@@ -92,7 +92,7 @@ export const ContactIntegrations: React.FC<ContactIntegrationsProps> = ({
             className={`p-3 rounded-xl border flex flex-col justify-between transition-all duration-300 ${
               config?.emailProvider === 'google'
                 ? 'bg-blue-500/10 border-blue-500/80 text-white shadow-[0_0_12px_rgba(59,130,246,0.15)]'
-                : 'bg-slate-900/40 border-slate-800 text-slate-400'
+                : 'bg-slate-900/40 border-white/10 text-slate-400'
             }`}
           >
             <div>
@@ -143,7 +143,7 @@ export const ContactIntegrations: React.FC<ContactIntegrationsProps> = ({
             className={`p-3 rounded-xl border flex flex-col justify-between transition-all duration-300 ${
               config?.emailProvider === 'microsoft'
                 ? 'bg-sky-500/10 border-sky-500/80 text-white shadow-[0_0_12px_rgba(14,165,233,0.15)]'
-                : 'bg-slate-900/40 border-slate-800 text-slate-400'
+                : 'bg-slate-900/40 border-white/10 text-slate-400'
             }`}
           >
             <div>

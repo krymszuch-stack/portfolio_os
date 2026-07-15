@@ -1,10 +1,14 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Project, Certificate, TimelineItem, OSConfig } from '../types';
 import { User, Briefcase, Award, Settings, Sparkles } from 'lucide-react';
 import { DesktopIcon } from './DesktopIcon';
 import { RetroWindow } from './RetroWindow';
 import { TopBar } from './TopBar';
 import { AppSettings } from './AppSettings';
+import { DesktopHero } from './DesktopHero';
+import { SocialDock } from './SocialDock';
+import { ProjectShowcase } from './ProjectShowcase';
+import { RecruiterAdvisor } from './RecruiterAdvisor';
 
 interface PortfolioViewProps {
   config: OSConfig;
@@ -140,7 +144,7 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
           pixelTheme: parsed.pixelTheme !== false,
           playSounds: parsed.playSounds !== false,
         };
-      } catch (e) {
+      } catch (e) { /* noop */
         return initialConfig;
       }
     }
@@ -171,26 +175,30 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
   };
 
   // Theme Wallpaper gradient configs
-  const wallpaperStyles: Record<string, { gradient: string; dockBg: string; dockBorder: string }> = {
+  const wallpaperStyles: Record<string, { gradient: string; dockBg: string; dockBorder: string; bgOverlay?: string }> = {
     'terraria': {
       gradient: 'linear-gradient(to bottom, #1d3c1e, #0c170c)',
       dockBg: 'bg-[#5d4037]/80',
-      dockBorder: 'border-[#3d2723]'
+      dockBorder: 'border-[#3d2723]',
+      bgOverlay: 'radial-gradient(ellipse at 30% 20%, rgba(76, 175, 80, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(139, 69, 19, 0.06) 0%, transparent 50%)'
     },
     'classic-mac': {
-      gradient: 'linear-gradient(to bottom, #7a8288, #44494c)',
+      gradient: 'linear-gradient(135deg, #8e9eab 0%, #eef2f3 50%, #8e9eab 100%)',
       dockBg: 'bg-[#C0C0C0]/90',
-      dockBorder: 'border-black'
+      dockBorder: 'border-black',
+      bgOverlay: 'repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(0,0,0,0.02) 35px, rgba(0,0,0,0.02) 36px)'
     },
     'cyberpunk': {
       gradient: 'linear-gradient(to bottom, #120921, #040207)',
       dockBg: 'bg-black/80',
-      dockBorder: 'border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
+      dockBorder: 'border-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.3)]',
+      bgOverlay: 'radial-gradient(circle at 50% 50%, rgba(6,182,212,0.04) 0%, transparent 60%), repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(6,182,212,0.02) 2px, rgba(6,182,212,0.02) 4px)'
     },
     'retro-gold': {
       gradient: 'linear-gradient(to bottom, #422910, #130a03)',
       dockBg: 'bg-[#4e2f09]/80',
-      dockBorder: 'border-[#321c05]'
+      dockBorder: 'border-[#321c05]',
+      bgOverlay: 'radial-gradient(ellipse at 50% 30%, rgba(245,158,11,0.06) 0%, transparent 50%)'
     }
   };
 
@@ -201,13 +209,15 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
     activeWallpaper = {
       gradient: 'linear-gradient(to bottom, #050505, #000000)',
       dockBg: 'bg-black/90 border border-amber-500/50',
-      dockBorder: 'border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+      dockBorder: 'border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.25)]',
+      bgOverlay: 'radial-gradient(circle at 50% 40%, rgba(245,158,11,0.04) 0%, transparent 50%)'
     };
   } else if (config.accentColor === 'white-clean') {
     activeWallpaper = {
       gradient: 'linear-gradient(to bottom, #fcfcfc, #f4f6f8)',
       dockBg: 'bg-white/90 border border-slate-300/80',
-      dockBorder: 'border-slate-300 shadow-sm'
+      dockBorder: 'border-slate-300 shadow-sm',
+      bgOverlay: 'repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(0,0,0,0.01) 35px, rgba(0,0,0,0.01) 36px)'
     };
   }
 
@@ -229,14 +239,16 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
         osc.start();
         osc.stop(ctx.currentTime + 0.12);
       }
-    } catch (e) {}
+    } catch (e) { /* noop */}
   };
 
   return (
     <div 
       className="min-h-screen font-mono text-black select-none relative overflow-hidden transition-all duration-500" 
       style={{
-        backgroundImage: `${activeWallpaper.gradient}, url("https://www.transparenttextures.com/patterns/pixel-weave.png")`,
+        backgroundImage: activeWallpaper.bgOverlay
+          ? `${activeWallpaper.bgOverlay}, ${activeWallpaper.gradient}, url("https://www.transparenttextures.com/patterns/pixel-weave.png")`
+          : `${activeWallpaper.gradient}, url("https://www.transparenttextures.com/patterns/pixel-weave.png")`,
         backgroundBlendMode: 'overlay'
       }}
     >
@@ -255,12 +267,26 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
       {/* Vintage CRT Scanline Filter */}
       {config.pixelTheme !== false && <div className="crt-overlay pointer-events-none" />}
       
+      {/* Hero + Social + Projects Showcase */}
+      <div className="px-6 md:px-10 pt-20 md:pt-24 pb-6 flex flex-col items-center gap-6 relative z-10 max-w-6xl mx-auto w-full">
+        <DesktopHero config={config} onOpenContact={() => handleOpenWindow('contact')} onLaunchGenerator={onLaunchGenerator} />
+        <SocialDock config={config} />
+        <ProjectShowcase projects={projects} config={config} onOpenProjects={() => handleOpenWindow('projects')} />
+      </div>
+
       {/* Desktop Grid Area */}
-      <div className="p-10 pt-24 flex flex-wrap gap-10 justify-start items-start relative z-10 max-w-6xl mx-auto">
+      <div className="px-10 pb-10 flex flex-wrap gap-10 justify-start items-start relative z-10 max-w-6xl mx-auto">
         <DesktopIcon label="O Mnie" icon={<User />} onClick={() => handleOpenWindow('bio')} />
         <DesktopIcon label="Projekty" icon={<Briefcase />} onClick={() => handleOpenWindow('projects')} />
         <DesktopIcon label="Certyfikaty" icon={<Award />} onClick={() => handleOpenWindow('certificates')} />
         <DesktopIcon label="Ustawienia" icon={<Settings />} onClick={() => handleOpenWindow('settings')} />
+        {onLaunchGenerator && (
+          <DesktopIcon 
+            label="Kreator Wizytówki" 
+            icon={<Sparkles className="text-yellow-400 animate-pulse" />} 
+            onClick={onLaunchGenerator} 
+          />
+        )}
       </div>
 
       {/* Dynamic Windows Rendering */}
@@ -416,6 +442,14 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({
           </>
         )}
       </div>
+
+      {/* Recruiter Advisor Chatbot Widget */}
+      <RecruiterAdvisor 
+        config={config} 
+        projects={projects} 
+        certificates={certificates} 
+        timeline={timeline} 
+      />
     </div>
   );
 };

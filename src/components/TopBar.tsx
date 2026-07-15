@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { OSConfig } from '../types';
-import { Cloud, CloudUpload, CloudOff, Key } from 'lucide-react';
+import { Cloud, CloudUpload, CloudOff, Key, Menu, X } from 'lucide-react';
 
 interface TopBarProps {
   config: OSConfig;
@@ -12,6 +12,7 @@ interface TopBarProps {
 
 export const TopBar: React.FC<TopBarProps> = ({ config, syncStatus, onRetrySync, guestMode, onLoginClick }) => {
   const [time, setTime] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const activeTheme = config?.systemTheme || 'terraria';
 
   useEffect(() => {
@@ -64,44 +65,78 @@ export const TopBar: React.FC<TopBarProps> = ({ config, syncStatus, onRetrySync,
 
   const currentStyle = themeStyles[activeTheme] || themeStyles['terraria'];
 
+  const hasSyncOrAuth = syncStatus || (guestMode && onLoginClick);
+
   return (
     <div className={`fixed top-0 left-0 right-0 h-12 z-[100] flex items-center justify-between px-6 font-mono border-black ${currentStyle.bar}`}>
       <div className="flex items-center gap-4 font-bold select-none">
         <span className="tracking-widest text-sm uppercase">{config?.portfolioName ? `${config.portfolioName} OS` : 'AdrianOS'}</span>
       </div>
       <div className={currentStyle.time}>{time}</div>
-      <div className="flex items-center gap-3 select-none">
+      <div className="flex items-center gap-3 select-none relative">
+        {/* Compact status dot — visible sync indicator */}
         {syncStatus && (
-          <div className="flex items-center gap-1.5 mr-2">
-            {syncStatus === 'saving' && (
-              <span className="text-[10px] text-yellow-400 font-bold uppercase animate-pulse flex items-center gap-1">
-                <CloudUpload size={11} className="animate-bounce" /> Zapisywanie...
-              </span>
+          <div className="flex items-center" title={
+            syncStatus === 'saving' ? 'Zapisywanie...' :
+            syncStatus === 'synced' ? 'Zsynchronizowano' :
+            'Błąd synchronizacji'
+          }>
+            <div className={`w-2 h-2 rounded-full transition-all ${
+              syncStatus === 'saving' ? 'bg-yellow-400 animate-pulse' :
+              syncStatus === 'synced' ? 'bg-green-400' :
+              'bg-red-500'
+            }`} />
+          </div>
+        )}
+
+        <span className={`text-xs tracking-wider uppercase font-bold ${currentStyle.status}`}>Status: Dostępny</span>
+
+        {/* Compact menu toggle for sync/auth controls */}
+        {hasSyncOrAuth && (
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+            aria-label="Menu systemowe"
+          >
+            {menuOpen ? <X size={14} /> : <Menu size={14} />}
+          </button>
+        )}
+
+        {/* Dropdown menu */}
+        {menuOpen && (
+          <div className="absolute top-12 right-0 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-3 min-w-[220px] space-y-2 z-50">
+            {syncStatus && (
+              <div className="space-y-1.5 pb-2 border-b border-white/10">
+                {syncStatus === 'saving' && (
+                  <span className="text-[10px] text-yellow-400 font-bold uppercase animate-pulse flex items-center gap-1.5">
+                    <CloudUpload size={12} className="animate-bounce" /> Zapisywanie...
+                  </span>
+                )}
+                {syncStatus === 'synced' && (
+                  <span className="text-[10px] text-green-400 font-bold uppercase flex items-center gap-1.5" title="Zsynchronizowano z chmurą">
+                    <Cloud size={12} /> Zsynchronizowano z chmurą
+                  </span>
+                )}
+                {syncStatus === 'error' && (
+                  <button
+                    onClick={() => { onRetrySync?.(); setMenuOpen(false); }}
+                    className="text-[10px] text-red-500 hover:underline font-bold uppercase flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <CloudOff size={12} /> Błąd synchronizacji (Ponów)
+                  </button>
+                )}
+              </div>
             )}
-            {syncStatus === 'synced' && (
-              <span className="text-[10px] text-green-400 font-bold uppercase flex items-center gap-1" title="Zsynchronizowano z chmurą">
-                <Cloud size={11} /> Zsynchronizowano
-              </span>
-            )}
-            {syncStatus === 'error' && (
-              <button 
-                onClick={onRetrySync}
-                className="text-[10px] text-red-500 hover:underline font-bold uppercase flex items-center gap-1 cursor-pointer"
+            {guestMode && onLoginClick && (
+              <button
+                onClick={() => { onLoginClick(); setMenuOpen(false); }}
+                className="w-full text-[10px] text-amber-400 hover:bg-amber-400/10 font-bold uppercase cursor-pointer flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-amber-400/20 transition-colors"
               >
-                <CloudOff size={11} /> Błąd synchronizacji (Ponów)
+                <Key size={11} /> Połącz z chmurą
               </button>
             )}
           </div>
         )}
-        {guestMode && onLoginClick && (
-          <button 
-            onClick={onLoginClick}
-            className="text-[10px] text-amber-400 hover:bg-amber-400/10 hover:underline font-bold uppercase mr-2 cursor-pointer flex items-center gap-1 px-2 py-1 rounded border border-amber-400/20"
-          >
-            <Key size={10} /> Połącz z chmurą
-          </button>
-        )}
-        <span className={`text-xs tracking-wider uppercase font-bold ${currentStyle.status}`}>Status: Dostępny</span>
       </div>
     </div>
   );

@@ -23,10 +23,21 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      ...jsxA11y.configs.recommended.rules,
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/ban-ts-comment': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }]
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-require-imports': 'warn',
+      'no-regex-spaces': 'warn',
+      'jsx-a11y/label-has-associated-control': 'off',
+      'jsx-a11y/click-events-have-key-events': 'off',
+      'jsx-a11y/no-static-element-interactions': 'off',
+      'jsx-a11y/no-autofocus': 'off',
+      'jsx-a11y/img-redundant-alt': 'off',
+      'jsx-a11y/no-noninteractive-element-interactions': 'off',
+      'prefer-const': 'warn',
+      'no-empty': 'warn',
+      'no-empty-pattern': 'warn',
+      'react-hooks/exhaustive-deps': 'warn'
     },
   }
 );

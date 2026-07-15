@@ -43,7 +43,9 @@ import {
   Film,
   TrendingUp,
   BarChart,
-  Info
+  Info,
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
 import { googleSignIn, auth } from '../lib/googleAuth';
 
@@ -134,10 +136,19 @@ export const Wizard: React.FC<WizardProps> = ({
   const [isFinished, setIsFinished] = useState(false);
   const [shouldReduceMotion, setShouldReduceMotion] = useState(false);
 
+  // AI Parser states
+  const [isAiMode, setIsAiMode] = useState(false);
+  const [cvText, setCvText] = useState('');
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [isParsing, setIsParsing] = useState(false);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [parseStatus, setParseStatus] = useState('');
+
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setShouldReduceMotion(mediaQuery.matches);
-    const listener = (e: MediaQueryListEvent) => setShouldReduceMotion(e.matches);
+    const isForcedReduced = document.documentElement.classList.contains('reduce-motion');
+    setShouldReduceMotion(mediaQuery.matches || isForcedReduced);
+    const listener = (e: MediaQueryListEvent) => setShouldReduceMotion(e.matches || document.documentElement.classList.contains('reduce-motion'));
     mediaQuery.addEventListener('change', listener);
     return () => mediaQuery.removeEventListener('change', listener);
   }, []);
@@ -376,7 +387,7 @@ export const Wizard: React.FC<WizardProps> = ({
   const { saveToCloud, saveStatus } = usePortfolioSave();
 
   const handleFinishAndExplore = async () => {
-    const result = await saveToCloud(config, projects, certificates, timeline, icons);
+    const result = await saveToCloud(config, projects || [], certificates || [], timeline || [], icons || []);
     if (result.success) {
       if (result.publicSlug) {
         setPublishedSlug(result.publicSlug);
@@ -428,7 +439,144 @@ export const Wizard: React.FC<WizardProps> = ({
     onClose();
   };
 
+  const handleAiParse = async () => {
+    setIsParsing(true);
+    setParseError(null);
+    setParseStatus('Wczytywanie pliku...');
+
+    try {
+      let fileData: string | null = null;
+      let mimeType: string | null = null;
+
+      if (cvFile) {
+        const filePromise = new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(cvFile);
+        });
+        const dataUrl = await filePromise;
+        const parts = dataUrl.split(',');
+        fileData = parts[1];
+        mimeType = dataUrl.split(';')[0].split(':')[1];
+      }
+
+      if (!cvText.trim() && !fileData) {
+        throw new Error("Wklej profil LinkedIn lub załącz plik CV przed analizą.");
+      }
+
+      setParseStatus('Przesyłanie do AI (Gemini)...');
+      const response = await fetch('/api/parse-cv', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: cvText,
+          fileData,
+          mimeType
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Błąd komunikacji z asystentem AI.');
+      }
+
+      setParseStatus('Analiza struktury CV i wyodrębnianie kompetencji...');
+      const result = await response.json();
+
+      if (result.bio) {
+        const parsedSkills = result.bio.skills || [];
+        const fSkills: string[] = [];
+        const bSkills: string[] = [];
+        const dSkills: string[] = [];
+        
+        parsedSkills.forEach((s: any) => {
+          const name = s.name;
+          const nameLower = name.toLowerCase();
+          if (nameLower.includes('css') || nameLower.includes('html') || nameLower.includes('react') || nameLower.includes('vue') || nameLower.includes('angular') || nameLower.includes('javascript') || nameLower.includes('typescript') || nameLower.includes('frontend') || nameLower.includes('ui') || nameLower.includes('tailwind')) {
+            fSkills.push(name);
+          } else if (nameLower.includes('design') || nameLower.includes('figma') || nameLower.includes('photoshop') || nameLower.includes('illustrator') || nameLower.includes('ux') || nameLower.includes('graphics')) {
+            dSkills.push(name);
+          } else {
+            bSkills.push(name);
+          }
+        });
+
+        // Set local states
+        if (result.bio.fullName) setUserName(result.bio.fullName);
+
+        // Update main configuration
+        setConfig(prev => ({
+          ...prev,
+          portfolioName: result.bio.fullName || prev.portfolioName,
+          fullName: result.bio.fullName || prev.fullName,
+          title: result.bio.title || prev.title,
+          professionalRole: result.bio.title || prev.professionalRole,
+          portfolioBio: result.bio.biography || prev.portfolioBio,
+          address: result.bio.contactInfo?.location || prev.address,
+          phone: result.bio.contactInfo?.phone || prev.phone,
+          githubUsername: result.bio.contactInfo?.github || prev.githubUsername,
+          linkedinUsername: result.bio.contactInfo?.linkedin || prev.linkedinUsername,
+          skills: parsedSkills.map((s: any) => s.name),
+          frontendSkills: fSkills,
+          backendSkills: bSkills,
+          designSkills: dSkills
+        }));
+      }
+
+      if (result.projects && setProjects) {
+        const parsedProjects = result.projects.map((p: any, idx: number) => ({
+          id: `proj-ai-${idx}`,
+          title: p.title,
+          description: p.description,
+          role: p.role,
+          tags: p.techStack || [],
+          stars: 0,
+          link: ''
+        }));
+        setProjects(parsedProjects);
+      }
+
+      if (result.certificates && setCertificates) {
+        const parsedCerts = result.certificates.map((c: any, idx: number) => ({
+          id: `cert-ai-${idx}`,
+          title: c.title,
+          issuer: c.issuer,
+          date: c.date,
+          url: c.url || ''
+        }));
+        setCertificates(parsedCerts);
+      }
+
+      if (result.timeline && setTimeline) {
+        const parsedTimeline = result.timeline.map((t: any, idx: number) => ({
+          id: `time-ai-${idx}`,
+          year: t.year,
+          role: t.role,
+          company: t.company,
+          description: t.description
+        }));
+        setTimeline(parsedTimeline);
+      }
+
+      setParseStatus('Gotowe!');
+      // Jump directly to Step 4 (Summary and Publish) since all data is filled!
+      setStep(4);
+    } catch (err: any) {
+      setParseError(err.message || 'Wystąpił błąd podczas analizy CV.');
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
   const handleResetWizard = () => {
+    setIsAiMode(false);
+    setCvText('');
+    setCvFile(null);
+    setParseError(null);
+    setParseStatus('');
     setStep(1);
     setTags([]);
     setTagInput('');
@@ -479,7 +627,7 @@ export const Wizard: React.FC<WizardProps> = ({
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-left max-w-sm mx-auto flex items-center gap-2">
+          <div className="p-4 rounded-xl bg-slate-950/60 border border-white/10 text-left max-w-sm mx-auto flex items-center gap-2">
             <input 
               readOnly 
               value={`${window.location.origin}/p/${publishedSlug}`}
@@ -532,7 +680,7 @@ export const Wizard: React.FC<WizardProps> = ({
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-left space-y-2.5 max-w-sm mx-auto">
+          <div className="p-4 rounded-xl bg-slate-950/60 border border-white/10 text-left space-y-2.5 max-w-sm mx-auto">
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-400">Nazwa:</span>
               <span className="text-white font-semibold">{userName}</span>
@@ -594,23 +742,116 @@ export const Wizard: React.FC<WizardProps> = ({
         <div className="space-y-6">
           {/* Step 1: Powitanie */}
           {step === 1 && (
-            <div className="space-y-6 text-center py-8 animate-fadeIn">
+            <div className="space-y-6 text-center py-6 animate-fadeIn">
               <div className="w-20 h-20 rounded-3xl bg-amber-500/15 border-2 border-amber-500/30 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/10">
                 <Laptop size={36} className="text-amber-400" />
               </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-black text-white font-sans tracking-tight">Kreator PortfolioOS</h2>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
-                  Zainstaluj swój własny, interaktywny pulpit systemowy prezentujący Twoje Bio, projekty i umiejętności w formie wbudowanych aplikacji.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center gap-2 mx-auto shadow-lg shadow-amber-500/20 active:scale-95 transition-transform cursor-pointer"
-              >
-                Zacznij konfigurację <ArrowRight size={14} strokeWidth={2.5} />
-              </button>
+              
+              {!isAiMode ? (
+                <>
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-black text-white font-sans tracking-tight">Kreator PortfolioOS</h2>
+                    <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                      Zainstaluj swój własny, interaktywny pulpit systemowy prezentujący Twoje Bio, projekty i umiejętności w formie wbudowanych aplikacji.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-3 max-w-xs mx-auto pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsAiMode(true)}
+                      className="w-full py-3 bg-yellow-500 hover:bg-yellow-600 text-slate-950 rounded-xl text-xs font-sans font-bold flex items-center justify-center gap-2 shadow-lg shadow-yellow-500/15 cursor-pointer animate-pulse hover:animate-none"
+                    >
+                      <Sparkles size={14} /> Błyskawiczny Start z AI (Zalecane) ⚡
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStep(2)}
+                      className="w-full py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl text-xs font-sans font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                    >
+                      Konfiguracja Krok po Kroku <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-5 text-left max-w-md mx-auto">
+                  <div className="space-y-1 text-center">
+                    <h2 className="text-xl font-bold text-white font-sans">Błyskawiczny Start z AI</h2>
+                    <p className="text-xs text-slate-400">Załaduj plik CV (PDF/JPG) lub wklej dane profilu z LinkedIn</p>
+                  </div>
+
+                  <div className="space-y-4 pt-2">
+                    {/* Text area input */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Wklej tekst CV / profil LinkedIn</label>
+                      <textarea
+                        value={cvText}
+                        onChange={(e) => setCvText(e.target.value)}
+                        placeholder="Wklej tutaj treść swojego CV lub całą zawartość skopiowaną z profilu LinkedIn..."
+                        rows={5}
+                        disabled={isParsing}
+                        className="w-full px-3 py-2.5 bg-slate-950/80 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-yellow-500/50 resize-none font-sans"
+                      />
+                    </div>
+
+                    {/* File uploader */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Lub załącz plik CV (PDF, PNG, JPG)</label>
+                      <div className="relative border-2 border-dashed border-slate-800 rounded-xl p-4 bg-slate-950/30 hover:bg-slate-950/50 transition-colors flex flex-col items-center justify-center gap-1.5">
+                        <input
+                          type="file"
+                          accept=".pdf,.png,.jpg,.jpeg"
+                          disabled={isParsing}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) setCvFile(file);
+                          }}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                        <span className="text-xs font-semibold text-slate-300">
+                          {cvFile ? `✓ Wybrano: ${cvFile.name}` : "Kliknij lub przeciągnij plik tutaj"}
+                        </span>
+                        <span className="text-[9px] text-slate-500">Maksymalny rozmiar: 15MB (PDF/Obraz)</span>
+                      </div>
+                    </div>
+
+                    {/* Parser Status & Log output */}
+                    {isParsing && (
+                      <div className="p-3 bg-yellow-500/5 border border-yellow-500/10 rounded-xl flex items-center gap-2 text-xs text-yellow-400">
+                        <RefreshCw size={13} className="animate-spin text-yellow-400 shrink-0" />
+                        <span>{parseStatus}</span>
+                      </div>
+                    )}
+
+                    {/* Error message */}
+                    {parseError && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-2 text-xs text-red-400">
+                        <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                        <span>{parseError}</span>
+                      </div>
+                    )}
+
+                    {/* Action buttons */}
+                    <div className="flex gap-2.5 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsAiMode(false)}
+                        disabled={isParsing}
+                        className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-semibold cursor-pointer border border-white/5 transition-colors disabled:opacity-50"
+                      >
+                        Wróć
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAiParse}
+                        disabled={isParsing || (!cvText.trim() && !cvFile)}
+                        className="flex-1 py-2.5 bg-yellow-500 hover:bg-yellow-600 disabled:bg-slate-800 disabled:text-slate-500 text-slate-950 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-yellow-500/10 transition-colors"
+                      >
+                        {isParsing ? "Przetwarzanie..." : "Analizuj i generuj ⚡"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -625,20 +866,20 @@ export const Wizard: React.FC<WizardProps> = ({
               <div className="space-y-4">
                 {/* 1. Imię / Nazwa */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Nazwa wizytówki / Imię i Nazwisko</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Nazwa wizytówki / Imię i Nazwisko</span>
                   <input
                     type="text"
                     required
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
                     placeholder="np. Wiktor Krawczyk, Gospodarstwo Ekologiczne Lipa, Piekarnia Retro"
-                    className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 {/* 2. Wybór Avatara */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz avatar profilowy</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz avatar profilowy</span>
                   <div className="grid grid-cols-4 gap-2.5">
                     {[
                       { id: 'dev', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', label: 'Programista' },
@@ -653,7 +894,7 @@ export const Wizard: React.FC<WizardProps> = ({
                           type="button"
                           onClick={() => setAvatarUrl(av.url)}
                           className={`relative rounded-xl overflow-hidden border-2 transition-all p-1 cursor-pointer flex flex-col items-center gap-1.5 bg-slate-950/40 ${
-                            isSelected ? 'border-amber-500 bg-amber-500/5 scale-105' : 'border-slate-800 hover:border-slate-700'
+                            isSelected ? 'border-amber-500 bg-amber-500/5 scale-105' : 'border-white/10 hover:border-white/10'
                           }`}
                         >
                           <img src={av.url} alt={av.label} className="w-12 h-12 rounded-lg object-cover" />
@@ -669,14 +910,14 @@ export const Wizard: React.FC<WizardProps> = ({
                       value={avatarUrl}
                       onChange={(e) => setAvatarUrl(e.target.value)}
                       placeholder="Lub wklej własny adres URL do zdjęcia profilowego..."
-                      className="w-full px-3 py-1.5 bg-slate-950/40 border border-slate-800 rounded-lg text-[10px] text-slate-300 placeholder-slate-700 focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-1.5 bg-slate-950/40 border border-white/10 rounded-lg text-[10px] text-slate-300 placeholder-slate-700 focus:outline-none focus:border-amber-500"
                     />
                   </div>
                 </div>
 
                 {/* 3. Wybór Branży / Kategorii */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz główny obszar działalności</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz główny obszar działalności</span>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {industryCategories.map((cat) => {
                       const isSelected = selectedCategory.id === cat.id;
@@ -691,7 +932,7 @@ export const Wizard: React.FC<WizardProps> = ({
                           className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer h-16 ${
                             isSelected
                               ? 'border-amber-500 bg-amber-500/10 text-white'
-                              : 'border-slate-800 bg-slate-950/20 text-slate-400 hover:border-slate-700 hover:bg-slate-900/40'
+                              : 'border-white/10 bg-slate-950/20 text-slate-400 hover:border-white/10 hover:bg-slate-900/40'
                           }`}
                         >
                           <CategoryIcon id={cat.id} size={14} className="text-amber-400 shrink-0" />
@@ -704,7 +945,7 @@ export const Wizard: React.FC<WizardProps> = ({
 
                 {/* 4. Słowa kluczowe / Specjalizacja */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Dodatkowe słowa kluczowe (np. rolnictwo, react, meble)</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Dodatkowe słowa kluczowe (np. rolnictwo, react, meble)</span>
                   <input
                     type="text"
                     value={tagInput}
@@ -712,7 +953,7 @@ export const Wizard: React.FC<WizardProps> = ({
                     onKeyDown={handleKeyDown}
                     onBlur={handleBlur}
                     placeholder="Wpisz słowo kluczowe i kliknij Enter..."
-                    className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
                   />
                   {tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
@@ -728,7 +969,7 @@ export const Wizard: React.FC<WizardProps> = ({
 
                 {/* Real-time category recognition indicator */}
                 {selectedCategory.matchedProfession && (
-                  <div className="p-3 rounded-xl bg-slate-950/40 border border-slate-800/60 flex items-center justify-between text-xs animate-fadeIn">
+                  <div className="p-3 rounded-xl bg-slate-950/40 border border-white/10/60 flex items-center justify-between text-xs animate-fadeIn">
                     <span className="text-slate-400 font-sans">Automatycznie dopasowana profesja:</span>
                     <span className="text-amber-400 font-bold flex items-center gap-1.5">
                       <ProfessionIcon id={selectedCategory.matchedProfession.id} size={14} className="text-amber-400 shrink-0" />
@@ -765,7 +1006,7 @@ export const Wizard: React.FC<WizardProps> = ({
                       className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer h-28 relative overflow-hidden group ${
                         isSelected
                           ? 'border-amber-500 ring-2 ring-amber-500/20 bg-slate-900/60 shadow-lg scale-102'
-                          : 'border-slate-800 bg-slate-950/20 hover:border-slate-700'
+                          : 'border-white/10 bg-slate-950/20 hover:border-white/10'
                       }`}
                     >
                       <div className="absolute inset-0 opacity-10 group-hover:opacity-15 transition-opacity" style={{ background: wp.bg }} />
@@ -795,7 +1036,7 @@ export const Wizard: React.FC<WizardProps> = ({
                 <p className="text-xs text-slate-400">Twój system operacyjny jest gotowy do wdrożenia. Sprawdź poniższe podsumowanie.</p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3.5">
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-white/10 space-y-3.5">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-400 font-sans">Nazwa użytkownika / Wizytówka:</span>
                   <span className="text-white font-semibold">{userName || 'Gość'}</span>
@@ -826,7 +1067,7 @@ export const Wizard: React.FC<WizardProps> = ({
 
           {/* Controls Footer buttons */}
           {step > 1 && (
-            <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
+            <div className="flex items-center justify-between pt-6 border-t border-white/10/50">
               <div className="flex items-center gap-3">
                 <button
                   type="button"

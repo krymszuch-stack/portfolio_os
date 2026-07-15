@@ -29,10 +29,10 @@ export const TerminalAchievementsWidget = () => {
   }, []);
 
   return (
-    <div className="flex flex-col h-full w-full justify-between select-none p-3 relative overflow-hidden bg-slate-950/80 rounded-2xl border border-slate-700/50 shadow-inner">
+    <div className="flex flex-col h-full w-full justify-between select-none p-3 relative overflow-hidden bg-slate-950/80 rounded-2xl border border-white/10/50 shadow-inner">
       <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 blur-3xl rounded-full pointer-events-none" />
       
-      <div className="flex justify-between items-start relative z-10 mb-2 border-b border-slate-800 pb-2">
+      <div className="flex justify-between items-start relative z-10 mb-2 border-b border-white/10 pb-2">
         <div>
           <h4 className="text-[13px] font-bold text-slate-200 leading-tight flex items-center gap-1.5">
             <Terminal size={14} className="text-green-400" />

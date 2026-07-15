@@ -48,7 +48,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
         </div>
         <button
           onClick={onResetSent}
-          className="px-4 py-1.5 bg-slate-900 text-xs font-sans font-medium text-slate-200 border border-slate-800 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+          className="px-4 py-1.5 backdrop-blur-md bg-slate-900/60 text-xs font-sans font-medium text-slate-200 border border-white/10 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
         >
           Wyślij kolejną wiadomość
         </button>
@@ -60,49 +60,49 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Twoje imię / nazwa firmy</label>
+          <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Twoje imię / nazwa firmy</span>
           <input
             type="text"
             value={formData.name}
             onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
             placeholder="np. Jan Kowalski"
-            className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
+            className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
           />
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Adres e-mail *</label>
+          <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Adres e-mail *</span>
           <input
             type="email"
             required
             value={formData.email}
             onChange={(e) => setFormData(f => ({ ...f, email: e.target.value }))}
             placeholder="np. jan@domena.com"
-            className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
+            className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
           />
         </div>
       </div>
 
       <div className="space-y-1">
-        <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Temat wiadomości</label>
+        <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Temat wiadomości</span>
         <input
           type="text"
           value={formData.subject}
           onChange={(e) => setFormData(f => ({ ...f, subject: e.target.value }))}
           placeholder="np. Zapytanie o projekt strony portfolio"
-          className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
+          className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
         />
       </div>
 
       <div className="space-y-1">
-        <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Treść wiadomości *</label>
+        <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Treść wiadomości *</span>
         <textarea
           required
           rows={4}
           value={formData.message}
           onChange={(e) => setFormData(f => ({ ...f, message: e.target.value }))}
           placeholder="Napisz krótko nad jakim projektem pracujesz i czego potrzebujesz..."
-          className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
+          className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
         />
       </div>
 

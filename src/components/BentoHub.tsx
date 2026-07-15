@@ -73,6 +73,21 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp })
               </div>
               <span className="text-sm font-bold text-white">Certyfikaty</span>
             </button>
+            <button 
+              onClick={() => openApp('wizard')}
+              className="col-span-2 flex items-center justify-between bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 rounded-3xl p-4 transition-all group shadow-[0_0_20px_rgba(234,179,8,0.1)] hover:shadow-[0_0_30px_rgba(234,179,8,0.2)] animate-pulse hover:animate-none"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-yellow-500/20 flex items-center justify-center text-yellow-400 shrink-0 group-hover:scale-110 transition-transform shadow-inner border border-yellow-400/20">
+                  <Lucide.Sparkles size={32} strokeWidth={1.5} />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-bold text-white">Stwórz Własne Portfolio</h3>
+                  <p className="text-xs text-yellow-300/70 mt-0.5">Uruchom Kreator Wizytówki</p>
+                </div>
+              </div>
+              <Lucide.ChevronRight size={24} className="text-yellow-500/50 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
         </div>
 
