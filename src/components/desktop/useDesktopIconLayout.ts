@@ -12,7 +12,6 @@ export function useDesktopIconLayout(
       return newIcons.sort((a, b) => {
         const indexA = orderMap.has(a.id) ? orderMap.get(a.id) : 999;
         const indexB = orderMap.has(b.id) ? orderMap.get(b.id) : 999;
-        // @ts-expect-error - indexA and indexB are numbers, safe to subtract
         return (indexA as number) - (indexB as number);
       });
     });
