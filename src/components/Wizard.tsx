@@ -960,7 +960,7 @@ export const Wizard: React.FC<WizardProps> = ({
                       {tags.map((tag, idx) => (
                         <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-400 font-medium">
                           {tag}
-                          <button type="button" onClick={() => handleRemoveTag(idx)} className="text-amber-500 hover:text-amber-300"><X size={10} /></button>
+                          <button type="button" aria-label={`Usuń tag ${tag}`} onClick={() => handleRemoveTag(idx)} className="text-amber-500 hover:text-amber-300"><X size={10} /></button>
                         </span>
                       ))}
                     </div>

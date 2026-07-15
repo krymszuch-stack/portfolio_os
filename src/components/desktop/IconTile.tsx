@@ -91,6 +91,7 @@ export const IconTile: React.FC<IconTileProps> = ({
               e.stopPropagation();
               handleDeleteIcon(icon.id);
             }}
+            aria-label="Usuń ikonę"
             className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-rose-500 hover:bg-rose-600 border border-white/20 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 z-20 cursor-pointer animate-scaleIn"
           >
             <X size={10} strokeWidth={3} />
@@ -312,6 +313,7 @@ export const IconTile: React.FC<IconTileProps> = ({
         <button
           id={`btn-edit-icon-${icon.id}`}
           onClick={(e) => handleOpenEdit(icon, e)}
+          aria-label="Edytuj wygląd ikony"
           className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 bg-black/60 rounded-md border border-white/10 text-slate-400 hover:text-white transition-all duration-200"
           title="Edytuj wygląd ikony"
         >
@@ -334,6 +336,7 @@ export const IconTile: React.FC<IconTileProps> = ({
             e.stopPropagation();
             handleDeleteIcon(icon.id);
           }}
+          aria-label="Usuń ikonę"
           className="absolute -top-1.5 -left-1.5 w-6 h-6 bg-rose-500 hover:bg-rose-600 border border-white/20 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 z-20 cursor-pointer animate-scaleIn"
           title="Usuń"
         >
