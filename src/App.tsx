@@ -655,6 +655,17 @@ export default function App() {
               >
                 <Sparkles size={15} className="text-yellow-400" /> <span className="hidden sm:inline">Stwórz Własne Portfolio</span><span className="inline sm:hidden">Stwórz</span>
               </button>
+
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setIsPublicView(false);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/35 border border-purple-500/30 text-purple-300 font-sans text-xs md:text-sm font-semibold tracking-wide transition-all uppercase duration-200 cursor-pointer hover:border-purple-400"
+                title="Przejdź do edytora pulpitu OS"
+              >
+                <Lucide.Sliders size={15} className="text-purple-400" /> <span className="hidden sm:inline">Powrót do Edytora OS</span><span className="inline sm:hidden">Edytor</span>
+              </button>
             </div>
           ) : config.viewerMode ? (
             <div className="flex items-center gap-1.5 px-3 md:px-4.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-sans text-xs md:text-sm font-semibold tracking-wide cursor-default shadow-sm">
@@ -675,20 +686,33 @@ export default function App() {
               <ArrowLeft size={15} className="text-purple-400" /> <span className="hidden sm:inline">Podgląd Portfolio</span><span className="inline sm:hidden">Portfolio</span>
             </button>
           ) : (
-            <button
-              onClick={() => {
-                if (config.playSounds) {
-                  playXpStartup();
-                }
-                setCurrentView('generator');
-                setIsKreatorMode(true);
-                handleOpenApp('wizard'); // Open generator wizard automatically!
-              }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/35 border border-yellow-500/30 text-yellow-400 font-sans text-xs md:text-sm font-bold tracking-wider transition-all uppercase duration-200 cursor-pointer animate-pulse hover:border-yellow-400"
-              title="Zarządzaj konfiguracją i edytuj system"
-            >
-              <Sparkles size={15} className="text-yellow-400" /> <span className="hidden sm:inline">Zarządzanie / Edycja OS</span><span className="inline sm:hidden">System</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  if (config.playSounds) {
+                    playXpStartup();
+                  }
+                  setCurrentView('generator');
+                  setIsKreatorMode(true);
+                  handleOpenApp('wizard'); // Open generator wizard automatically!
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/35 border border-yellow-500/30 text-yellow-400 font-sans text-xs md:text-sm font-bold tracking-wider transition-all uppercase duration-200 cursor-pointer animate-pulse hover:border-yellow-400"
+                title="Zarządzaj konfiguracją i edytuj system"
+              >
+                <Sparkles size={15} className="text-yellow-400" /> <span className="hidden sm:inline">Zarządzanie / Edycja OS</span><span className="inline sm:hidden">System</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setIsPublicView(true);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-500/30 text-emerald-400 font-sans text-xs md:text-sm font-semibold tracking-wide transition-all uppercase duration-200 cursor-pointer hover:border-emerald-400"
+                title="Zobacz jak wygląda Twoja strona publicznie dla gości"
+              >
+                <Lucide.Eye size={15} className="text-emerald-400" /> <span className="hidden sm:inline">Podgląd Publiczny</span><span className="inline sm:hidden">Podgląd</span>
+              </button>
+            </div>
           )}
           
           <span className="text-white/10 hidden md:inline">|</span>
