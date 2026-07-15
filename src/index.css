@@ -90,7 +90,7 @@ body {
 }
 
 .immersive-glass-hover {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.25s, opacity 0.25s, background-color 0.25s, box-shadow 0.25s, border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .immersive-glass-hover:hover {
   background: rgba(255, 255, 255, 0.08);
@@ -140,12 +140,16 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, box-shadow;
+  transform: translateZ(0);
   backdrop-filter: blur(12px);
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 .bento-tile:hover {
   border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-4px);
+  transform: translateY(-4px) translateZ(0);
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
 }
 
