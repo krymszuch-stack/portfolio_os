@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Project, OSConfig } from '../types';
-import * as Lucide from 'lucide-react';
 
 interface BentoHubProps {
   projects: Project[];
@@ -9,160 +8,561 @@ interface BentoHubProps {
 }
 
 export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp }) => {
-  // Split projects into two arrays to fake the "Websites" and "Projects" dual-carousel look
-  const half = Math.ceil((projects.length || 1) / 2);
-  const featuredProjects = projects.slice(0, half);
-  const otherProjects = projects.slice(half);
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const websiteScrollRef = useRef<HTMLDivElement>(null);
+  const projectScrollRef = useRef<HTMLDivElement>(null);
 
-  return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-8 z-10 pointer-events-none pb-28 pt-8">
-      <div className="w-full max-w-5xl max-h-[85vh] overflow-y-auto hide-scrollbar rounded-[2rem] bg-slate-950/70 backdrop-blur-3xl border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.8)] p-4 md:p-6 pointer-events-auto flex flex-col gap-6 animate-scaleIn">
-        
-        {/* Top Row: Profile & Actions */}
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Profile Card */}
-          <div className="flex-1 bg-white/5 rounded-3xl p-5 md:p-6 border border-white/10 flex items-center gap-5 md:gap-6 shadow-inner">
-            <div className="w-20 h-20 md:w-28 md:h-28 rounded-full border-2 border-white/20 overflow-hidden shrink-0 bg-slate-800 shadow-xl">
-              {config.avatarUrl ? (
-                <img src={config.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <Lucide.User size={40} className="w-full h-full p-6 text-slate-400" />
-              )}
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">{config.ownerName || 'Adrian'}</h1>
-              <p className="text-sm md:text-base text-slate-300 font-medium mt-1">{config.portfolioRole || 'Full Stack Web Developer'}</p>
-              <p className="text-xs md:text-sm text-slate-500 mt-2 line-clamp-2 max-w-md leading-relaxed">
-                {config.portfolioBio || 'Tworzę skalowalne aplikacje webowe, systemy oparte o AI i rozwijam chmurę. Zlokalizowany w Polsce.'}
-              </p>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="w-full md:w-[340px] grid grid-cols-2 gap-3 shrink-0">
-            <button 
-              onClick={() => openApp('bio')}
-              className="col-span-2 flex items-center justify-between bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-3xl p-4 transition-all group shadow-[0_0_20px_rgba(59,130,246,0.1)] hover:shadow-[0_0_30px_rgba(59,130,246,0.2)]"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0 group-hover:scale-110 transition-transform shadow-inner border border-blue-400/20">
-                  <Lucide.FileBadge size={32} strokeWidth={1.5} />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-lg font-bold text-white">Zobacz CV</h3>
-                  <p className="text-xs text-blue-300/70 mt-0.5">Doświadczenie & Edukacja</p>
-                </div>
-              </div>
-              <Lucide.ChevronRight size={24} className="text-blue-500/50 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button 
-              onClick={() => openApp('contact')}
-              className="flex flex-col items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[1.5rem] p-5 transition-all group shadow-lg hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]"
-            >
-              <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform border border-emerald-400/20">
-                <Lucide.Send size={28} strokeWidth={1.5} className="mr-1 mt-1" />
-              </div>
-              <span className="text-sm font-bold text-white">Napisz</span>
-            </button>
-            <button 
-              onClick={() => openApp('certificates')}
-              className="flex flex-col items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-[1.5rem] p-5 transition-all group shadow-lg hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]"
-            >
-              <div className="w-14 h-14 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform border border-amber-400/20">
-                <Lucide.Medal size={28} strokeWidth={1.5} />
-              </div>
-              <span className="text-sm font-bold text-white">Certyfikaty</span>
-            </button>
-            <button 
-              onClick={() => openApp('wizard')}
-              className="col-span-2 flex items-center justify-between bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 rounded-3xl p-4 transition-all group shadow-[0_0_20px_rgba(234,179,8,0.1)] hover:shadow-[0_0_30px_rgba(234,179,8,0.2)] animate-pulse hover:animate-none"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-yellow-500/20 flex items-center justify-center text-yellow-400 shrink-0 group-hover:scale-110 transition-transform shadow-inner border border-yellow-400/20">
-                  <Lucide.Sparkles size={32} strokeWidth={1.5} />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-lg font-bold text-white">Stwórz Własne Portfolio</h3>
-                  <p className="text-xs text-yellow-300/70 mt-0.5">Uruchom Kreator Wizytówki</p>
-                </div>
-              </div>
-              <Lucide.ChevronRight size={24} className="text-yellow-500/50 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        </div>
-
-        {/* Middle Row: Featured Projects */}
-        <div className="flex flex-col gap-3 mt-2">
-          <div className="flex justify-between items-end px-3">
-            <h2 className="text-sm md:text-base font-bold text-white tracking-wide">Główne Projekty</h2>
-            <button onClick={() => openApp('projects')} className="text-[10px] md:text-xs text-slate-400 hover:text-white transition-colors">Pokaż wszystkie ({projects.length})</button>
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar px-2 -mx-2">
-            {featuredProjects.map(proj => (
-              <ProjectCard key={proj.id} project={proj} onClick={() => openApp('projects')} />
-            ))}
-            {featuredProjects.length === 0 && (
-              <div className="text-sm text-slate-500 italic p-4">Brak projektów.</div>
-            )}
-          </div>
-        </div>
-
-        {/* Bottom Row: Other Projects */}
-        <div className="flex flex-col gap-3">
-          <div className="flex justify-between items-end px-3">
-            <h2 className="text-sm md:text-base font-bold text-white tracking-wide">Eksperymenty i Pakiety</h2>
-          </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar px-2 -mx-2">
-            {otherProjects.map(proj => (
-              <ProjectCard key={proj.id} project={proj} onClick={() => openApp('projects')} />
-            ))}
-            {otherProjects.length === 0 && (
-              <div className="text-sm text-slate-500 italic p-4">Brak innych projektów.</div>
-            )}
-          </div>
-        </div>
-
-      </div>
-    </div>
+  // Split projects into Websites and Projects
+  // We identify websites by tags/keywords, or just split them in half if empty
+  const websiteProjects = projects.filter(p => 
+    p.tags.some(t => ['website', 'web', 'frontend', 'app', 'saas', 'crm'].includes(t.toLowerCase()))
   );
-};
+  const otherProjects = projects.filter(p => !websiteProjects.includes(p));
 
-const ProjectCard = ({ project, onClick }: { project: Project, onClick: () => void }) => {
+  const displayWebsites = websiteProjects.length > 0 ? websiteProjects : projects.slice(0, Math.ceil(projects.length / 2));
+  const displayProjects = otherProjects.length > 0 ? otherProjects : projects.slice(Math.ceil(projects.length / 2));
+
+  // Custom Cursor Tracker
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (cursorRef.current) {
+        cursorRef.current.style.left = `${e.clientX}px`;
+        cursorRef.current.style.top = `${e.clientY}px`;
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    // Hover effect scale
+    const interactiveElements = document.querySelectorAll('a, button, .group');
+    const handleMouseEnter = () => {
+      if (cursorRef.current) {
+        cursorRef.current.style.transform = 'translate(-50%, -50%) scale(2.5)';
+        cursorRef.current.style.backgroundColor = 'rgba(176, 198, 255, 0.1)';
+        cursorRef.current.style.borderColor = 'rgba(176, 198, 255, 0.5)';
+      }
+    };
+    const handleMouseLeave = () => {
+      if (cursorRef.current) {
+        cursorRef.current.style.transform = 'translate(-50%, -50%) scale(1)';
+        cursorRef.current.style.backgroundColor = 'transparent';
+        cursorRef.current.style.borderColor = '#b0c6ff';
+      }
+    };
+
+    interactiveElements.forEach(el => {
+      el.addEventListener('mouseenter', handleMouseEnter);
+      el.addEventListener('mouseleave', handleMouseLeave);
+    });
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      interactiveElements.forEach(el => {
+        el.removeEventListener('mouseenter', handleMouseEnter);
+        el.removeEventListener('mouseleave', handleMouseLeave);
+      });
+    };
+  }, [projects, config]);
+
+  // Horizontal scroll wheel listener for carousels
+  useEffect(() => {
+    const attachWheelListener = (ref: React.RefObject<HTMLDivElement | null>) => {
+      const el = ref.current;
+      if (!el) return;
+
+      const handleWheel = (e: WheelEvent) => {
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          el.scrollLeft += e.deltaY;
+        }
+      };
+
+      el.addEventListener('wheel', handleWheel, { passive: false });
+      return () => el.removeEventListener('wheel', handleWheel);
+    };
+
+    const cleanupWebsites = attachWheelListener(websiteScrollRef);
+    const cleanupProjects = attachWheelListener(projectScrollRef);
+
+    return () => {
+      cleanupWebsites?.();
+      cleanupProjects?.();
+    };
+  }, [projects]);
+
+  // Dynamic values
+  const brandName = config.fullName 
+    ? `${config.fullName.split(' ')[0].toLowerCase()}.dev` 
+    : (config.portfolioName ? `${config.portfolioName.toLowerCase()}.dev` : 'viktor.dev');
+
+  const fullName = config.fullName || config.ownerName || 'Viktor Shchelochkov';
+  const role = config.portfolioRole || config.professionalRole || 'Senior Full Stack Web Developer';
+  
+  // Parse age if possible
+  const locationText = config.address || 'Barcelona & Zaragoza, Spain';
+
+  // Dynamic tags for CV card
+  const cvTags = projects.flatMap(p => p.tags).filter((v, i, a) => a.indexOf(v) === i).slice(0, 5);
+  const tagsString = cvTags.length > 0 ? cvTags.join(', ') : 'React, TypeScript, Node.js, Tailwind';
+
+  // Helper to map project tags to Material Symbol icons
+  const getProjectIcon = (project: Project): string => {
+    const tags = project.tags.map(t => t.toLowerCase());
+    if (tags.some(t => ['cloud', 'aws', 'azure', 'serverless', 'api'].includes(t))) return 'cloud_upload';
+    if (tags.some(t => ['terminal', 'cli', 'library', 'npm', 'backend', 'core'].includes(t))) return 'terminal';
+    if (tags.some(t => ['chat', 'message', 'social', 'forum', 'communication'].includes(t))) return 'chat_bubble';
+    if (tags.some(t => ['notification', 'alert', 'push', 'signal'].includes(t))) return 'notifications_active';
+    if (tags.some(t => ['database', 'sql', 'postgres', 'mongo'].includes(t))) return 'database';
+    if (tags.some(t => ['security', 'auth', 'crypt', 'e2ee'].includes(t))) return 'lock';
+    return 'code';
+  };
+
+  // Helper to map icon color classes
+  const getProjectColorClass = (index: number): string => {
+    const colors = ['text-[#b0c6ff]', 'text-[#b6ccc0]', 'text-[#bbcac0]', 'text-[#ffb4ab]'];
+    return colors[index % colors.length];
+  };
+
+  // Default fallbacks for background images
+  const defaultBgImage = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCzoFBTwCVm0P0Asq2rmJLug1PIYXjkHsB89-wIE7VcAXHn6lM_bPTe7a4xmZGVnuIEZnh1jTbfJoe-SwFzTFNFs5EdNE0IwNW07u9XdZ5NiNG8PdyND55fLrjDnd3THShElKCCY7_porYMeC0veqw6dhoP7Zu_C81l8xYsugIS7kAQYr_NYtB_LIETA6igPW-l_aWeb5CLoqWliaX3e5IHwO81qlGrxkNzY-K8Z6E5BT26C7arRGaq';
+  const avatarFallback = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBHcdVMiRAVgNyfcsdPGU3X5HMsheKu6BDd6YmITx8c10GtXODuYIUUu9xpSVZyY4Fx9ushLG2w87rCZvbJd5Gk2__MK2ofKo81uqxTnfzqoy5fNj6tFguCN5G3iHatKP9a4TA1vv29hkjgNz7EiECj3PI7C9Aea5jwOYfOOXJ4WMsds8CHEFjuC8KbT-JTpXijVq4aXI19FYeq71tiMB4Qx5SM_Ky33VgN_SlLOIMaC68ujVn7Xps_';
+
   return (
-    <button 
-      onClick={onClick}
-      className="flex-shrink-0 w-64 md:w-80 bg-[#16161c] border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 transition-all text-left group snap-start shadow-lg"
-    >
-      <div className="h-32 md:h-40 bg-slate-900 relative overflow-hidden border-b border-white/5">
-        {project.thumbnail ? (
-           <img src={project.thumbnail} alt={project.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col items-center justify-center group-hover:scale-105 transition-all duration-500">
-            <Lucide.Github size={48} className="text-white/10" />
-            {project.stars && project.stars > 0 && (
-              <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full flex items-center gap-1 text-[10px] text-amber-400 font-bold border border-white/10">
-                <Lucide.Star size={10} className="fill-amber-400" /> {project.stars}
+    <>
+      {/* Stylesheet injector for Material Symbols */}
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+      
+      {/* Dynamic Scoped Styles */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .bento-scope {
+          background: #000;
+          overflow-y: auto;
+          font-family: 'Inter', sans-serif;
+          position: absolute;
+          inset: 0;
+          z-index: 10;
+          scroll-behavior: smooth;
+        }
+
+        .glass-container {
+          background: rgba(13, 26, 20, 0.7);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.3s ease-out;
+        }
+
+        .glass-inner {
+          background: rgba(0, 0, 0, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          transition: all 0.3s ease-out;
+        }
+
+        .active-glow {
+          box-shadow: 0 0 15px rgba(87, 140, 255, 0.4);
+        }
+
+        .hover-card-effect:hover {
+          transform: scale(1.02);
+          background: rgba(255, 255, 255, 0.05);
+          box-shadow: 0 10px 30px -10px rgba(87, 140, 255, 0.2);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+
+        .social-dock {
+          background: rgba(13, 26, 20, 0.6);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.3s ease-out;
+        }
+
+        .hero-bg {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: -1;
+          filter: blur(10px) brightness(0.6);
+          background-size: cover;
+          background-position: center;
+        }
+
+        .ambient-glow {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: -1;
+          background: radial-gradient(circle at 50% 50%, rgba(60, 74, 66, 0.2) 0%, transparent 50%);
+          animation: ambient-shift 20s infinite alternate ease-in-out;
+          pointer-events: none;
+        }
+
+        @keyframes ambient-shift {
+          0% { transform: translate(-10%, -10%) scale(1); }
+          50% { transform: translate(10%, 5%) scale(1.2); }
+          100% { transform: translate(-5%, 10%) scale(1.1); }
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fade-up {
+          animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+
+        @keyframes pulse-status {
+          0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+          70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        .status-pulse {
+          animation: pulse-status 2s infinite;
+        }
+
+        .custom-cursor {
+          width: 20px;
+          height: 20px;
+          border: 2px solid #b0c6ff;
+          border-radius: 50%;
+          position: fixed;
+          pointer-events: none;
+          z-index: 9999;
+          transition: transform 0.1s ease;
+          transform: translate(-50%, -50%);
+        }
+      ` }} />
+
+      <div className="bento-scope text-on-surface pb-32">
+        {/* Background Layers */}
+        <div className="hero-bg" style={{ backgroundImage: `url('${config.avatarUrl || defaultBgImage}')` }}></div>
+        <div className="ambient-glow"></div>
+
+        {/* Top App Bar */}
+        <header className="fixed top-0 left-0 right-0 z-40 animate-fade-up">
+          <nav className="flex justify-between items-center w-full px-8 py-4 max-w-[1100px] mx-auto">
+            <div className="font-semibold text-2xl text-white tracking-tight">{brandName}</div>
+            
+            <div className="hidden md:flex items-center gap-8">
+              <button 
+                onClick={() => openApp('bio')} 
+                className="font-sans text-sm text-primary border-b-2 border-primary pb-1 transition-all duration-300 cursor-pointer"
+              >
+                Resume
+              </button>
+              <a 
+                href="#websites" 
+                className="font-sans text-sm text-slate-400 hover:text-white transition-all duration-300"
+              >
+                Websites
+              </a>
+              <a 
+                href="#projects" 
+                className="font-sans text-sm text-slate-400 hover:text-white transition-all duration-300"
+              >
+                Projects
+              </a>
+              <button 
+                onClick={() => openApp('contact')} 
+                className="font-sans text-sm text-slate-400 hover:text-white transition-all duration-300 cursor-pointer"
+              >
+                Contact
+              </button>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => openApp('contact')} 
+                className="hover:bg-white/10 backdrop-blur-sm rounded-lg p-2 transition-all duration-300 active:scale-95 cursor-pointer flex items-center justify-center"
+                title="Send Message"
+              >
+                <span className="material-symbols-outlined text-primary text-xl">mail</span>
+              </button>
+              <button 
+                onClick={() => openApp('terminal')} 
+                className="hover:bg-white/10 backdrop-blur-sm rounded-lg p-2 transition-all duration-300 active:scale-95 cursor-pointer flex items-center justify-center"
+                title="Launch Terminal"
+              >
+                <span className="material-symbols-outlined text-primary text-xl">code</span>
+              </button>
+            </div>
+          </nav>
+        </header>
+
+        {/* Main Content Layout */}
+        <main className="min-h-screen flex items-center justify-center pt-28 pb-12 px-4 md:px-8">
+          <div className="glass-container w-full max-w-[1100px] rounded-[32px] p-6 md:p-12 overflow-hidden relative shadow-2xl opacity-0 animate-fade-up delay-100">
+            
+            {/* Grid Layout Header */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+              
+              {/* Profile Identity Card */}
+              <div className="lg:col-span-7 glass-inner rounded-[24px] p-6 md:p-8 flex flex-col md:flex-row items-center gap-8">
+                <div className="relative shrink-0">
+                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white/10 shadow-lg bg-slate-900">
+                    <img 
+                      className="w-full h-full object-cover" 
+                      alt={fullName} 
+                      src={config.avatarUrl || avatarFallback} 
+                    />
+                  </div>
+                  <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-[#0d1a14] active-glow status-pulse"></div>
+                </div>
+                
+                <div className="text-center md:text-left">
+                  <h1 className="font-bold text-3xl md:text-5xl text-white mb-2 tracking-tight">{fullName}</h1>
+                  <p className="font-semibold text-lg md:text-xl text-primary opacity-90 mb-4">{role}</p>
+                  
+                  <div className="flex items-center justify-center md:justify-start gap-2 text-slate-400">
+                    <span className="material-symbols-outlined text-sm">location_on</span>
+                    <span className="font-sans text-sm">{locationText}</span>
+                  </div>
+                </div>
               </div>
-            )}
+
+              {/* Action Cards */}
+              <div className="lg:col-span-5 grid grid-cols-2 gap-4">
+                
+                {/* CV Resume Uploader / Viewer Card */}
+                <button 
+                  onClick={() => {
+                    if (config.cvUrl) {
+                      window.open(config.cvUrl, '_blank');
+                    } else {
+                      openApp('bio');
+                    }
+                  }}
+                  className="col-span-2 glass-inner rounded-[24px] p-6 flex items-center gap-4 hover-card-effect transition-all duration-300 group text-left cursor-pointer w-full"
+                >
+                  <div className="bg-blue-500/20 text-blue-400 p-4 rounded-2xl active-glow transition-all duration-300 group-hover:scale-110 shrink-0 flex items-center justify-center">
+                    <span className="material-symbols-outlined">description</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-white">Jump to resume & CV</h3>
+                    <p className="font-mono text-xs text-slate-400 mt-1 line-clamp-1">{tagsString}</p>
+                  </div>
+                </button>
+
+                {/* Contact Card */}
+                <button 
+                  onClick={() => openApp('contact')}
+                  className="glass-inner rounded-[24px] p-6 flex items-center gap-4 hover-card-effect transition-all duration-300 group text-left cursor-pointer"
+                >
+                  <div className="bg-primary/20 text-primary p-4 rounded-2xl transition-all duration-300 group-hover:bg-primary/30 shrink-0 flex items-center justify-center">
+                    <span className="material-symbols-outlined">payments</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-white">Contact</h3>
+                    <p className="font-mono text-[10px] text-slate-400 mt-0.5">Hire Me</p>
+                  </div>
+                </button>
+
+                {/* System Wizard Creator Card */}
+                <button 
+                  onClick={() => openApp('wizard')}
+                  className="glass-inner rounded-[24px] p-6 flex flex-col items-center justify-center gap-2 hover-card-effect transition-all duration-300 group cursor-pointer text-center"
+                >
+                  <span className="material-symbols-outlined text-primary text-3xl transition-all duration-300 group-hover:rotate-12">language</span>
+                  <span className="font-mono text-xs text-white">Build Yours</span>
+                </button>
+
+              </div>
+            </div>
+
+            {/* Websites Section */}
+            <section id="websites" className="mb-8 opacity-0 animate-fade-up delay-200">
+              <div className="flex justify-between items-end mb-4">
+                <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">Websites</h2>
+                <button 
+                  onClick={() => openApp('projects')} 
+                  className="font-mono text-xs text-primary hover:underline transition-all duration-300 cursor-pointer"
+                >
+                  Show All ({projects.length})
+                </button>
+              </div>
+              
+              <div 
+                ref={websiteScrollRef}
+                className="flex overflow-x-auto gap-4 no-scrollbar pb-4 -mx-2 px-2 snap-x"
+              >
+                {displayWebsites.map(proj => (
+                  <div 
+                    key={proj.id} 
+                    onClick={() => {
+                      if (proj.link) window.open(proj.link, '_blank');
+                      else openApp('projects');
+                    }}
+                    className="min-w-[280px] max-w-[280px] group cursor-pointer snap-start"
+                  >
+                    <div className="glass-inner rounded-xl overflow-hidden aspect-video relative mb-3 hover-card-effect transition-all duration-300">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-end p-4">
+                        <span className="text-white text-xs font-semibold translate-y-2 group-hover:translate-y-0 transition-transform duration-300 flex items-center gap-1">
+                          View Live Project <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                        </span>
+                      </div>
+                      <img 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                        alt={proj.title} 
+                        src={proj.thumbnail || defaultBgImage} 
+                      />
+                    </div>
+                    <h4 className="font-semibold text-sm text-slate-200 group-hover:text-primary transition-colors duration-300 truncate">
+                      {proj.title}
+                    </h4>
+                  </div>
+                ))}
+
+                {displayWebsites.length === 0 && (
+                  <div className="text-slate-500 italic py-6 text-sm">Brak projektów stron internetowych.</div>
+                )}
+              </div>
+            </section>
+
+            {/* Projects Section */}
+            <section id="projects" className="opacity-0 animate-fade-up delay-300">
+              <div className="flex justify-between items-end mb-4">
+                <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">Projects & Tools</h2>
+                <button 
+                  onClick={() => openApp('projects')} 
+                  className="font-mono text-xs text-primary hover:underline transition-all duration-300 cursor-pointer"
+                >
+                  Show All ({projects.length})
+                </button>
+              </div>
+              
+              <div 
+                ref={projectScrollRef}
+                className="flex overflow-x-auto gap-4 no-scrollbar pb-4 -mx-2 px-2 snap-x"
+              >
+                {displayProjects.map((proj, idx) => (
+                  <div 
+                    key={proj.id} 
+                    onClick={() => {
+                      if (proj.link) window.open(proj.link, '_blank');
+                      else openApp('projects');
+                    }}
+                    className="min-w-[280px] max-w-[280px] group cursor-pointer snap-start"
+                  >
+                    <div className="glass-inner rounded-xl p-6 h-44 flex flex-col justify-center items-center gap-4 relative overflow-hidden transition-all duration-300 hover-card-effect">
+                      <span className={`material-symbols-outlined text-5xl ${getProjectColorClass(idx)} transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6`}>
+                        {getProjectIcon(proj)}
+                      </span>
+                      <div className="text-center w-full">
+                        <h4 className="font-bold text-base text-white group-hover:text-primary transition-colors duration-300 truncate">
+                          {proj.title}
+                        </h4>
+                        <p className="text-xs text-slate-400 mt-1 line-clamp-2 max-w-[240px] mx-auto">
+                          {proj.description || 'Brak opisu.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {displayProjects.length === 0 && (
+                  <div className="text-slate-500 italic py-6 text-sm">Brak innych projektów.</div>
+                )}
+              </div>
+            </section>
+
           </div>
-        )}
-      </div>
-      <div className="p-4 md:p-5 bg-gradient-to-b from-white/[0.02] to-transparent">
-        <h3 className="text-sm md:text-base font-bold text-white truncate">{project.title}</h3>
-        <p className="text-[11px] md:text-xs text-slate-400 truncate mt-1.5">{project.description || 'Brak opisu.'}</p>
-        <div className="flex gap-2 mt-4 overflow-hidden">
-          {project.tags.slice(0, 3).map(tag => (
-            <span key={tag} className="text-[9px] md:text-[10px] font-medium px-2 py-1 rounded-md bg-white/5 border border-white/5 text-slate-300 whitespace-nowrap">
-              {tag}
-            </span>
-          ))}
-          {project.tags.length > 3 && (
-            <span className="text-[9px] md:text-[10px] font-medium px-2 py-1 rounded-md bg-white/5 border border-white/5 text-slate-400 whitespace-nowrap">
-              +{project.tags.length - 3}
-            </span>
+        </main>
+
+        {/* Bottom Social Bar Dock */}
+        <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 social-dock px-6 py-2 rounded-full shadow-2xl animate-fade-up">
+          {config.linkedinUsername && (
+            <a 
+              className="p-3 text-slate-400 hover:text-primary hover:bg-white/5 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center" 
+              href={`https://linkedin.com/in/${config.linkedinUsername}`} 
+              target="_blank"
+              rel="noopener noreferrer"
+              title="LinkedIn"
+            >
+              <span className="material-symbols-outlined text-lg">groups</span>
+            </a>
           )}
-        </div>
+          {config.githubUsername && (
+            <a 
+              className="p-3 text-slate-400 hover:text-primary hover:bg-white/5 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center" 
+              href={`https://github.com/${config.githubUsername}`} 
+              target="_blank"
+              rel="noopener noreferrer"
+              title="GitHub"
+            >
+              <span className="material-symbols-outlined text-lg">code</span>
+            </a>
+          )}
+          {config.instagramUsername && (
+            <a 
+              className="p-3 text-slate-400 hover:text-primary hover:bg-white/5 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center" 
+              href={`https://instagram.com/${config.instagramUsername}`} 
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Instagram"
+            >
+              <span className="material-symbols-outlined text-lg">photo_camera</span>
+            </a>
+          )}
+          {config.telegramUsername && (
+            <>
+              <div className="w-px h-6 bg-white/10 mx-1"></div>
+              <a 
+                className="p-3 bg-primary-container text-on-primary-container rounded-full active-glow transition-all duration-300 hover:scale-110 active:scale-90 flex items-center justify-center" 
+                href={`https://t.me/${config.telegramUsername}`} 
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Telegram"
+              >
+                <span className="material-symbols-outlined text-lg">send</span>
+              </a>
+            </>
+          )}
+          {config.discordId && (
+            <a 
+              className="p-3 text-slate-400 hover:text-primary hover:bg-white/5 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center" 
+              href="https://discord.com" 
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Discord"
+            >
+              <span className="material-symbols-outlined text-lg">forum</span>
+            </a>
+          )}
+          {config.phone && (
+            <a 
+              className="p-3 text-slate-400 hover:text-primary hover:bg-white/5 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center" 
+              href={`tel:${config.phone}`} 
+              title="Call Phone"
+            >
+              <span className="material-symbols-outlined text-lg">work</span>
+            </a>
+          )}
+        </nav>
+
+        {/* Tracking custom cursor effect */}
+        <div ref={cursorRef} className="custom-cursor hidden md:block" id="cursor"></div>
       </div>
-    </button>
+    </>
   );
 };
