@@ -151,6 +151,81 @@ async function startServer() {
     }
   });
 
+  // Recruiter Advisor endpoint to verify and query candidate portfolio data
+  app.post("/api/recruiter-advisor", async (req: express.Request, res: express.Response): Promise<any> => {
+    try {
+      if (!ai) {
+        return res.status(503).json({ error: "AI service unavailable. Set GEMINI_API_KEY in environment." });
+      }
+
+      const { portfolioData, query, history } = req.body;
+
+      if (!portfolioData || !query) {
+        return res.status(400).json({ error: "Brak danych portfolio lub zapytania." });
+      }
+
+      const candidateName = portfolioData.config?.fullName || portfolioData.config?.portfolioName || "Adrian";
+
+      const systemInstruction = `
+        Jesteś Wirtualnym Doradcą Rekrutera (Recruiter Advisor) dla kandydata: ${candidateName}.
+        Twoim celem jest pomoc rekruterowi w weryfikacji i analizie doświadczenia, projektów, certyfikatów i dopasowania kandydata do stanowiska.
+        Odpowiadaj profesjonalnie, precyzyjnie, zwięźle i w języku polskim, opierając się wyłącznie o załączone dane portfolio kandydata.
+
+        DANE PROFILU KANDYDATA:
+        - Imię i Nazwisko: ${candidateName}
+        - Tytuł/Rola: ${portfolioData.config?.professionalRole || portfolioData.config?.title || ""}
+        - Biografia/O mnie: ${portfolioData.config?.portfolioBio || ""}
+        - Adres/Lokalizacja: ${portfolioData.config?.address || ""}
+        - Główne umiejętności: ${JSON.stringify(portfolioData.config?.skills || [])}
+
+        PROJEKTY:
+        ${JSON.stringify(portfolioData.projects || [])}
+
+        CERTYFIKATY:
+        ${JSON.stringify(portfolioData.certificates || [])}
+
+        DOŚWIADCZENIE / LINIA CZASU:
+        ${JSON.stringify(portfolioData.timeline || [])}
+
+        Wytyczne do odpowiedzi:
+        1. Odpowiadaj krótko i konkretnie (rekruterzy nie lubią czytać ścian tekstu).
+        2. Pomagaj weryfikować prawdziwość umiejętności wskazując na konkretne projekty i firmy w linii czasu, w których kandydat ich używał.
+        3. Jeśli rekruter pyta o technologię lub umiejętność, której nie ma w danych kandydata, powiedz jasno: "Na podstawie załączonego portfolio nie można potwierdzić doświadczenia w [X]". Nie zmyślaj faktów.
+        4. Zachowaj profesjonalny ton.
+      `;
+
+      // Build chat contents from history and current query
+      let contents: any[] = [];
+
+      if (history && Array.isArray(history)) {
+        contents = history.map((msg: any) => ({
+          role: msg.role === "user" ? "user" : "model",
+          parts: [{ text: msg.text || msg.parts?.[0]?.text || "" }]
+        }));
+      }
+
+      // Add latest query
+      contents.push({
+        role: "user",
+        parts: [{ text: query }]
+      });
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: contents,
+        config: {
+          systemInstruction: systemInstruction
+        }
+      });
+
+      const reply = response.text || "Przepraszam, nie mogłem przetworzyć tego pytania.";
+      res.json({ reply });
+    } catch (error: any) {
+      console.error("[ADVISOR ERROR] Błąd doradcy rekrutera:", error);
+      res.status(500).json({ error: error.message || "Błąd wewnętrzny doradcy rekrutera." });
+    }
+  });
+
   // Serve static assets or use Vite's development middleware
   // Default to production mode unless NODE_ENV is explicitly set to 'development'
   const isDev = process.env.NODE_ENV === "development";

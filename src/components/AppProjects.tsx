@@ -316,7 +316,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
           <div className="flex gap-2 w-full md:w-auto">
             <input
               type="text"
-              placeholder="nazwa-repozytorium"
+              placeholder="np. krymszuch-stack/portfolio"
               value={githubRepoInput}
               onChange={(e) => setGithubRepoInput(e.target.value)}
               className="flex-1 md:w-48 px-3 py-1.5 bg-slate-950/80 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-cyan-500"
