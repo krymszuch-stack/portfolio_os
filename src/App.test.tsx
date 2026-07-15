@@ -4,9 +4,6 @@ import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { WindowProvider } from './contexts/WindowContext';
 
-import { AuthProvider } from './contexts/AuthContext';
-import { WindowProvider } from './contexts/WindowContext';
-
 // Mock Firebase and other external dependencies
 vi.mock('./lib/googleAuth', () => ({
   auth: { currentUser: null },
