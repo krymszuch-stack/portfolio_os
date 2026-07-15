@@ -23,6 +23,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'github' | 'manual'>('all');
   const [isSyncingId, setIsSyncingId] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [showWinFixer, setShowWinFixer] = useState(false);
 
   // Quick Look & Focus Mode
@@ -147,21 +148,10 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
       console.warn('Could not sync repository details, using fallback simulation:', err);
     }
 
-    // Fallback simulation in case of API failure or offline
-    setTimeout(() => {
-      setProjects(prev => prev.map(p => {
-        if (p.id === id) {
-          const updatedStars = p.stars ? p.stars + Math.floor(Math.random() * 5) + 1 : 1;
-          return {
-            ...p,
-            stars: updatedStars,
-            lastSync: 'Zsynchronizowano przed chwilą'
-          };
-        }
-        return p;
-      }));
-      setIsSyncingId(null);
-    }, 1000);
+    // API failure or offline - show a real error instead of fabricating data
+    console.warn(`Nie udalo sie zsynchronizowac repozytorium (id: ${id})`);
+    setSyncError('Nie udalo sie odswiezyc danych - sprobuj ponownie za chwile.');
+    setIsSyncingId(null);
   };
 
   const handleCreateProject = () => {
@@ -338,6 +328,11 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
         {importError && (
           <div className="mt-3 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-2 rounded-lg font-sans">
             {importError}
+          </div>
+        )}
+        {syncError && (
+          <div className="mt-3 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-2 rounded-lg font-sans">
+            {syncError}
           </div>
         )}
       </div>
