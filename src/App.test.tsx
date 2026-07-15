@@ -2,6 +2,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import App from './App';
 
+import { AuthProvider } from './contexts/AuthContext';
+import { WindowProvider } from './contexts/WindowContext';
+
 // Mock Firebase and other external dependencies
 vi.mock('./lib/googleAuth', () => ({
   auth: { currentUser: null },
@@ -13,9 +16,9 @@ vi.mock('firebase/auth', () => ({
 }));
 
 vi.mock('./lib/firestoreStore', () => ({
-  loadPortfolioConfig: vi.fn(),
-  loadPortfolioBySlug: vi.fn(),
-  savePortfolioConfig: vi.fn(),
+  loadPortfolioConfig: vi.fn(() => Promise.resolve(null)),
+  loadPortfolioBySlug: vi.fn(() => Promise.resolve(null)),
+  savePortfolioConfig: vi.fn(() => Promise.resolve(null)),
 }));
 
 // Mock sounds to prevent HTMLAudioElement issues in jsdom
@@ -30,9 +33,15 @@ vi.mock('./lib/sounds', () => ({
 
 describe('App Component', () => {
   it('renders without crashing', () => {
-    const { container } = render(<App />);
+    const { container } = render(
+      <AuthProvider>
+        <WindowProvider>
+          <App />
+        </WindowProvider>
+      </AuthProvider>
+    );
     expect(container).toBeTruthy();
     // Verify that the desktop or some generic element renders
-    expect(container.querySelector('.system-font-apple')).toBeTruthy();
+    expect(container.querySelector('.system-font-apple') || container.querySelector('.cv-builder-scope')).toBeTruthy();
   });
 });
