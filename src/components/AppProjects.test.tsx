@@ -27,8 +27,8 @@ describe('AppProjects Github Import', () => {
       />
     );
 
-    // Use getByRole as primary selector (more robust than placeholder text)
-    const input = screen.getByRole('textbox') as HTMLInputElement;
+    // Get the GitHub import input specifically by looking for the placeholder text
+    const input = screen.getByPlaceholderText(/np\. krymszuch-stack\/portfolio/) as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'missing-repo' } });
 
     // Submit form
@@ -56,7 +56,7 @@ describe('AppProjects Github Import', () => {
       />
     );
 
-    const input = screen.getByRole('textbox') as HTMLInputElement;
+    const input = screen.getByPlaceholderText(/np\. krymszuch-stack\/portfolio/) as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'just-repo' } });
 
     const importButton = screen.getByText('Importuj');

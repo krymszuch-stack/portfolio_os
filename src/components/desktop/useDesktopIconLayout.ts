@@ -12,13 +12,13 @@ export function useDesktopIconLayout(
       return newIcons.sort((a, b) => {
         const indexA = orderMap.has(a.id) ? orderMap.get(a.id) : 999;
         const indexB = orderMap.has(b.id) ? orderMap.get(b.id) : 999;
-        // @ts-ignore
-        return indexA - indexB;
+        // @ts-expect-error - indexA and indexB are numbers, safe to subtract
+        return (indexA as number) - (indexB as number);
       });
     });
   };
 
-  const handleDragEnd = (e: any, info: any, iconId: string) => {
+  const handleDragEnd = (e: unknown, info: { point: { x: number; y: number } }, iconId: string) => {
     const dropX = info.point.x;
     const dropY = info.point.y;
     
@@ -29,8 +29,8 @@ export function useDesktopIconLayout(
     cells.forEach(cell => {
       const rect = cell.getBoundingClientRect();
       if (dropX >= rect.left && dropX <= rect.right && dropY >= rect.top && dropY <= rect.bottom) {
-        targetR = parseInt(cell.getAttribute('data-grid-r') || '-1');
-        targetC = parseInt(cell.getAttribute('data-grid-c') || '-1');
+        targetR = parseInt(cell.getAttribute('data-grid-r') || '-1', 10);
+        targetC = parseInt(cell.getAttribute('data-grid-c') || '-1', 10);
       }
     });
 

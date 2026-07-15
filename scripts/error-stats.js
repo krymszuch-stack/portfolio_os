@@ -66,8 +66,8 @@ function extractTokens(text) {
 }
 
 function summarizeMap(map) {
-  const arr = Array.from(map.entries()).map(([k,v]) => ({ token: k, count: v }));
-  arr.sort((a,b) => b.count - a.count);
+  const arr = Array.from(map.entries()).map(([k, v]) => ({ token: k, count: v }));
+  arr.sort((a, b) => b.count - a.count);
   return arr;
 }
 
