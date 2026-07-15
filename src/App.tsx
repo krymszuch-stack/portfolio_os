@@ -893,7 +893,11 @@ export default function App() {
           <BentoHub 
             projects={projects}
             config={config}
-            openApp={handleOpenApp}
+            openApp={(appId) => {
+              setIsPublicView(false);
+              handleOpenApp(appId);
+            }}
+            isOwner={!!currentUser}
           />
         ) : (
           <Desktop
