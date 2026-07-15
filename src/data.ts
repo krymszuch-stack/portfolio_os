@@ -5,13 +5,89 @@
 
 import { Project, Certificate, TimelineItem, ActiveSprint, DesktopIcon, OSConfig } from './types';
 
-export const initialProjects: Project[] = [];
+// Tutaj uzupełniasz swoje projekty. Pierwszy z nich to PortfolioOS!
+export const initialProjects: Project[] = [
+  {
+    id: 'portfolio-os',
+    title: 'PortfolioOS',
+    description: 'Innowacyjna platforma webowa pozwalająca każdemu stworzyć interaktywny profil-wizytówkę w formie wirtualnego systemu operacyjnego. Projekt, który właśnie przeglądasz!',
+    tags: ['React', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
+    type: 'manual',
+    link: 'https://oauthcry.com' // Link do kreatora lub repo
+  },
+  {
+    id: 'project-2',
+    title: '[Nazwa Twojego Projektu 2]',
+    description: 'Krótki opis projektu, problemu, który rozwiązuje i Twojej roli. Wykorzystana architektura cloudowa, mikroserwisy itp.',
+    tags: ['Node.js', 'Azure', 'Docker'],
+    type: 'manual'
+  },
+  {
+    id: 'project-3',
+    title: '[Nazwa Twojego Projektu 3]',
+    description: 'Aplikacja mobilna / webowa z naciskiem na wydajność. Opisz krótko stack technologiczny.',
+    tags: ['React Native', 'Firebase', 'Redux'],
+    type: 'manual'
+  }
+];
 
-export const initialCertificates: Certificate[] = [];
+// Twoje certyfikaty i odznaki
+export const initialCertificates: Certificate[] = [
+  {
+    id: 'cert-1',
+    title: 'Microsoft Certified: Azure Developer Associate',
+    issuer: 'Microsoft',
+    date: '2023-05-10',
+    description: 'Certyfikat potwierdzający zaawansowane umiejętności tworzenia rozwiązań chmurowych na platformie Azure.',
+    verified: true
+  },
+  {
+    id: 'cert-2',
+    title: '[Nazwa Twojego Certyfikatu]',
+    issuer: '[Wydawca, np. AWS / Google / Coursera]',
+    date: '2022-11-20',
+    description: 'Opis zdobytej wiedzy lub certyfikacji.',
+    verified: true
+  }
+];
 
-export const initialTimeline: TimelineItem[] = [];
+// Oś czasu Twojej kariery / edukacji
+export const initialTimeline: TimelineItem[] = [
+  {
+    id: 'timeline-1',
+    period: '2023 - Obecnie',
+    role: 'Senior Software Engineer',
+    company: '[Nazwa Firmy / Freelance]',
+    description: 'Projektowanie i wdrażanie skalowalnych aplikacji webowych. Wprowadzanie rozwiązań opartych na sztucznej inteligencji.'
+  },
+  {
+    id: 'timeline-2',
+    period: '2021 - 2023',
+    role: 'Full-Stack Developer',
+    company: '[Poprzednia Firma]',
+    description: 'Rozwój systemów backendowych, optymalizacja baz danych i tworzenie interfejsów użytkownika w React.'
+  }
+];
 
-export const initialSprints: ActiveSprint[] = [];
+// Aktywne sprinty lub to, czego się aktualnie uczysz
+export const initialSprints: ActiveSprint[] = [
+  {
+    id: 'sprint-1',
+    title: 'Rozwój AI Agentów w Azure',
+    phase: 'Wdrażanie',
+    progress: 75,
+    status: 'In Progress',
+    tags: ['Azure OpenAI', 'Python']
+  },
+  {
+    id: 'sprint-2',
+    title: 'Optymalizacja CI/CD',
+    phase: 'Testowanie',
+    progress: 40,
+    status: 'In Progress',
+    tags: ['GitHub Actions', 'Docker']
+  }
+];
 
 export const initialDesktopIcons: DesktopIcon[] = [
   {
@@ -100,9 +176,13 @@ export const defaultOSConfig: OSConfig = {
   visualMode: 'deep-space',
   wallpaper: 'ubuntu-pixel',
   proMode: true,
-  portfolioName: '',
-  portfolioBio: '',
-  isInitialized: false,
+  // Domyślna konfiguracja ustawiona pod Ciebie
+  portfolioName: 'Adrian',
+  fullName: 'Adrian',
+  professionalRole: 'Software Engineer & Creator',
+  portfolioBio: 'Witaj w moim wirtualnym systemie operacyjnym! Jestem inżynierem oprogramowania pasjonującym się nowoczesnymi technologiami webowymi, chmurą i rozwiązaniami AI. To portfolio zostało stworzone przy użyciu autorskiego narzędzia PortfolioOS.',
+  skills: ['React', 'TypeScript', 'Node.js', 'Microsoft Azure', 'Tailwind CSS', 'AI Integration'],
+  isInitialized: true, // Od razu zainicjowane, by pokazać Twoje portfolio jako domyślne
   playSounds: false,
   pixelTheme: false,
   portfolioStyle: 'lumine-ubuntu-style',
