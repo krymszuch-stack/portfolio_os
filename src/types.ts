@@ -75,6 +75,7 @@ export interface OSConfig {
   facebookUsername?: string;
   messengerUsername?: string;
   telegramUsername?: string;
+  twitterUsername?: string;
   whatsappPhone?: string;
   steamId?: string;
   eaId?: string;

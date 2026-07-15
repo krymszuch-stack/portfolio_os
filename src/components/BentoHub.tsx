@@ -224,7 +224,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp })
         }
 
         .animate-fade-up {
-          animation: fadeInUp 0.8s ease-out forwards;
+          animation: fadeInUp 0.8s ease-out both;
         }
 
         .delay-100 { animation-delay: 0.1s; }
@@ -490,72 +490,117 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp })
         </main>
 
         {/* Bottom Social Bar Dock */}
-        <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 social-dock px-6 py-2 rounded-full shadow-2xl animate-fade-up">
-          {config.linkedinUsername && (
-            <a 
-              className="p-3 text-slate-400 hover:text-primary hover:bg-white/5 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center" 
-              href={`https://linkedin.com/in/${config.linkedinUsername}`} 
-              target="_blank"
-              rel="noopener noreferrer"
-              title="LinkedIn"
-            >
-              <span className="material-symbols-outlined text-lg">groups</span>
-            </a>
-          )}
+        <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 social-dock px-6 py-3 rounded-[24px] shadow-2xl animate-fade-up">
           {config.githubUsername && (
             <a 
-              className="p-3 text-slate-400 hover:text-primary hover:bg-white/5 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center" 
               href={`https://github.com/${config.githubUsername}`} 
-              target="_blank"
-              rel="noopener noreferrer"
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(87,140,255,0.4)] shadow-lg group relative cursor-pointer"
               title="GitHub"
             >
-              <span className="material-symbols-outlined text-lg">code</span>
+              <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.8)] group-hover:shadow-[0_0_12px_rgba(87,140,255,0.8)] transition-all">
+                <svg className="w-7 h-7 fill-black" viewBox="0 0 24 24">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+              </div>
             </a>
           )}
+
+          {config.linkedinUsername && (
+            <a 
+              href={`https://linkedin.com/in/${config.linkedinUsername}`} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(10,102,194,0.4)] shadow-lg group relative cursor-pointer"
+              title="LinkedIn"
+            >
+              <div className="w-10 h-10 bg-[#0a66c2] rounded-lg flex items-center justify-center shadow-md">
+                <svg className="w-6 h-6 fill-white" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                </svg>
+              </div>
+            </a>
+          )}
+
+          {config.twitterUsername && (
+            <a 
+              href={`https://x.com/${config.twitterUsername}`} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] shadow-lg group relative cursor-pointer"
+              title="X (Twitter)"
+            >
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-neutral-800 to-neutral-950 border border-white/10 flex items-center justify-center shadow-[inset_0_1px_2px_rgba(255,255,255,0.2)] group-hover:border-[#b0c6ff]/35 group-hover:shadow-[0_0_12px_rgba(176,198,255,0.3)] transition-all">
+                <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+              </div>
+            </a>
+          )}
+
+          {config.telegramUsername && (
+            <a 
+              href={`https://t.me/${config.telegramUsername}`} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex flex-col items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(34,139,230,0.4)] shadow-lg group relative cursor-pointer"
+              title="Telegram"
+            >
+              <div className="w-9 h-9 bg-gradient-to-b from-[#33a8e2] to-[#179cde] rounded-lg flex items-center justify-center shadow-md">
+                <svg className="w-5 h-5 fill-white mr-0.5 mt-0.5" viewBox="0 0 24 24">
+                  <path d="M23.91 2.38a.93.93 0 00-.91-.12L1.08 9.94a.92.92 0 00-.06 1.68l5.57 2.14 2.16 6.84a.93.93 0 001.53.42l3.24-2.88 5.48 4.05c.42.31.99.16 1.22-.32L24.16 3.19a.94.94 0 00-.25-.81zm-7.66 9.87l-7.79-5.11 8.92-5.75c.16-.1.35.14.2.26l-7.68 6.94v2.79c0 .24.17.43.4.45l2.09-1.83 3.86 2.85 2.94-10.46-2.94 10.46z"/>
+                </svg>
+              </div>
+              <span className="text-[6.5px] text-slate-400 font-mono tracking-widest uppercase mt-0.5 group-hover:text-[#33a8e2] transition-colors leading-none">Telegram</span>
+            </a>
+          )}
+
           {config.instagramUsername && (
             <a 
-              className="p-3 text-slate-400 hover:text-primary hover:bg-white/5 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center" 
               href={`https://instagram.com/${config.instagramUsername}`} 
-              target="_blank"
-              rel="noopener noreferrer"
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(225,48,108,0.4)] shadow-lg group relative cursor-pointer"
               title="Instagram"
             >
-              <span className="material-symbols-outlined text-lg">photo_camera</span>
+              <div className="w-10 h-10 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] rounded-xl flex items-center justify-center shadow-md">
+                <svg className="w-5 h-5 fill-none stroke-white stroke-[2.2]" viewBox="0 0 24 24">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+              </div>
             </a>
           )}
-          {config.telegramUsername && (
-            <>
-              <div className="w-px h-6 bg-white/10 mx-1"></div>
-              <a 
-                className="p-3 bg-primary-container text-on-primary-container rounded-full active-glow transition-all duration-300 hover:scale-110 active:scale-90 flex items-center justify-center" 
-                href={`https://t.me/${config.telegramUsername}`} 
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Telegram"
-              >
-                <span className="material-symbols-outlined text-lg">send</span>
-              </a>
-            </>
-          )}
+
           {config.discordId && (
             <a 
-              className="p-3 text-slate-400 hover:text-primary hover:bg-white/5 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center" 
               href="https://discord.com" 
-              target="_blank"
-              rel="noopener noreferrer"
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(88,101,242,0.4)] shadow-lg group relative cursor-pointer"
               title="Discord"
             >
-              <span className="material-symbols-outlined text-lg">forum</span>
+              <div className="w-10 h-10 bg-[#5865f2] rounded-lg flex items-center justify-center shadow-md">
+                <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
+                  <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.873-.894.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.011c3.92 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.009c.12.099.246.195.373.289a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084-.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.156 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.156 2.418z"/>
+                </svg>
+              </div>
             </a>
           )}
+
           {config.phone && (
             <a 
-              className="p-3 text-slate-400 hover:text-primary hover:bg-white/5 rounded-full transition-all duration-300 active:scale-90 flex items-center justify-center" 
               href={`tel:${config.phone}`} 
+              className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(76,175,80,0.4)] shadow-lg group relative cursor-pointer"
               title="Call Phone"
             >
-              <span className="material-symbols-outlined text-lg">work</span>
+              <div className="w-10 h-10 bg-[#4caf50] rounded-lg flex items-center justify-center shadow-md">
+                <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
+                  <path d="M20 22.622l-3.276-3.276c-.08-.08-.19-.122-.3-.122h-.446c-1.036 0-2.028-.403-2.76-1.135L8.91 13.782c-.732-.732-1.135-1.724-1.135-2.76v-.446c0-.11-.042-.22-.122-.3L4.378 7.002A5.02 5.02 0 0 1 3 3.5c0-2.761 2.239-5 5-5a5.02 5.02 0 0 1 3.5 1.378l3.276 3.276c.08.08.122.19.122.3v.446c0 1.036.403 2.028 1.135 2.76l4.307 4.307c.732.732 1.135 1.724 1.135 2.76v.446c0 .11.042.22.122.3l3.276 3.276A5.02 5.02 0 0 1 23 20.5c0 2.761-2.239 5-5 5a5.02 5.02 0 0 1-3-1.378z"/>
+                </svg>
+              </div>
             </a>
           )}
         </nav>
