@@ -27,8 +27,8 @@ describe('AppProjects Github Import', () => {
       />
     );
 
-    // Enter a repo name
-    const input = screen.getByPlaceholderText('nazwa-repozytorium');
+    // Use getByRole as primary selector (more robust than placeholder text)
+    const input = screen.getByRole('textbox') as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'missing-repo' } });
 
     // Submit form
@@ -56,7 +56,7 @@ describe('AppProjects Github Import', () => {
       />
     );
 
-    const input = screen.getByPlaceholderText('nazwa-repozytorium');
+    const input = screen.getByRole('textbox') as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'just-repo' } });
 
     const importButton = screen.getByText('Importuj');
