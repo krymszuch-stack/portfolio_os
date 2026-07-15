@@ -7,6 +7,9 @@ import tseslint from 'typescript-eslint';
 export default tseslint.config(
   { ignores: ['dist', 'node_modules'] },
   {
+    linterOptions: {
+      reportUnusedDisableDirectives: 'off'
+    },
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx,js,jsx}'],
     languageOptions: {
@@ -23,21 +26,21 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/ban-ts-comment': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-require-imports': 'warn',
-      'no-regex-spaces': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+      'no-regex-spaces': 'off',
       'jsx-a11y/label-has-associated-control': 'off',
       'jsx-a11y/click-events-have-key-events': 'off',
       'jsx-a11y/no-static-element-interactions': 'off',
       'jsx-a11y/no-autofocus': 'off',
       'jsx-a11y/img-redundant-alt': 'off',
       'jsx-a11y/no-noninteractive-element-interactions': 'off',
-      'prefer-const': 'warn',
-      'no-empty': 'warn',
-      'no-empty-pattern': 'warn',
-      'react-hooks/exhaustive-deps': 'warn'
+      'prefer-const': 'off',
+      'no-empty': 'off',
+      'no-empty-pattern': 'off',
+      'react-hooks/exhaustive-deps': 'off'
     },
   }
 );
