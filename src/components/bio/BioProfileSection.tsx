@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
 import React, { useState, useEffect } from 'react';
 import { OSConfig } from '../../types';
 import { Briefcase, MapPin, Plus, Edit2, Check, Sparkles, X } from 'lucide-react';
@@ -51,7 +52,7 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
   };
 
   return (
-    <div className="p-6 rounded-2xl bg-slate-900/40 border border-slate-800/60 relative overflow-hidden">
+    <div className="p-6 rounded-2xl bg-slate-900/40 border border-white/10/60 relative overflow-hidden">
       <div className="absolute top-0 right-0 p-3 opacity-15 pointer-events-none">
         <Sparkles className="w-24 h-24 text-slate-300" />
       </div>
@@ -62,14 +63,14 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
           {/* Avatar Photo Container */}
           <div className="relative shrink-0">
             {isEditingAvatar ? (
-              <div className="space-y-2 p-3 bg-slate-950/90 border border-slate-800 rounded-xl shadow-xl z-20 absolute left-0 top-0 min-w-[220px]">
-                <label className="text-[10px] text-amber-400 font-mono uppercase tracking-wider block">Wklej URL zdjęcia</label>
+              <div className="space-y-2 p-3 bg-slate-950/90 border border-white/10 rounded-xl shadow-xl z-20 absolute left-0 top-0 min-w-[220px]">
+                <span className="text-[10px] text-amber-400 font-mono uppercase tracking-wider block">Wklej URL zdjęcia</span>
                 <input
                   type="text"
                   placeholder="https://images.unsplash.com/..."
                   value={avatarInput}
                   onChange={(e) => setAvatarInput(e.target.value)}
-                  className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                  className="w-full px-2 py-1 backdrop-blur-md bg-slate-900/60 border border-white/10 rounded text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
                 />
                 <div className="flex gap-1.5 justify-end">
                   <button
@@ -98,7 +99,7 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
                   <img
                     src={config.avatarUrl}
                     alt="Avatar"
-                    className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover border-2 border-slate-700/50 group-hover:border-amber-500/50 transition-all duration-300"
+                    className="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover border-2 border-white/10/50 group-hover:border-amber-500/50 transition-all duration-300"
                     referrerPolicy="no-referrer"
                   />
                   <div className="absolute inset-0 bg-black/60 rounded-2xl opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity">
@@ -126,28 +127,28 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
             {isEditingProfile ? (
               <div className="space-y-2 max-w-sm">
                 <div>
-                  <label className="text-[9px] font-mono text-purple-400 uppercase tracking-widest block mb-0.5">
+                  <span className="text-[9px] font-mono text-purple-400 uppercase tracking-widest block mb-0.5">
                     Imię i Nazwisko <span className="text-rose-500 font-bold">*</span>
-                  </label>
+                  </span>
                   <input
                     type="text"
                     value={profileForm.name}
                     onChange={(e) => setProfileForm(p => ({ ...p, name: e.target.value }))}
-                    className={`w-full bg-slate-950/80 border ${!profileForm.name.trim() ? 'border-rose-500 focus:border-rose-500' : 'border-slate-700 focus:border-purple-500'} rounded px-2.5 py-1 text-sm text-white focus:outline-none`}
+                    className={`w-full bg-slate-950/80 border ${!profileForm.name.trim() ? 'border-rose-500 focus:border-rose-500' : 'border-white/10 focus:border-purple-500'} rounded px-2.5 py-1 text-sm text-white focus:outline-none`}
                   />
                   {!profileForm.name.trim() && (
                     <span className="text-[9px] text-rose-500 font-mono mt-0.5 block">✦ Imię i nazwisko nie może być puste!</span>
                   )}
                 </div>
                 <div>
-                  <label className="text-[9px] font-mono text-purple-400 uppercase tracking-widest block mb-0.5">
+                  <span className="text-[9px] font-mono text-purple-400 uppercase tracking-widest block mb-0.5">
                     Rola Zawodowa <span className="text-rose-500 font-bold">*</span>
-                  </label>
+                  </span>
                   <input
                     type="text"
                     value={profileForm.role}
                     onChange={(e) => setProfileForm(p => ({ ...p, role: e.target.value }))}
-                    className={`w-full bg-slate-950/80 border ${!profileForm.role.trim() ? 'border-rose-500 focus:border-rose-500' : 'border-slate-700 focus:border-purple-500'} rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none block`}
+                    className={`w-full bg-slate-950/80 border ${!profileForm.role.trim() ? 'border-rose-500 focus:border-rose-500' : 'border-white/10 focus:border-purple-500'} rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none block`}
                   />
                   {!profileForm.role.trim() && (
                     <span className="text-[9px] text-rose-500 font-mono mt-0.5 block">✦ Rola zawodowa nie może być pusta!</span>
@@ -212,7 +213,7 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
                 });
                 setIsEditingProfile(true);
               }}
-              className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700/60 transition-colors font-sans font-medium cursor-pointer"
+              className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-white/10/60 transition-colors font-sans font-medium cursor-pointer"
             >
               <Edit2 size={13} /> Edytuj Bio
             </button>
@@ -221,11 +222,11 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
       </div>
 
       {/* Bio Text area */}
-      <div className="mt-5 pt-5 border-t border-slate-800/50">
+      <div className="mt-5 pt-5 border-t border-white/10/50">
         {isEditingProfile ? (
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-[10px] font-mono text-purple-400 uppercase tracking-widest block">O Mnie / Biografia</label>
+              <span className="text-[10px] font-mono text-purple-400 uppercase tracking-widest block">O Mnie / Biografia</span>
               <span className={`text-[10px] font-mono ${profileForm.bio.length > 500 ? 'text-rose-500 font-bold animate-pulse' : 'text-slate-400'}`}>
                 {profileForm.bio.length} / 500
               </span>
@@ -236,7 +237,7 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
               maxLength={500}
               rows={3}
               placeholder="Napisz kilka zdań o swoim profesjonalnym doświadczeniu..."
-              className="w-full bg-slate-950/80 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500"
+              className="w-full bg-slate-950/80 border border-white/10 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-purple-500"
             />
           </div>
         ) : (
@@ -265,7 +266,7 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
         {coreValues.map((value, idx) => (
           <span
             key={idx}
-            className="group/val inline-flex items-center gap-1.5 text-[11px] bg-slate-800/40 hover:bg-slate-800/80 text-slate-300 hover:text-slate-200 border border-slate-700/50 px-2.5 py-1 rounded-md font-sans transition-all"
+            className="group/val inline-flex items-center gap-1.5 text-[11px] bg-slate-800/40 hover:bg-slate-800/80 text-slate-300 hover:text-slate-200 border border-white/10/50 px-2.5 py-1 rounded-md font-sans transition-all"
           >
             <span>✦ {value}</span>
             <button
@@ -295,8 +296,8 @@ export const BioProfileSection: React.FC<BioProfileSectionProps> = ({ config, se
                   setIsAddingValue(false);
                 }
               }}
-              className="bg-slate-950 border border-slate-700 rounded px-2 py-0.5 text-xs text-white focus:outline-none focus:border-amber-500"
-              autoFocus
+              className="backdrop-blur-md bg-slate-950/60 border border-white/10 rounded px-2 py-0.5 text-xs text-white focus:outline-none focus:border-amber-500"
+
             />
             <button
               onClick={() => {

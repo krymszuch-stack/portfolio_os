@@ -117,7 +117,7 @@ export const AppTerminal: React.FC<AppTerminalProps> = ({ config }) => {
                 setInput('');
               }
             }}
-            autoFocus
+
             className="flex-1 bg-transparent border-none outline-none text-green-400 caret-green-400"
             spellCheck={false}
             autoComplete="off"

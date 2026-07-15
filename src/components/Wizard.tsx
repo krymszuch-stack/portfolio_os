@@ -146,8 +146,9 @@ export const Wizard: React.FC<WizardProps> = ({
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setShouldReduceMotion(mediaQuery.matches);
-    const listener = (e: MediaQueryListEvent) => setShouldReduceMotion(e.matches);
+    const isForcedReduced = document.documentElement.classList.contains('reduce-motion');
+    setShouldReduceMotion(mediaQuery.matches || isForcedReduced);
+    const listener = (e: MediaQueryListEvent) => setShouldReduceMotion(e.matches || document.documentElement.classList.contains('reduce-motion'));
     mediaQuery.addEventListener('change', listener);
     return () => mediaQuery.removeEventListener('change', listener);
   }, []);
@@ -386,7 +387,7 @@ export const Wizard: React.FC<WizardProps> = ({
   const { saveToCloud, saveStatus } = usePortfolioSave();
 
   const handleFinishAndExplore = async () => {
-    const result = await saveToCloud(config, projects, certificates, timeline, icons);
+    const result = await saveToCloud(config, projects || [], certificates || [], timeline || [], icons || []);
     if (result.success) {
       if (result.publicSlug) {
         setPublishedSlug(result.publicSlug);
@@ -626,7 +627,7 @@ export const Wizard: React.FC<WizardProps> = ({
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-left max-w-sm mx-auto flex items-center gap-2">
+          <div className="p-4 rounded-xl bg-slate-950/60 border border-white/10 text-left max-w-sm mx-auto flex items-center gap-2">
             <input 
               readOnly 
               value={`${window.location.origin}/p/${publishedSlug}`}
@@ -679,7 +680,7 @@ export const Wizard: React.FC<WizardProps> = ({
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-left space-y-2.5 max-w-sm mx-auto">
+          <div className="p-4 rounded-xl bg-slate-950/60 border border-white/10 text-left space-y-2.5 max-w-sm mx-auto">
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-400">Nazwa:</span>
               <span className="text-white font-semibold">{userName}</span>
@@ -865,20 +866,20 @@ export const Wizard: React.FC<WizardProps> = ({
               <div className="space-y-4">
                 {/* 1. Imię / Nazwa */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Nazwa wizytówki / Imię i Nazwisko</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Nazwa wizytówki / Imię i Nazwisko</span>
                   <input
                     type="text"
                     required
                     value={userName}
                     onChange={(e) => setUserName(e.target.value)}
                     placeholder="np. Wiktor Krawczyk, Gospodarstwo Ekologiczne Lipa, Piekarnia Retro"
-                    className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 {/* 2. Wybór Avatara */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz avatar profilowy</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz avatar profilowy</span>
                   <div className="grid grid-cols-4 gap-2.5">
                     {[
                       { id: 'dev', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', label: 'Programista' },
@@ -893,7 +894,7 @@ export const Wizard: React.FC<WizardProps> = ({
                           type="button"
                           onClick={() => setAvatarUrl(av.url)}
                           className={`relative rounded-xl overflow-hidden border-2 transition-all p-1 cursor-pointer flex flex-col items-center gap-1.5 bg-slate-950/40 ${
-                            isSelected ? 'border-amber-500 bg-amber-500/5 scale-105' : 'border-slate-800 hover:border-slate-700'
+                            isSelected ? 'border-amber-500 bg-amber-500/5 scale-105' : 'border-white/10 hover:border-white/10'
                           }`}
                         >
                           <img src={av.url} alt={av.label} className="w-12 h-12 rounded-lg object-cover" />
@@ -909,14 +910,14 @@ export const Wizard: React.FC<WizardProps> = ({
                       value={avatarUrl}
                       onChange={(e) => setAvatarUrl(e.target.value)}
                       placeholder="Lub wklej własny adres URL do zdjęcia profilowego..."
-                      className="w-full px-3 py-1.5 bg-slate-950/40 border border-slate-800 rounded-lg text-[10px] text-slate-300 placeholder-slate-700 focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-1.5 bg-slate-950/40 border border-white/10 rounded-lg text-[10px] text-slate-300 placeholder-slate-700 focus:outline-none focus:border-amber-500"
                     />
                   </div>
                 </div>
 
                 {/* 3. Wybór Branży / Kategorii */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz główny obszar działalności</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz główny obszar działalności</span>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {industryCategories.map((cat) => {
                       const isSelected = selectedCategory.id === cat.id;
@@ -931,7 +932,7 @@ export const Wizard: React.FC<WizardProps> = ({
                           className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer h-16 ${
                             isSelected
                               ? 'border-amber-500 bg-amber-500/10 text-white'
-                              : 'border-slate-800 bg-slate-950/20 text-slate-400 hover:border-slate-700 hover:bg-slate-900/40'
+                              : 'border-white/10 bg-slate-950/20 text-slate-400 hover:border-white/10 hover:bg-slate-900/40'
                           }`}
                         >
                           <CategoryIcon id={cat.id} size={14} className="text-amber-400 shrink-0" />
@@ -944,7 +945,7 @@ export const Wizard: React.FC<WizardProps> = ({
 
                 {/* 4. Słowa kluczowe / Specjalizacja */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Dodatkowe słowa kluczowe (np. rolnictwo, react, meble)</label>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Dodatkowe słowa kluczowe (np. rolnictwo, react, meble)</span>
                   <input
                     type="text"
                     value={tagInput}
@@ -952,7 +953,7 @@ export const Wizard: React.FC<WizardProps> = ({
                     onKeyDown={handleKeyDown}
                     onBlur={handleBlur}
                     placeholder="Wpisz słowo kluczowe i kliknij Enter..."
-                    className="w-full px-3 py-2 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2 bg-slate-950/60 border border-white/10 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
                   />
                   {tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
@@ -968,7 +969,7 @@ export const Wizard: React.FC<WizardProps> = ({
 
                 {/* Real-time category recognition indicator */}
                 {selectedCategory.matchedProfession && (
-                  <div className="p-3 rounded-xl bg-slate-950/40 border border-slate-800/60 flex items-center justify-between text-xs animate-fadeIn">
+                  <div className="p-3 rounded-xl bg-slate-950/40 border border-white/10/60 flex items-center justify-between text-xs animate-fadeIn">
                     <span className="text-slate-400 font-sans">Automatycznie dopasowana profesja:</span>
                     <span className="text-amber-400 font-bold flex items-center gap-1.5">
                       <ProfessionIcon id={selectedCategory.matchedProfession.id} size={14} className="text-amber-400 shrink-0" />
@@ -1005,7 +1006,7 @@ export const Wizard: React.FC<WizardProps> = ({
                       className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer h-28 relative overflow-hidden group ${
                         isSelected
                           ? 'border-amber-500 ring-2 ring-amber-500/20 bg-slate-900/60 shadow-lg scale-102'
-                          : 'border-slate-800 bg-slate-950/20 hover:border-slate-700'
+                          : 'border-white/10 bg-slate-950/20 hover:border-white/10'
                       }`}
                     >
                       <div className="absolute inset-0 opacity-10 group-hover:opacity-15 transition-opacity" style={{ background: wp.bg }} />
@@ -1035,7 +1036,7 @@ export const Wizard: React.FC<WizardProps> = ({
                 <p className="text-xs text-slate-400">Twój system operacyjny jest gotowy do wdrożenia. Sprawdź poniższe podsumowanie.</p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3.5">
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-white/10 space-y-3.5">
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-slate-400 font-sans">Nazwa użytkownika / Wizytówka:</span>
                   <span className="text-white font-semibold">{userName || 'Gość'}</span>
@@ -1066,7 +1067,7 @@ export const Wizard: React.FC<WizardProps> = ({
 
           {/* Controls Footer buttons */}
           {step > 1 && (
-            <div className="flex items-center justify-between pt-6 border-t border-slate-800/50">
+            <div className="flex items-center justify-between pt-6 border-t border-white/10/50">
               <div className="flex items-center gap-3">
                 <button
                   type="button"

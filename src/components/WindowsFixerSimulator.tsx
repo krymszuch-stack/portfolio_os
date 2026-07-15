@@ -481,9 +481,9 @@ export const WindowsFixerSimulator: React.FC<WindowsFixerSimulatorProps> = ({ on
             {/* Custom Description Textarea */}
             <div className="space-y-2 pt-2">
               <div className="flex justify-between items-center">
-                <label className="text-[11px] text-slate-400 font-mono uppercase tracking-wider">
+                <span className="text-[11px] text-slate-400 font-mono uppercase tracking-wider">
                   Własny opis problemu (j. polski / angielski)
-                </label>
+                </span>
                 {description.length > 0 && (
                   <button 
                     onClick={() => { setDescription(''); setSelectedPreset(null); }}

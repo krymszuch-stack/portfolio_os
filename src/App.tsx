@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ParticleOverlay } from './components/ParticleOverlay';
+const ParticleOverlay = lazy(() => import('./components/ParticleOverlay').then(m => ({ default: m.ParticleOverlay })));
 import { Desktop } from './components/Desktop';
 import { BentoHub } from './components/BentoHub';
 import { WindowFrame } from './components/WindowFrame';
@@ -45,6 +45,7 @@ import { loadPortfolioConfig, loadPortfolioBySlug, savePortfolioConfig } from '.
 import { playXpStartup, playXpShutdown, playXpError, playXpBalloon, playXpClick, setSoundsEnabled } from './lib/sounds';
 import { AuthScreen } from './components/AuthScreen';
 import { useDynamicFonts } from './hooks/useDynamicFonts';
+import { useDeviceOptimization } from './hooks/useDeviceOptimization';
 
 const ALL_SOCIALS = [
   { id: 'linkedin', label: 'LinkedIn', icon: 'Linkedin', color: 'text-[#0a66c2] hover:bg-[#0a66c2]/10', url: 'https://linkedin.com' },
@@ -63,6 +64,8 @@ const ALL_SOCIALS = [
 ];
 
 export default function App() {
+
+  useDeviceOptimization();
 
   // Config & Core System states
   const [config, setConfig] = useState<OSConfig>(() => {
@@ -94,7 +97,7 @@ export default function App() {
   const [projects, setProjects] = useState(initialProjects);
   const [certificates, setCertificates] = useState(initialCertificates);
   const [timeline, setTimeline] = useState(initialTimeline);
-  const [sprints, setSprints] = useState(initialSprints);
+  const [, setSprints] = useState(initialSprints);
   const [icons, setIcons] = useState<DesktopIcon[]>(() => {
     const saved = localStorage.getItem('adrianDesktopIcons');
     if (saved) {
@@ -119,7 +122,7 @@ export default function App() {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {}
+      } catch (e) { /* ignore */ }
     }
     return ['linkedin', 'mail'];
   });
@@ -1082,8 +1085,10 @@ export default function App() {
 
       {/* Terraria-like retro pixel sparks rendering canvas */}
       {config.particles !== 'none' && getParticleVariant() !== 'none' && (
-        <ParticleOverlay triggerRef={triggerSparksRef} variant={getParticleVariant()} />
-      )}
+              <Suspense fallback={null}>
+                <ParticleOverlay triggerRef={triggerSparksRef} variant={getParticleVariant()} />
+              </Suspense>
+            )}
 
       {/* Free watermark and helper banner at desktop base */}
       {!config.proMode && (
