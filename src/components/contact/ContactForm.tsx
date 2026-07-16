@@ -60,8 +60,9 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Twoje imię / nazwa firmy</span>
+          <label htmlFor="contact-name" className="block text-[10px] text-slate-400 uppercase font-mono tracking-wider">Twoje imię / nazwa firmy</label>
           <input
+            id="contact-name"
             type="text"
             value={formData.name}
             onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
@@ -71,8 +72,9 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
         </div>
 
         <div className="space-y-1">
-          <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Adres e-mail *</span>
+          <label htmlFor="contact-email" className="block text-[10px] text-slate-400 uppercase font-mono tracking-wider">Adres e-mail *</label>
           <input
+            id="contact-email"
             type="email"
             required
             value={formData.email}
@@ -84,8 +86,9 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
       </div>
 
       <div className="space-y-1">
-        <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Temat wiadomości</span>
+        <label htmlFor="contact-subject" className="block text-[10px] text-slate-400 uppercase font-mono tracking-wider">Temat wiadomości</label>
         <input
+          id="contact-subject"
           type="text"
           value={formData.subject}
           onChange={(e) => setFormData(f => ({ ...f, subject: e.target.value }))}
@@ -95,8 +98,9 @@ export const ContactForm: React.FC<ContactFormProps> = ({ onSubmit, isSending, i
       </div>
 
       <div className="space-y-1">
-        <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Treść wiadomości *</span>
+        <label htmlFor="contact-message" className="block text-[10px] text-slate-400 uppercase font-mono tracking-wider">Treść wiadomości *</label>
         <textarea
+          id="contact-message"
           required
           rows={4}
           value={formData.message}
