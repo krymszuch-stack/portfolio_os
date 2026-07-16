@@ -190,6 +190,10 @@ export const Desktop: React.FC<DesktopProps> = ({
   };
 
   const handleAddElement = () => {
+    if (icons.length >= 30) {
+      alert("Osiągnięto maksymalną liczbę elementów na pulpicie.");
+      return;
+    }
     if (!addingCell) return;
     
     let finalLabel = addForm.label;
