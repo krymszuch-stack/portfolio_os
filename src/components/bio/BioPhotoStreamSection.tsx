@@ -76,9 +76,11 @@ export const BioPhotoStreamSection: React.FC<BioPhotoStreamSectionProps> = ({ co
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {(config.instagramPhotos || []).map((photoUrl, idx) => (
           <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-white/10">
+            {/* ⚡ Bolt Performance: Lazy load instagram stream photos to improve initial page load and save network bandwidth */}
             <img
               src={photoUrl}
               alt={`Instagram post ${idx + 1}`}
+              loading="lazy"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               referrerPolicy="no-referrer"
             />

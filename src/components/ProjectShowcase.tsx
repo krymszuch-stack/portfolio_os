@@ -99,11 +99,15 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ projects, conf
               {/* Thumbnail */}
               <div className={`h-36 bg-gradient-to-br ${accent.thumbGradient} flex items-center justify-center relative overflow-hidden`}>
                 {project.thumbnail ? (
-                  <img
-                    src={project.thumbnail}
-                    alt={project.title}
-                    className="w-full h-full object-cover"
-                  />
+                  <>
+                    {/* ⚡ Bolt Performance: Lazy load project thumbnails to improve initial page load and save network bandwidth */}
+                    <img
+                      src={project.thumbnail}
+                      alt={project.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
+                  </>
                 ) : (
                   <span className={`text-4xl font-black opacity-20 ${titleColor}`}>
                     {project.title[0]?.toUpperCase() || '?'}
