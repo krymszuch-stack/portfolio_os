@@ -473,10 +473,12 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
                           View Live Project <span className="material-symbols-outlined text-xs">arrow_forward</span>
                         </span>
                       </div>
+                      {/* ⚡ Bolt Performance: Lazy load project thumbnails to improve initial page load and save network bandwidth */}
                       <img 
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                         alt={proj.title} 
-                        src={proj.thumbnail || defaultBgImage} 
+                        src={proj.thumbnail || defaultBgImage}
+                        loading="lazy"
                       />
                     </div>
                     <h4 className="font-semibold text-sm text-slate-200 group-hover:text-primary transition-colors duration-300 truncate">

@@ -194,12 +194,16 @@ export const AppCertificates: React.FC<AppCertificatesProps> = ({
                 <div className="flex items-center space-x-3">
                   <div className="w-12 h-12 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-center p-1.5 overflow-hidden">
                     {cert.logoUrl ? (
-                      <img
-                        src={cert.logoUrl}
-                        alt={cert.issuer}
-                        className="w-full h-full object-contain filter brightness-90 group-hover:brightness-100 transition-all"
-                        referrerPolicy="no-referrer"
-                      />
+                      <>
+                        {/* ⚡ Bolt Performance: Lazy load certificate logos to improve initial page load and save network bandwidth */}
+                        <img
+                          src={cert.logoUrl}
+                          alt={cert.issuer}
+                          loading="lazy"
+                          className="w-full h-full object-contain filter brightness-90 group-hover:brightness-100 transition-all"
+                          referrerPolicy="no-referrer"
+                        />
+                      </>
                     ) : (
                       <Award className="w-6 h-6 text-pink-400" />
                     )}
