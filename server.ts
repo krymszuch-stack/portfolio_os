@@ -43,6 +43,15 @@ async function startServer() {
     legacyHeaders: false,
   });
 
+  // Rate limiting for the Recruiter Advisor endpoint
+  const advisorLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20, // Limit each IP to 20 requests per windowMs
+    message: { error: "Przekroczono limit zapytań (rate limit). Spróbuj ponownie później." },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
   // CV / LinkedIn profile AI parsing compiler route with OCR & synonym bounding
   app.post("/api/parse-cv", cvParseLimiter, async (req: express.Request, res: express.Response): Promise<any> => {
     try {
@@ -159,7 +168,7 @@ async function startServer() {
   });
 
   // Recruiter Advisor endpoint to verify and query candidate portfolio data
-  app.post("/api/recruiter-advisor", async (req: express.Request, res: express.Response): Promise<any> => {
+  app.post("/api/recruiter-advisor", advisorLimiter, async (req: express.Request, res: express.Response): Promise<any> => {
     try {
       if (!ai) {
         return res.status(503).json({ error: "AI service unavailable. Set GEMINI_API_KEY in environment." });
