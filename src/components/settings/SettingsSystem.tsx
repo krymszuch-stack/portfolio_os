@@ -47,6 +47,10 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({
                       setIcons(prev => prev.filter(i => i.appId !== app.appId));
                     } else {
                       // Add it
+                      if (icons.length >= 30) {
+                        alert("Osiągnięto maksymalną liczbę elementów na pulpicie.");
+                        return;
+                      }
                       let nextX = 0;
                       let nextY = 0;
                       const coords = new Set(icons.map(i => `${i.x},${i.y}`));
