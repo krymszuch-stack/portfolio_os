@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { googleSignIn, microsoftSignIn } from '../lib/googleAuth';
+import { googleSignIn } from '../lib/googleAuth';
+import { loginMicrosoft } from '../lib/microsoftAuth';
 import { Sparkles, LogIn, Monitor, Cloud, Shield, ChevronRight, HelpCircle } from 'lucide-react';
 
 interface AuthScreenProps {
@@ -17,7 +18,7 @@ export function AuthScreen({ onContinueGuest }: AuthScreenProps) {
       await googleSignIn();
     } catch (err: any) {
       console.error('Google login failed:', err);
-      setError('Logowanie Google nie powiodło się. Spróbuj ponownie.');
+      if (err?.code === 'auth/unauthorized-domain') { setError('Błąd Google: Domena nie jest autoryzowana w Firebase (dodaj ją w Firebase Console).'); } else { setError('Logowanie Google nie powiodło się. Spróbuj ponownie.'); }
     } finally {
       setLoading(null);
     }
@@ -27,10 +28,10 @@ export function AuthScreen({ onContinueGuest }: AuthScreenProps) {
     try {
       setLoading('microsoft');
       setError(null);
-      await microsoftSignIn();
+      await loginMicrosoft();
     } catch (err: any) {
       console.error('Microsoft login failed:', err);
-      setError('Logowanie Microsoft AD nie powiodło się. Spróbuj ponownie.');
+      if (err?.name === 'BrowserAuthError') { setError('Błąd Microsoft: ' + err.message); } else { setError('Logowanie Microsoft AD nie powiodło się. Spróbuj ponownie.'); }
     } finally {
       setLoading(null);
     }
