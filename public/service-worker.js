@@ -1,7 +1,7 @@
 // Serwis roboczy (Service Worker) dla AdrianOS
 // Zapewnia offline caching i instalowalność aplikacji PWA
 
-const CACHE_NAME = 'adrianos-cache-v1';
+const CACHE_NAME = 'adrianos-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -44,31 +44,32 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.includes('/api/') || url.pathname.includes('identitytoolkit')) return;
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+    fetch(event.request)
+      .then((networkResponse) => {
+        // Jeśli odpowiedź jest prawidłowa, zapisz do cache i zwróć
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+        return networkResponse;
+      })
+      .catch(() => {
+        // Fallback do cache w przypadku błędu sieci (offline)
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          // Fallback dla nawigacji, np. powrót do index.html (SPA)
+          if (event.request.mode === 'navigate') {
+            return caches.match('/index.html') || caches.match('/');
+          }
+          return new Response('Network error occurred', {
+            status: 408,
+            headers: { 'Content-Type': 'text/plain' }
+          });
         });
-
-        return response;
-      }).catch(() => {
-        if (event.request.mode === 'navigate') {
-          return caches.match('/');
-        }
-        return new Response('Network error occurred', {
-          status: 408,
-          headers: { 'Content-Type': 'text/plain' }
-        });
-      });
-    })
+      })
   );
 });
