@@ -61,14 +61,21 @@ async function startServer() {
       const systemInstruction = `
         Jesteś zaawansowanym asystentem i kompilatorem PortfolioOS. Twój cel to przeanalizowanie CV (tekstu, profilu LinkedIn, pliku PDF lub zrzutu ekranu/obrazu) i przygotowanie ustrukturyzowanych danych do bazy systemu operacyjnego portfolio.
         
+
         Zasady kompilacji i OCR:
         1. Jeśli przekazano plik (fileData), dokonaj najpierw dokładnego OCR tekstu i zidentyfikuj wszystkie sekcje.
         2. Przeanalizuj każde słowo, przetłumacz sekcje na elegancki i profesjonalny język polski.
-        3. Każdy element (umiejętność, technologia, rola) musi być szczegółowo opisany oraz zawierać powiązaną tablicę synonimów (synonyms), które pozwolą później na łączenie zmiennych (np. "React" ma synonimy ["ReactJS", "React.js", "Frontend", "JSX", "JavaScript UI"]).
+        3. Każdy element (umiejętność, technologia, rola)
+        4. Oceny zawodu: na podstawie analizy CV wybierz NAJBARDZIEJ PASUJĄCĄ KATEGORIĘ ORAZ ID ZAWODU.
+           Dostępne kategorie: "tech", "craft", "agriculture", "gardening", "creative", "business", "general".
+           Przykładowe zawody (użyj ID np. 'web-developer', 'ai-engineer', 'graphic-designer', 'accountant', 'mechanic', 'electrician' itd.). Jeśli żaden z popularnych nie pasuje, możesz użyć 'other'. Oczekiwany jest ścisły string id w polu "suggestedProfessionId".
+ musi być szczegółowo opisany oraz zawierać powiązaną tablicę synonimów (synonyms), które pozwolą później na łączenie zmiennych (np. "React" ma synonimy ["ReactJS", "React.js", "Frontend", "JSX", "JavaScript UI"]).
         
         Schemat wyjściowy (zwróć TYLKO czysty obiekt JSON zgodny z tym szablonem, bez dodatkowych komentarzy czy kodu markdown):
         {
           "bio": {
+            "suggestedCategory": "ID jednej z kategorii (tech, craft, agriculture, gardening, creative, business, general)",
+            "suggestedProfessionId": "ID sugerowanego zawodu z dostępnego słownika",
             "fullName": "Imię i nazwisko",
             "title": "Tytuł zawodowy (np. Senior Full-Stack Engineer)",
             "biography": "Profesjonalny, inspirujący biogram po polsku",

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
+import { Copy, Check } from 'lucide-react';
 import { Sparkles, Plus, X, Edit2 } from 'lucide-react';
 import { OSConfig } from '../../types';
 
@@ -10,6 +12,15 @@ interface ContactInfoProps {
 export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) => {
   const [editingPlatform, setEditingPlatform] = useState<string | null>(null);
   const [socialInputVal, setSocialInputVal] = useState('');
+  const [isCopied, copy] = useCopyToClipboard();
+  const [copiedType, setCopiedType] = useState<string | null>(null);
+
+  const handleCopy = (text: string, type: string) => {
+    copy(text);
+    setCopiedType(type);
+    setTimeout(() => setCopiedType(null), 2000);
+  };
+
 
   const handleOpenEditor = (platformKey: string, currentVal: string) => {
     setEditingPlatform(platformKey);

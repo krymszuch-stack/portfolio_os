@@ -487,6 +487,13 @@ export const Wizard: React.FC<WizardProps> = ({
       const result = await response.json();
 
       if (result.bio) {
+        if (result.bio.suggestedCategory) {
+          const foundCat = industryCategories.find(c => c.id === result.bio.suggestedCategory);
+          if (foundCat) setSelectedCategory(foundCat);
+        }
+        if (result.bio.suggestedProfessionId) {
+          setManualProfessionId(result.bio.suggestedProfessionId);
+        }
         const parsedSkills = result.bio.skills || [];
         const fSkills: string[] = [];
         const bSkills: string[] = [];
@@ -562,8 +569,8 @@ export const Wizard: React.FC<WizardProps> = ({
       }
 
       setParseStatus('Gotowe!');
-      // Jump directly to Step 4 (Summary and Publish) since all data is filled!
-      setStep(4);
+      // Move to intermediate verification step instead of jumping straight to publish
+      setStep(4); // Idź do kroku 4 żeby zweryfikować dane po parsowaniu
     } catch (err: any) {
       setParseError(err.message || 'Wystąpił błąd podczas analizy CV.');
     } finally {
@@ -594,7 +601,7 @@ export const Wizard: React.FC<WizardProps> = ({
       {/* Top progress stepper (Dots) */}
       {!isFinished && !isGenerating && publishedSlug === null && (
         <div className="flex items-center justify-center space-x-2.5 mb-8 select-none">
-          {[1, 2, 3, 4].map((stepNum) => (
+          {[1, 2, 3, 4, 5].map((stepNum) => (
             <div
               key={stepNum}
               className={`h-2 text-center rounded-full transition-all duration-300 ${
@@ -606,7 +613,7 @@ export const Wizard: React.FC<WizardProps> = ({
             />
           ))}
           <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest ml-2">
-            Krok {step}/4
+            Krok {step}/5
           </span>
         </div>
       )}
@@ -765,7 +772,7 @@ export const Wizard: React.FC<WizardProps> = ({
                     </button>
                     <button
                       type="button"
-                      onClick={() => setStep(2)}
+                      onClick={() => setStep(step + 1)}
                       className="w-full py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl text-xs font-sans font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors"
                     >
                       Konfiguracja Krok po Kroku <ArrowRight size={14} />
@@ -879,7 +886,14 @@ export const Wizard: React.FC<WizardProps> = ({
 
                 {/* 2. Wybór Avatara */}
                 <div className="space-y-1.5">
-                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz avatar profilowy</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider block">Wybierz avatar lub podaj URL</span>
+                  <input
+                    type="text"
+                    placeholder="Wklej link do zdjęcia (np. z LinkedIn)"
+                    value={avatarUrl}
+                    onChange={(e) => setAvatarUrl(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-amber-500 outline-none mb-3"
+                  />
                   <div className="grid grid-cols-4 gap-2.5">
                     {[
                       { id: 'dev', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', label: 'Programista' },
@@ -1030,6 +1044,21 @@ export const Wizard: React.FC<WizardProps> = ({
 
           {/* Step 4: Krótkie podsumowanie */}
           {step === 4 && (
+            <div className="space-y-4 animate-fadeIn text-left">
+              <div className="space-y-1">
+                <h3 className="text-base font-sans font-bold text-white">Weryfikacja danych</h3>
+                <p className="text-xs text-slate-400">Sprawdź podsumowanie swojego profilu. W razie potrzeby możesz dokonać zmian później w Ustawieniach (App Settings).</p>
+              </div>
+              <div className="bg-slate-900/50 p-4 border border-white/10 rounded-xl space-y-3">
+                <p className="text-xs text-slate-300"><strong>Imię i Nazwisko:</strong> {userName}</p>
+                <p className="text-xs text-slate-300"><strong>Stanowisko:</strong> {config.title}</p>
+                <p className="text-xs text-slate-300"><strong>Zidentyfikowane projekty:</strong> {projects?.length || 0}</p>
+                <p className="text-xs text-slate-300"><strong>Zidentyfikowane wpisy doświadczenia:</strong> {timeline?.length || 0}</p>
+                <p className="text-xs text-slate-300"><strong>Sugerowana kategoria:</strong> {selectedCategory.name}</p>
+              </div>
+            </div>
+          )}
+          {step === 5 && (
             <div className="space-y-5 animate-fadeIn text-left">
               <div className="space-y-1">
                 <h3 className="text-base font-sans font-bold text-white">Podsumowanie Konfiguracji</h3>
@@ -1085,7 +1114,7 @@ export const Wizard: React.FC<WizardProps> = ({
                 </button>
               </div>
 
-              {step < 4 ? (
+              {step < 5 ? (
                 <button
                   type="button"
                   onClick={handleNext}
