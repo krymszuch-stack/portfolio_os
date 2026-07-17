@@ -238,35 +238,25 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
   const isWhiteClean = config.accentColor === 'white-clean';
   const isBlackGold = config.accentColor === 'black-gold';
 
-  // Dynamic design variables based on config.glassBlur
+  // Modern design - Aero/macOS inspired with solid backgrounds and depth
   const blurClass = isWhiteClean
     ? 'bg-white'
     : isBlackGold
-      ? 'bg-black'
-      : {
-          none: 'backdrop-blur-none bg-black/65',
-          low: 'backdrop-blur-md bg-black/45',
-          medium: 'backdrop-blur-md bg-black/30',
-          high: 'backdrop-blur-lg saturate-150 bg-black/25'
-        }[config.glassBlur || 'medium'];
+      ? 'bg-slate-950'
+      : 'bg-slate-900/95 backdrop-blur-sm';
 
-  // Dynamic border styling
+  // Modern border and shadow styling - more prominent and less glassmorphic
   const borderClass = isWhiteClean
-    ? 'border border-slate-300/80 shadow-md'
+    ? 'border border-slate-200 shadow-lg shadow-slate-400/20'
     : isBlackGold
-      ? 'border-2 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
-      : {
-          none: 'border-0',
-          thin: `border border-white/10 ${accentClasses.border}`,
-          thick: `border-4 border-white/10/80 ${accentClasses.border}`,
-          double: `border-4 border-double border-slate-600/90 ${accentClasses.border}`
-        }[config.borderStyle || 'thin'];
+      ? 'border border-amber-600/60 shadow-2xl shadow-black/40'
+      : 'border border-slate-700/80 shadow-2xl shadow-black/50';
 
   const titleBarClass = isWhiteClean
-    ? 'bg-slate-100 border-b border-slate-200 text-slate-800'
+    ? 'bg-gradient-to-b from-slate-50 to-slate-100 border-b border-slate-200 text-slate-800'
     : isBlackGold
-      ? 'bg-black border-b border-amber-500/50 text-amber-400'
-      : 'backdrop-blur-xl bg-[#0e111a]/85 border-b border-white/10 shadow-[0_2px_8px_rgba(0,0,0,0.5)]';
+      ? 'bg-gradient-to-b from-slate-950 to-slate-900 border-b border-amber-600/40 text-amber-400'
+      : 'bg-gradient-to-b from-slate-800 to-slate-900 border-b border-slate-700/50 text-slate-100';
 
   const titleTextClass = isWhiteClean
     ? 'text-slate-800'
@@ -275,10 +265,10 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
       : 'text-slate-300';
 
   const contentTextClass = isWhiteClean
-    ? 'text-slate-800'
+    ? 'text-slate-900'
     : isBlackGold
-      ? 'text-slate-100'
-      : 'text-slate-200';
+      ? 'text-slate-50'
+      : 'text-slate-100';
 
   return (
     <motion.div
@@ -315,8 +305,8 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
         ${isBlackGold ? 'theme-black-gold' : ''}
       `}
     >
-      {/* Decorative inner glow */}
-      <div className={`absolute top-0 left-0 right-0 h-[1px] ${accentClasses.bgGlow} pointer-events-none`} />
+      {/* Subtle top highlight - Windows Aero style */}
+      <div className={`absolute top-0 left-0 right-0 h-px ${isWhiteClean ? 'bg-white/30' : isBlackGold ? 'bg-amber-400/20' : 'bg-white/15'} pointer-events-none`} />
 
       {/* Title Bar */}
       <div 
@@ -366,76 +356,52 @@ export const WindowFrame: React.FC<WindowFrameProps> = ({
             id={`btn-minimize-${id}`}
             type="button"
             aria-label="Minimalizuj"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.85 }}
             onClick={(e) => {
               e.stopPropagation();
               triggerHaptic('light');
               handleMinimize(e);
             }}
-            className={`p-1.5 rounded-lg transition-colors hidden sm:inline-flex ${isWhiteClean ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200' : isBlackGold ? 'text-amber-500 hover:text-amber-300 hover:bg-amber-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+            className={`w-8 h-8 rounded-lg transition-all hidden sm:inline-flex items-center justify-center font-bold text-xs ${isWhiteClean ? 'bg-yellow-400 hover:bg-yellow-500 text-slate-800 shadow-sm' : isBlackGold ? 'bg-yellow-500/70 hover:bg-yellow-500 text-slate-900 shadow-sm' : 'bg-yellow-500/70 hover:bg-yellow-500 text-slate-900 shadow-sm'}`}
             title="Minimalizuj"
           >
-            <Minus size={14} />
+            −
           </motion.button>
           <motion.button
             id={`btn-maximize-${id}`}
             type="button"
             aria-label={layoutMode === 'full' ? "Przywróć" : "Maksymalizuj"}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.85 }}
             onClick={(e) => {
               e.stopPropagation();
               triggerHaptic('light');
               handleControlClick(e);
               handleSnap(layoutMode === 'full' ? 'floating' : 'full');
             }}
-            onMouseEnter={() => { hoverTimer.current = setTimeout(() => setShowLayoutMenu(true), 400); }}
-            onMouseLeave={() => { if (hoverTimer.current) clearTimeout(hoverTimer.current); setShowLayoutMenu(false); }}
-            className={`p-1.5 rounded-lg transition-colors hidden sm:inline-flex relative ${isWhiteClean ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200' : isBlackGold ? 'text-amber-500 hover:text-amber-300 hover:bg-amber-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+            className={`w-8 h-8 rounded-lg transition-all hidden sm:inline-flex items-center justify-center font-bold text-xs ${isWhiteClean ? 'bg-green-400 hover:bg-green-500 text-slate-800 shadow-sm' : isBlackGold ? 'bg-green-500/70 hover:bg-green-500 text-slate-900 shadow-sm' : 'bg-green-500/70 hover:bg-green-500 text-slate-900 shadow-sm'}`}
             title={layoutMode === 'full' ? "Przywróć" : "Maksymalizuj"}
           >
-            {layoutMode === 'full' ? <RotateCcw size={14} /> : <Square size={13} />}
-            {showLayoutMenu && (
-              <div className="absolute top-full right-0 mt-2 p-2 backdrop-blur-md bg-slate-900/60 border border-white/10 rounded-xl shadow-2xl flex gap-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                <button 
-                  type="button"
-                  aria-label="Przypnij do lewej"
-                  onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); handleSnap('left-half'); }}
-                  className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer flex bg-transparent"
-                ><div className="w-1/2 h-full bg-white/20"></div></button>
-                <button 
-                  type="button"
-                  aria-label="Maksymalizuj"
-                  onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); handleSnap('full'); }}
-                  className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer bg-white/20"
-                ></button>
-                <button 
-                  type="button"
-                  aria-label="Przypnij do prawej"
-                  onClick={(e) => { e.stopPropagation(); triggerHaptic('light'); handleSnap('right-half'); }}
-                  className="w-10 h-8 border-2 border-white/20 rounded hover:border-amber-400 cursor-pointer flex justify-end bg-transparent"
-                ><div className="w-1/2 h-full bg-white/20"></div></button>
-              </div>
-            )}
+            ▢
           </motion.button>
           {!isMobile && (
             <motion.button
               id={`btn-close-${id}`}
               type="button"
               aria-label="Zamknij"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.15 }}
+              whileTap={{ scale: 0.85 }}
               onClick={(e) => {
                 e.stopPropagation();
                 triggerHaptic('medium');
                 handleControlClick(e);
                 onClose();
               }}
-              className={`p-1.5 sm:p-1 rounded-full transition-all flex items-center justify-center ${isWhiteClean ? 'bg-slate-100 hover:bg-rose-500/10 text-slate-600 hover:text-rose-600 border border-slate-200' : isBlackGold ? 'bg-amber-500/5 hover:bg-rose-500/20 text-amber-500 hover:text-amber-400 border border-amber-500/30' : 'bg-white/5 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-white/10 sm:border-transparent'}`}
+              className={`w-8 h-8 rounded-lg transition-all flex items-center justify-center font-bold text-sm ${isWhiteClean ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm' : isBlackGold ? 'bg-red-500/80 hover:bg-red-600 text-white shadow-sm' : 'bg-red-500/80 hover:bg-red-600 text-white shadow-sm'}`}
               title="Zamknij"
             >
-              <X size={14} className="sm:w-3.5 sm:h-3.5" />
+              ✕
             </motion.button>
           )}
         </div>
