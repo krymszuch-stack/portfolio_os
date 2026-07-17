@@ -121,11 +121,19 @@ export const DesktopIconGrid: React.FC<DesktopIconGridProps> = ({
         </div>
       ) : (
         <React.Fragment>
-          {gridCells.map((item, idx) => {
-            const isGridCell = true;
-            const r = (item as any).r;
-            const c = (item as any).c;
-            const icon = displayedIcons.find(i => i.x === r && i.y === c);
+          {(() => {
+            const iconGrid: Record<number, Record<number, DesktopIcon>> = {};
+            for (let i = 0; i < displayedIcons.length; i++) {
+              const icon = displayedIcons[i];
+              if (!iconGrid[icon.x]) iconGrid[icon.x] = {};
+              iconGrid[icon.x][icon.y] = icon;
+            }
+
+            return gridCells.map((item, idx) => {
+              const isGridCell = true;
+              const r = (item as any).r;
+              const c = (item as any).c;
+              const icon = iconGrid[r]?.[c];
 
             // Empty cell for drop target on desktop
             if (!icon) {
@@ -189,7 +197,7 @@ export const DesktopIconGrid: React.FC<DesktopIconGridProps> = ({
                 />
               </div>
             );
-          })}
+          })})()}
         </React.Fragment>
       )}
     </>
