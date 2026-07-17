@@ -33,7 +33,7 @@ import {
   wallpaperOptions 
 } from './data';
 import { ActiveAppId, OSConfig, DesktopIcon } from './types';
-import { Sparkles, RefreshCw, Clock, HelpCircle, Monitor, Search, ArrowLeft } from 'lucide-react';
+import { Sparkles, Clock, HelpCircle, Monitor, Search, ArrowLeft } from 'lucide-react';
 import * as Lucide from 'lucide-react';
 import { useAuthContext } from './contexts/AuthContext';
 import { useWindowContext } from './contexts/WindowContext';
