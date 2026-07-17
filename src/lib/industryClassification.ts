@@ -237,6 +237,7 @@ export function normalizeText(text: string): string {
  * to specific occupations with customized bio templates, manual projects,
  * verified certificates, and career timelines.
  */
+
 export const professionalDictionary: DictionaryProfession[] = [
   {
     id: 'wedding-photographer',
@@ -991,6 +992,19 @@ export const professionalDictionary: DictionaryProfession[] = [
 /**
  * Searches the professional dictionary and evaluates keywords to find the most specific match.
  */
+
+const precomputedProfessionals = professionalDictionary.map(prof => ({
+  prof,
+  normRequiredAll: prof.requiredAll?.map(normalizeText) || [],
+  normAnyOf: prof.anyOf?.map(normalizeText) || [],
+  normTitle: normalizeText(prof.title)
+}));
+
+const precomputedCategories = industryCategories.map(cat => ({
+  cat,
+  normKeywords: cat.keywords.map(normalizeText)
+}));
+
 export function findBestProfession(inputText: string): DictionaryProfession | undefined {
   if (!inputText || inputText.trim() === '') return undefined;
   
@@ -999,13 +1013,13 @@ export function findBestProfession(inputText: string): DictionaryProfession | un
   let bestProf: DictionaryProfession | undefined = undefined;
   let maxScore = 0;
   
-  for (const prof of professionalDictionary) {
+  for (const item of precomputedProfessionals) {
+    const prof = item.prof;
     let score = 0;
     
     // 1. Required ALL check (yields large bonus)
-    if (prof.requiredAll && prof.requiredAll.length > 0) {
-      const allMatched = prof.requiredAll.every(kw => {
-        const normKw = normalizeText(kw);
+    if (item.normRequiredAll.length > 0) {
+      const allMatched = item.normRequiredAll.every(normKw => {
         return normalizedInput.includes(normKw);
       });
       if (allMatched) {
@@ -1014,9 +1028,8 @@ export function findBestProfession(inputText: string): DictionaryProfession | un
     }
     
     // 2. Any of check (incremental points per keyword)
-    if (prof.anyOf && prof.anyOf.length > 0) {
-      for (const kw of prof.anyOf) {
-        const normKw = normalizeText(kw);
+    if (item.normAnyOf.length > 0) {
+      for (const normKw of item.normAnyOf) {
         if (normalizedInput.includes(normKw)) {
           score += 6;
         }
@@ -1024,7 +1037,7 @@ export function findBestProfession(inputText: string): DictionaryProfession | un
     }
 
     // 3. Exact title check
-    const normTitle = normalizeText(prof.title);
+    const normTitle = item.normTitle;
     if (normalizedInput.includes(normTitle)) {
       score += 25;
     }
@@ -1053,13 +1066,13 @@ export function findTopMatchedProfessions(inputText: string): MatchedProfessionR
   const normalizedInput = normalizeText(inputText);
   const results: { profession: DictionaryProfession; confidence: number; score: number }[] = [];
   
-  for (const prof of professionalDictionary) {
+  for (const item of precomputedProfessionals) {
+    const prof = item.prof;
     let score = 0;
     
     // 1. Required ALL check (yields large bonus)
-    if (prof.requiredAll && prof.requiredAll.length > 0) {
-      const allMatched = prof.requiredAll.every(kw => {
-        const normKw = normalizeText(kw);
+    if (item.normRequiredAll.length > 0) {
+      const allMatched = item.normRequiredAll.every(normKw => {
         return normalizedInput.includes(normKw);
       });
       if (allMatched) {
@@ -1068,9 +1081,8 @@ export function findTopMatchedProfessions(inputText: string): MatchedProfessionR
     }
     
     // 2. Any of check (incremental points per keyword)
-    if (prof.anyOf && prof.anyOf.length > 0) {
-      for (const kw of prof.anyOf) {
-        const normKw = normalizeText(kw);
+    if (item.normAnyOf.length > 0) {
+      for (const normKw of item.normAnyOf) {
         if (normalizedInput.includes(normKw)) {
           score += 6;
         }
@@ -1078,7 +1090,7 @@ export function findTopMatchedProfessions(inputText: string): MatchedProfessionR
     }
 
     // 3. Exact title check
-    const normTitle = normalizeText(prof.title);
+    const normTitle = item.normTitle;
     if (normalizedInput.includes(normTitle)) {
       score += 25;
     }
@@ -1141,12 +1153,12 @@ export function classifyIndustry(inputText: string): IndustryCategory {
   let bestCategory = industryCategories.find(c => c.id === 'general') || industryCategories[industryCategories.length - 1];
   let maxMatches = 0;
 
-  for (const category of industryCategories) {
+  for (const item of precomputedCategories) {
+    const category = item.cat;
     if (category.id === 'general') continue;
     
     let matches = 0;
-    for (const keyword of category.keywords) {
-      const normKw = normalizeText(keyword);
+    for (const normKw of item.normKeywords) {
       if (cleanInput.includes(normKw)) {
         matches++;
       }
