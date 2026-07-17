@@ -1,3 +1,3 @@
-## 2026-07-17 - Pre-compute static normalizations
- **Learning:** Repeated text normalization (`normalizeText`) with heavy regex and `.replace()` operations inside nested loops for static dictionary arrays scales poorly.
- **Action:** Compute normalized texts once at module initialization or first use rather than inside the search loops.
+## 2025-02-18 - Avoid array recalculations on hover states
+**Learning:** Found an anti-pattern in `AppProjects.tsx` where hovering over an element triggers a full component re-render, forcing a complete recalculation of an unmemoized derived array (`filteredProjects`). Array filtering includes multiple string manipulations and array operations that execute on every hover interaction needlessly.
+**Action:** Always verify if complex components using `onMouseEnter`/`onMouseLeave` state updates have expensive derived state properly wrapped in `useMemo`.
