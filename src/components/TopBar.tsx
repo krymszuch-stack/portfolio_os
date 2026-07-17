@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { OSConfig } from '../types';
-import { Cloud, CloudUpload, CloudOff, Key, Menu, X } from 'lucide-react';
+import { Cloud, CloudUpload, CloudOff, Key, Menu, X, AlertCircle } from 'lucide-react';
 
 interface TopBarProps {
   config: OSConfig;
@@ -31,110 +31,134 @@ export const TopBar: React.FC<TopBarProps> = ({ config, syncStatus, onRetrySync,
     return () => clearInterval(timer);
   }, [config?.clockFormat]);
 
-  // Color mapping based on Terraria, Classic Mac, Cyberpunk or Golden Retro theme
-  const themeStyles: Record<string, { bar: string; apple: string; time: string; status: string; dot: string }> = {
+  // Simplified, modern theme color mapping
+  const themeStyles: Record<string, { bar: string; time: string; icon: string; accent: string }> = {
     'terraria': {
-      bar: 'bg-[#4e342e] border-b-4 border-[#3e2723] text-[#f1c40f]',
-      apple: 'text-emerald-400',
-      time: 'text-[#f1c40f] text-2xl font-black drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]',
-      status: 'text-emerald-400 font-bold',
-      dot: 'bg-green-500 border-green-950 shadow-[0_0_8px_rgba(34,197,94,0.8)]'
+      bar: 'bg-[#4e342e]/95 border-b border-[#3e2723]/50 text-[#f1c40f]',
+      time: 'text-[#f1c40f] text-lg font-semibold',
+      icon: 'text-emerald-400',
+      accent: 'text-emerald-400'
     },
     'classic-mac': {
-      bar: 'bg-[#DCDCDC] border-b-4 border-black text-black',
-      apple: 'text-black',
-      time: 'text-black text-xl font-extrabold',
-      status: 'text-black font-extrabold uppercase',
-      dot: 'bg-green-500 border-black shadow-none'
+      bar: 'bg-[#DCDCDC]/95 border-b border-black/20 text-black',
+      time: 'text-black text-lg font-semibold',
+      icon: 'text-black',
+      accent: 'text-black'
     },
     'cyberpunk': {
-      bar: 'bg-black border-b-2 border-cyan-500 text-cyan-400 shadow-[0_3px_15px_rgba(6,182,212,0.4)]',
-      apple: 'text-pink-500 animate-pulse',
-      time: 'text-cyan-400 text-2xl font-black drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]',
-      status: 'text-pink-500 font-black animate-pulse tracking-widest',
-      dot: 'bg-pink-500 border-cyan-400 shadow-[0_0_12px_rgba(236,72,153,0.9)] animate-ping'
+      bar: 'bg-black/95 border-b border-cyan-500/50 text-cyan-400',
+      time: 'text-cyan-400 text-lg font-semibold',
+      icon: 'text-pink-500',
+      accent: 'text-pink-500'
     },
     'retro-gold': {
-      bar: 'bg-[#5c3e16] border-b-4 border-[#3e270f] text-[#f39c12]',
-      apple: 'text-yellow-500',
-      time: 'text-yellow-400 text-2xl font-bold drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]',
-      status: 'text-yellow-300 font-bold',
-      dot: 'bg-yellow-400 border-yellow-950 shadow-[0_0_8px_rgba(234,179,8,0.8)]'
+      bar: 'bg-[#5c3e16]/95 border-b border-[#3e270f]/50 text-[#f39c12]',
+      time: 'text-[#f39c12] text-lg font-semibold',
+      icon: 'text-yellow-400',
+      accent: 'text-yellow-300'
     }
   };
 
   const currentStyle = themeStyles[activeTheme] || themeStyles['terraria'];
-
   const hasSyncOrAuth = syncStatus || (guestMode && onLoginClick);
 
   return (
-    <div className={`fixed top-0 left-0 right-0 h-12 z-[100] flex items-center justify-between px-6 font-mono border-black ${currentStyle.bar}`}>
-      <div className="flex items-center gap-4 font-bold select-none">
-        <span className="tracking-widest text-sm uppercase">{config?.portfolioName ? `${config.portfolioName} OS` : 'AdrianOS'}</span>
+    <div className={`fixed top-0 left-0 right-0 h-11 z-[100] flex items-center justify-between px-4 font-sans border-black backdrop-blur-sm ${currentStyle.bar}`}>
+      {/* Left: System name */}
+      <div className="flex items-center select-none">
+        <span className="text-xs font-bold tracking-wide uppercase opacity-75">
+          {config?.portfolioName ? `${config.portfolioName}` : 'Adrian'} OS
+        </span>
       </div>
-      <div className={currentStyle.time}>{time}</div>
-      <div className="flex items-center gap-3 select-none relative">
-        {/* Compact status dot — visible sync indicator */}
+
+      {/* Center: Time - Large and prominent */}
+      <div className={`${currentStyle.time} font-mono tabular-nums`}>
+        {time}
+      </div>
+
+      {/* Right: Status and controls - Minimal and clean */}
+      <div className="flex items-center gap-2 select-none relative">
+        {/* Sync indicator - compact and clear */}
         {syncStatus && (
-          <div className="flex items-center" title={
+          <div className="flex items-center gap-1.5" title={
             syncStatus === 'saving' ? 'Zapisywanie...' :
             syncStatus === 'synced' ? 'Zsynchronizowano' :
             'Błąd synchronizacji'
           }>
-            <div className={`w-2 h-2 rounded-full transition-all ${
-              syncStatus === 'saving' ? 'bg-yellow-400 animate-pulse' :
-              syncStatus === 'synced' ? 'bg-green-400' :
-              'bg-red-500'
-            }`} />
+            {syncStatus === 'saving' && (
+              <>
+                <CloudUpload size={13} className={`${currentStyle.accent} animate-bounce`} />
+              </>
+            )}
+            {syncStatus === 'synced' && (
+              <Cloud size={13} className={currentStyle.accent} />
+            )}
+            {syncStatus === 'error' && (
+              <AlertCircle size={13} className="text-red-500 animate-pulse" />
+            )}
           </div>
         )}
 
-        <span className={`text-xs tracking-wider uppercase font-bold ${currentStyle.status}`}>Status: Dostępny</span>
-
-        {/* Compact menu toggle for sync/auth controls */}
+        {/* Menu toggle - only show if needed */}
         {hasSyncOrAuth && (
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+            className={`w-7 h-7 flex items-center justify-center rounded transition-colors cursor-pointer ${
+              menuOpen ? `${currentStyle.accent} bg-white/10` : `${currentStyle.icon} hover:bg-white/5`
+            }`}
             aria-label="Menu systemowe"
           >
-            {menuOpen ? <X size={14} /> : <Menu size={14} />}
+            {menuOpen ? <X size={13} /> : <Menu size={13} />}
           </button>
         )}
 
-        {/* Dropdown menu */}
+        {/* Dropdown menu - clean and modern */}
         {menuOpen && (
-          <div className="absolute top-12 right-0 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-3 min-w-[220px] space-y-2 z-50">
-            {syncStatus && (
-              <div className="space-y-1.5 pb-2 border-b border-white/10">
-                {syncStatus === 'saving' && (
-                  <span className="text-[10px] text-yellow-400 font-bold uppercase animate-pulse flex items-center gap-1.5">
-                    <CloudUpload size={12} className="animate-bounce" /> Zapisywanie...
-                  </span>
-                )}
-                {syncStatus === 'synced' && (
-                  <span className="text-[10px] text-green-400 font-bold uppercase flex items-center gap-1.5" title="Zsynchronizowano z chmurą">
-                    <Cloud size={12} /> Zsynchronizowano z chmurą
-                  </span>
-                )}
-                {syncStatus === 'error' && (
-                  <button
-                    onClick={() => { onRetrySync?.(); setMenuOpen(false); }}
-                    className="text-[10px] text-red-500 hover:underline font-bold uppercase flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <CloudOff size={12} /> Błąd synchronizacji (Ponów)
-                  </button>
-                )}
-              </div>
-            )}
-            {guestMode && onLoginClick && (
-              <button
-                onClick={() => { onLoginClick(); setMenuOpen(false); }}
-                className="w-full text-[10px] text-amber-400 hover:bg-amber-400/10 font-bold uppercase cursor-pointer flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-amber-400/20 transition-colors"
-              >
-                <Key size={11} /> Połącz z chmurą
-              </button>
-            )}
+          <div className={`absolute top-10 right-0 backdrop-blur-xl rounded-lg shadow-lg p-3 min-w-max z-50 ${
+            activeTheme === 'classic-mac' 
+              ? 'bg-[#DCDCDC]/95 border border-black/20' 
+              : 'bg-black/80 border border-white/10'
+          }`}>
+            <div className="space-y-1.5">
+              {syncStatus && (
+                <div className="pb-2 border-b border-white/10">
+                  {syncStatus === 'saving' && (
+                    <div className={`text-xs font-semibold uppercase flex items-center gap-2 ${currentStyle.accent}`}>
+                      <CloudUpload size={12} className="animate-bounce" /> 
+                      <span>Zapisywanie...</span>
+                    </div>
+                  )}
+                  {syncStatus === 'synced' && (
+                    <div className={`text-xs font-semibold uppercase flex items-center gap-2 ${currentStyle.accent}`}>
+                      <Cloud size={12} /> 
+                      <span>Zsynchronizowano</span>
+                    </div>
+                  )}
+                  {syncStatus === 'error' && (
+                    <button
+                      onClick={() => { onRetrySync?.(); setMenuOpen(false); }}
+                      className={`text-xs font-semibold uppercase flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity text-red-500`}
+                    >
+                      <CloudOff size={12} /> 
+                      <span>Ponów sync</span>
+                    </button>
+                  )}
+                </div>
+              )}
+              {guestMode && onLoginClick && (
+                <button
+                  onClick={() => { onLoginClick(); setMenuOpen(false); }}
+                  className={`w-full text-xs font-semibold uppercase cursor-pointer flex items-center gap-2 px-3 py-2 rounded transition-colors ${
+                    activeTheme === 'classic-mac'
+                      ? 'text-black hover:bg-black/10'
+                      : 'text-amber-400 hover:bg-amber-400/10'
+                  }`}
+                >
+                  <Key size={12} /> 
+                  <span>Połącz z chmurą</span>
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

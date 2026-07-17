@@ -134,10 +134,10 @@ export const DesktopIconGrid: React.FC<DesktopIconGridProps> = ({
                   key={`${r}-${c}`}
                   data-grid-r={r}
                   data-grid-c={c}
-                  className={`flex items-center justify-center relative rounded-2xl border border-dashed transition-all duration-300 desktop-grid-cell group/cell h-full min-h-[110px] ${
+                  className={`flex items-center justify-center relative rounded-2xl border border-dashed transition-all duration-300 desktop-grid-cell group/cell h-full min-h-[140px] ${
                     isWiggling 
-                      ? 'border-purple-500/25 bg-purple-500/5 shadow-[inset_0_0_12px_rgba(168,85,247,0.05)]' 
-                      : 'border-white/[0.02] hover:border-white/[0.08] hover:bg-white/[0.01]'
+                      ? 'border-purple-500/30 bg-purple-500/8 shadow-[inset_0_0_15px_rgba(168,85,247,0.08)]' 
+                      : 'border-white/[0.02] hover:border-white/[0.1] hover:bg-white/[0.02]'
                   }`}
                 >
                   {isWiggling && (

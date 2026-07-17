@@ -609,7 +609,7 @@ export const Desktop: React.FC<DesktopProps> = ({
   return (
     <div 
       onClick={() => toggleWiggling(false)}
-      className={`absolute inset-0 pb-28 px-4 ${isMobile ? 'overflow-y-auto flex flex-col gap-3 content-start pt-24' : 'pt-28 overflow-hidden grid grid-cols-[repeat(6,min-content)] grid-rows-[repeat(5,min-content)] gap-8 p-4 content-start justify-start'}`}
+      className={`absolute inset-0 pb-28 px-6 ${isMobile ? 'overflow-y-auto flex flex-col gap-4 content-start pt-24' : 'pt-28 overflow-hidden grid grid-cols-[repeat(6,minmax(0,1fr))] grid-rows-[repeat(5,minmax(0,1fr))] gap-12 p-6 content-start justify-start'}`}
       
     >
       {/* Wiggle mode edit overlay banner */}
