@@ -21,17 +21,30 @@ export function useDesktopIconLayout(
     const dropX = info.point.x;
     const dropY = info.point.y;
     
-    const cells = document.querySelectorAll('.desktop-grid-cell');
     let targetR = -1;
     let targetC = -1;
     
-    cells.forEach(cell => {
-      const rect = cell.getBoundingClientRect();
-      if (dropX >= rect.left && dropX <= rect.right && dropY >= rect.top && dropY <= rect.bottom) {
+    // Performance optimization: Use elementsFromPoint which is significantly faster than querySelectorAll + getBoundingClientRect
+    // This avoids triggering synchronous layout thrashing and querying the entire DOM.
+    if (typeof document.elementsFromPoint === 'function') {
+      const elements = document.elementsFromPoint(dropX, dropY);
+      for (let i = 0; i < elements.length; i++) {
+        const el = elements[i];
+        if (el.classList && el.classList.contains('desktop-grid-cell')) {
+          targetR = parseInt(el.getAttribute('data-grid-r') || '-1', 10);
+          targetC = parseInt(el.getAttribute('data-grid-c') || '-1', 10);
+          break;
+        }
+      }
+    } else {
+      // Fallback for older browsers
+      const el = document.elementFromPoint(dropX, dropY);
+      const cell = el ? el.closest('.desktop-grid-cell') : null;
+      if (cell) {
         targetR = parseInt(cell.getAttribute('data-grid-r') || '-1', 10);
         targetC = parseInt(cell.getAttribute('data-grid-c') || '-1', 10);
       }
-    });
+    }
 
     if (targetR !== -1 && targetC !== -1) {
       setIcons(prev => {

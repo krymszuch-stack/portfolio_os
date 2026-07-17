@@ -1,3 +1,3 @@
-## 2025-02-18 - Avoid array recalculations on hover states
-**Learning:** Found an anti-pattern in `AppProjects.tsx` where hovering over an element triggers a full component re-render, forcing a complete recalculation of an unmemoized derived array (`filteredProjects`). Array filtering includes multiple string manipulations and array operations that execute on every hover interaction needlessly.
-**Action:** Always verify if complex components using `onMouseEnter`/`onMouseLeave` state updates have expensive derived state properly wrapped in `useMemo`.
+## 2024-05-24 - Drag and Drop Optimization with elementsFromPoint
+**Learning:** Using `document.querySelectorAll` followed by `.getBoundingClientRect()` inside a rapid event listener (like drag, scroll, or mousemove) causes significant synchronous layout thrashing and high CPU utilization.
+**Action:** When determining which element is under the cursor during a drag event, prefer `document.elementsFromPoint(x, y)` or `document.elementFromPoint(x, y)` as they are highly optimized native methods that avoid recalculating the layout of all potential target nodes. Note that they rely on CSS `pointer-events`, so the dragged element itself might need `pointer-events: none` or a similar technique (which Framer Motion handles automatically in this case).
