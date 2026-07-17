@@ -240,7 +240,7 @@ export default function App() {
   const [showSpotlight, setShowSpotlight] = useState(false);
   const [isKreatorMode, setIsKreatorMode] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const { saveToCloud, saveStatus, publicSlug } = usePortfolioSave();
+  const { saveToCloud, publicSlug } = usePortfolioSave();
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
