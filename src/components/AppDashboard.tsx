@@ -1,6 +1,6 @@
 import React from 'react';
 import { OSConfig } from '../types';
-import { Target, ListTodo, Activity, Radar, Sparkles } from 'lucide-react';
+import { Target, Activity, Sparkles } from 'lucide-react';
 
 interface AppDashboardProps {
   config: OSConfig;
