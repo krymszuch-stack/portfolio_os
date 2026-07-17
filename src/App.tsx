@@ -76,7 +76,7 @@ export default function App() {
           ...defaultOSConfig,
           ...parsed,
         };
-      } catch (e) {
+      } catch {
         return defaultOSConfig;
       }
     }
@@ -102,7 +102,7 @@ export default function App() {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
+      } catch {
         return initialDesktopIcons;
       }
     }
@@ -121,7 +121,7 @@ export default function App() {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
+      } catch {
        // Ignore parse error - use default
       }
     }
