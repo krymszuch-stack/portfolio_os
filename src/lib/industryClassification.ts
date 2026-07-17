@@ -991,6 +991,21 @@ export const professionalDictionary: DictionaryProfession[] = [
 /**
  * Searches the professional dictionary and evaluates keywords to find the most specific match.
  */
+
+interface NormalizedDictionaryProfession {
+  prof: DictionaryProfession;
+  normRequiredAll: string[];
+  normAnyOf: string[];
+  normTitle: string;
+}
+
+const normalizedDictionary: NormalizedDictionaryProfession[] = professionalDictionary.map(prof => ({
+  prof,
+  normRequiredAll: prof.requiredAll ? prof.requiredAll.map(normalizeText) : [],
+  normAnyOf: prof.anyOf ? prof.anyOf.map(normalizeText) : [],
+  normTitle: normalizeText(prof.title)
+}));
+
 export function findBestProfession(inputText: string): DictionaryProfession | undefined {
   if (!inputText || inputText.trim() === '') return undefined;
   
@@ -999,24 +1014,20 @@ export function findBestProfession(inputText: string): DictionaryProfession | un
   let bestProf: DictionaryProfession | undefined = undefined;
   let maxScore = 0;
   
-  for (const prof of professionalDictionary) {
+  for (const item of normalizedDictionary) {
     let score = 0;
     
     // 1. Required ALL check (yields large bonus)
-    if (prof.requiredAll && prof.requiredAll.length > 0) {
-      const allMatched = prof.requiredAll.every(kw => {
-        const normKw = normalizeText(kw);
-        return normalizedInput.includes(normKw);
-      });
+    if (item.normRequiredAll.length > 0) {
+      const allMatched = item.normRequiredAll.every(normKw => normalizedInput.includes(normKw));
       if (allMatched) {
         score += 35; // Significant bonus for exact intersection (e.g. "ogród" + "podlewanie")
       }
     }
     
     // 2. Any of check (incremental points per keyword)
-    if (prof.anyOf && prof.anyOf.length > 0) {
-      for (const kw of prof.anyOf) {
-        const normKw = normalizeText(kw);
+    if (item.normAnyOf.length > 0) {
+      for (const normKw of item.normAnyOf) {
         if (normalizedInput.includes(normKw)) {
           score += 6;
         }
@@ -1024,14 +1035,13 @@ export function findBestProfession(inputText: string): DictionaryProfession | un
     }
 
     // 3. Exact title check
-    const normTitle = normalizeText(prof.title);
-    if (normalizedInput.includes(normTitle)) {
+    if (normalizedInput.includes(item.normTitle)) {
       score += 25;
     }
     
     if (score > maxScore && score >= 6) { // Requires a minimum keyword match
       maxScore = score;
-      bestProf = prof;
+      bestProf = item.prof;
     }
   }
   
@@ -1053,24 +1063,20 @@ export function findTopMatchedProfessions(inputText: string): MatchedProfessionR
   const normalizedInput = normalizeText(inputText);
   const results: { profession: DictionaryProfession; confidence: number; score: number }[] = [];
   
-  for (const prof of professionalDictionary) {
+  for (const item of normalizedDictionary) {
     let score = 0;
     
     // 1. Required ALL check (yields large bonus)
-    if (prof.requiredAll && prof.requiredAll.length > 0) {
-      const allMatched = prof.requiredAll.every(kw => {
-        const normKw = normalizeText(kw);
-        return normalizedInput.includes(normKw);
-      });
+    if (item.normRequiredAll.length > 0) {
+      const allMatched = item.normRequiredAll.every(normKw => normalizedInput.includes(normKw));
       if (allMatched) {
         score += 35; // Significant bonus for exact intersection (e.g. "ogród" + "podlewanie")
       }
     }
     
     // 2. Any of check (incremental points per keyword)
-    if (prof.anyOf && prof.anyOf.length > 0) {
-      for (const kw of prof.anyOf) {
-        const normKw = normalizeText(kw);
+    if (item.normAnyOf.length > 0) {
+      for (const normKw of item.normAnyOf) {
         if (normalizedInput.includes(normKw)) {
           score += 6;
         }
@@ -1078,15 +1084,14 @@ export function findTopMatchedProfessions(inputText: string): MatchedProfessionR
     }
 
     // 3. Exact title check
-    const normTitle = normalizeText(prof.title);
-    if (normalizedInput.includes(normTitle)) {
+    if (normalizedInput.includes(item.normTitle)) {
       score += 25;
     }
     
     if (score >= 6) { // Requires a minimum keyword match
       const confidence = Math.min(score / 50, 1.0);
       results.push({
-        profession: prof,
+        profession: item.prof,
         confidence,
         score
       });
