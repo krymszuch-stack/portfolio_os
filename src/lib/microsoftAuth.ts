@@ -10,7 +10,7 @@ export const isMicrosoftConfigured = !!CLIENT_ID;
 const msalConfig: Configuration = {
   auth: {
     clientId: CLIENT_ID,
-    authority: 'https://login.microsoftonline.com/common',
+    authority: `https://login.microsoftonline.com/${(import.meta as any).env?.VITE_MICROSOFT_TENANT_ID || 'common'}`, // Microsoft Entra ID Tenant
     redirectUri: window.location.origin,
   },
   cache: {
