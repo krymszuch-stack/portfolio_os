@@ -11,7 +11,8 @@ async function startServer() {
   const PORT = Number(process.env.PORT) || 3000;
 
   // Increase body size limit to support file uploads for OCR (PDF, PNG, etc.)
-  app.use(express.json({ limit: "25mb" }));
+  app.use("/api/parse-cv", express.json({ limit: "25mb" }));
+  app.use(express.json({ limit: "2mb" }));
 
   // Initialize GoogleGenAI client only if API key is available
   let ai: GoogleGenAI | null = null;
