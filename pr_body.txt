@@ -1,0 +1,10 @@
+🎯 **What:** Removed unused `publicSlug` variable from `src/App.tsx`.
+
+💡 **Why:** The variable was destructured from `usePortfolioSave` but never used. Removing it improves code cleanliness and readability, and eliminates ESLint warnings.
+
+✅ **Verification:**
+- Ran `pnpm lint` which passed with no errors.
+- Ran `pnpm test` which passed all tests, ensuring no functionality was broken.
+- Manually reviewed the diff.
+
+✨ **Result:** Cleaner code, no unused variable warnings, and better maintainability without behavior changes.
