@@ -70,22 +70,28 @@ export const RetroWindow: React.FC<RetroWindowProps> = ({
       style={{ minWidth: '340px', minHeight: '220px' }}
     >
       {/* Dynamic Themed Title Bar */}
-      <div className={`absolute top-0 left-0 right-0 z-30 h-11 px-4 flex items-center justify-between cursor-move shadow-md ${currentStyle.titleBar}`}>
-        {/* Apple Style Control Dots */}
-        <div className="flex space-x-2">
+      <div className={`absolute top-0 left-0 right-0 z-30 h-12 px-4 flex items-center justify-between cursor-move shadow-md ${currentStyle.titleBar}`}>
+        {/* Modern Control Buttons - Mac/Aero Style */}
+        <div className="flex space-x-2 items-center">
           <button
             onClick={onClose}
             title="Zamknij"
-            className={`w-4.5 h-4.5 bg-red-500 border-2 border-black hover:bg-red-400 transition-colors flex items-center justify-center ${controlBtnRadius}`}
+            className={`w-6 h-6 flex items-center justify-center font-bold text-xs transition-all hover:scale-110 ${activeTheme === 'classic-mac' ? 'bg-red-500 text-white rounded-full border-2 border-black' : 'bg-red-500/80 text-white rounded-lg'}`}
           >
-            <span className="text-[7px] font-black text-black leading-none opacity-0 hover:opacity-100">✕</span>
+            ✕
           </button>
           <button
-            className={`w-4.5 h-4.5 bg-yellow-400 border-2 border-black hover:bg-yellow-300 transition-colors ${controlBtnRadius}`}
-          />
+            className={`w-6 h-6 flex items-center justify-center font-bold transition-all hover:scale-110 ${activeTheme === 'classic-mac' ? 'bg-yellow-400 rounded-full border-2 border-black' : 'bg-yellow-500/70 rounded-lg'}`}
+            title="Minimalizuj"
+          >
+            −
+          </button>
           <button
-            className={`w-4.5 h-4.5 bg-green-500 border-2 border-black hover:bg-green-400 transition-colors ${controlBtnRadius}`}
-          />
+            className={`w-6 h-6 flex items-center justify-center font-bold transition-all hover:scale-110 ${activeTheme === 'classic-mac' ? 'bg-green-500 rounded-full border-2 border-black' : 'bg-green-500/70 rounded-lg'}`}
+            title="Maksymalizuj"
+          >
+            ▢
+          </button>
         </div>
 
         {/* Window Title */}
@@ -94,7 +100,7 @@ export const RetroWindow: React.FC<RetroWindowProps> = ({
         </span>
 
         {/* Right empty anchor for symmetry */}
-        <div className="w-14 h-4" />
+        <div className="w-20 h-4" />
       </div>
 
       {/* Window Content Body */}
