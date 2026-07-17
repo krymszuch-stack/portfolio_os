@@ -7,3 +7,15 @@
 **Vulnerability:** The application was suffering from a zombie window vulnerability due to unsynced logical states (`currentView` vs URL vs window-manager's `openApps`). It left background processes and UI elements hanging.
 **Learning:** Single-Page Applications that blend URL-driven state (`popstate`) and virtual window management must implement bidirectional reconciliation (fail-safes).
 **Prevention:** Introduce a global `useEffect` that continuously monitors all interdependent states (e.g. if I am in view X, then app Y MUST be open), and auto-corrects them when out of sync.
+## 2025-02-21 - Express Server Security Enhancements
+
+**Vulnerability:**
+- The Express API backend lacked basic HTTP security headers.
+- Top-level `catch` blocks in AI endpoints directly exposed `error.message` to the client, potentially leaking sensitive internal error information and stack traces in edge cases.
+
+**Learning:**
+- Fast prototypes often skip header middleware (like Helmet or custom ones) and tend to reuse the standard error object message for ease of debugging in development.
+
+**Prevention:**
+- Always inject basic headers (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Strict-Transport-Security`) at the top middleware level.
+- Always sanitize error strings before sending to clients, especially in production environments (`res.status(500).json({ error: "Generic message" })`). Log the raw error internally for debugging.
