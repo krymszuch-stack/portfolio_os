@@ -66,12 +66,14 @@ export const BioSkillsSection: React.FC<BioSkillsSectionProps> = ({ config, setC
                 />
                 <button
                   onClick={() => handleAddSkill('frontend')}
+                  aria-label="Zapisz umiejętność"
                   className="p-1 bg-purple-500 text-slate-950 rounded hover:bg-purple-400 cursor-pointer"
                 >
                   <Check size={10} />
                 </button>
                 <button
                   onClick={() => setActiveAddCategory(null)}
+                  aria-label="Anuluj dodawanie umiejętności"
                   className="p-1 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 cursor-pointer"
                 >
                   <X size={10} />
@@ -92,6 +94,7 @@ export const BioSkillsSection: React.FC<BioSkillsSectionProps> = ({ config, setC
                 <span>{skill}</span>
                 <button
                   onClick={() => setFrontendSkills(prev => prev.filter(s => s !== skill))}
+                  aria-label={`Usuń umiejętność ${skill}`}
                   className="opacity-0 group-hover/tag:opacity-100 hover:text-rose-400 transition-opacity ml-1 text-[10px] cursor-pointer"
                   title="Usuń"
                 >
@@ -119,12 +122,14 @@ export const BioSkillsSection: React.FC<BioSkillsSectionProps> = ({ config, setC
                 />
                 <button
                   onClick={() => handleAddSkill('backend')}
+                  aria-label="Zapisz umiejętność"
                   className="p-1 bg-cyan-500 text-slate-950 rounded hover:bg-cyan-400 cursor-pointer"
                 >
                   <Check size={10} />
                 </button>
                 <button
                   onClick={() => setActiveAddCategory(null)}
+                  aria-label="Anuluj dodawanie umiejętności"
                   className="p-1 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 cursor-pointer"
                 >
                   <X size={10} />
@@ -145,6 +150,7 @@ export const BioSkillsSection: React.FC<BioSkillsSectionProps> = ({ config, setC
                 <span>{skill}</span>
                 <button
                   onClick={() => setBackendSkills(prev => prev.filter(s => s !== skill))}
+                  aria-label={`Usuń umiejętność ${skill}`}
                   className="opacity-0 group-hover/tag:opacity-100 hover:text-rose-400 transition-opacity ml-1 text-[10px] cursor-pointer"
                   title="Usuń"
                 >
@@ -172,12 +178,14 @@ export const BioSkillsSection: React.FC<BioSkillsSectionProps> = ({ config, setC
                 />
                 <button
                   onClick={() => handleAddSkill('design')}
+                  aria-label="Zapisz umiejętność"
                   className="p-1 bg-orange-500 text-slate-950 rounded hover:bg-orange-400 cursor-pointer"
                 >
                   <Check size={10} />
                 </button>
                 <button
                   onClick={() => setActiveAddCategory(null)}
+                  aria-label="Anuluj dodawanie umiejętności"
                   className="p-1 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 cursor-pointer"
                 >
                   <X size={10} />
@@ -198,6 +206,7 @@ export const BioSkillsSection: React.FC<BioSkillsSectionProps> = ({ config, setC
                 <span>{skill}</span>
                 <button
                   onClick={() => setDesignSkills(prev => prev.filter(s => s !== skill))}
+                  aria-label={`Usuń umiejętność ${skill}`}
                   className="opacity-0 group-hover/tag:opacity-100 hover:text-rose-400 transition-opacity ml-1 text-[10px] cursor-pointer"
                   title="Usuń"
                 >

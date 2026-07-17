@@ -173,6 +173,7 @@ export const BioMilestoneSection: React.FC<BioMilestoneSectionProps> = ({ timeli
                       <button
                         id={`btn-edit-milestone-${item.id}`}
                         onClick={() => handleStartEditMilestone(item)}
+                        aria-label={`Edytuj etap ${item.role}`}
                         className="p-1 text-slate-400 hover:text-white transition-colors"
                         title="Edytuj"
                       >
@@ -181,6 +182,7 @@ export const BioMilestoneSection: React.FC<BioMilestoneSectionProps> = ({ timeli
                       <button
                         id={`btn-delete-milestone-${item.id}`}
                         onClick={() => handleDeleteMilestone(item.id)}
+                        aria-label={`Usuń etap ${item.role}`}
                         className="p-1 text-slate-400 hover:text-rose-400 transition-colors"
                         title="Usuń"
                       >
