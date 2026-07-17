@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Project } from '../types';
 import { Search, FolderGit2, Star, Link, Plus, Trash2, Edit2, Check, RefreshCw, Github, Sparkles, X, Maximize2 } from 'lucide-react';
 import { lazy, Suspense } from 'react';
@@ -66,14 +66,17 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
   const [importError, setImportError] = useState<string | null>(null);
 
   // Filtered list
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          project.tags.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    if (filterType === 'all') return matchesSearch;
-    return matchesSearch && project.type === filterType;
-  });
+  // ⚡ Bolt Performance: Memoize filtered projects to prevent unnecessary recalculations on re-renders (e.g. when hoveredProject changes)
+  const filteredProjects = useMemo(() => {
+    return projects.filter(project => {
+      const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            project.tags.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      if (filterType === 'all') return matchesSearch;
+      return matchesSearch && project.type === filterType;
+    });
+  }, [projects, searchTerm, filterType]);
 
   // Helper to format GitHub relative date-time in Polish
   const formatRelativeTime = (dateString: string): string => {
