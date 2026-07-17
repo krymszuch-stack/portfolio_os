@@ -38,7 +38,7 @@ import * as Lucide from 'lucide-react';
 import { useAuthContext } from './contexts/AuthContext';
 import { useWindowContext } from './contexts/WindowContext';
 import { usePortfolioSave } from './lib/usePortfolioSave';
-import { Check, Loader2, CloudUpload, Eye } from 'lucide-react';
+import { Check, Loader2, CloudUpload } from 'lucide-react';
 import { triggerHaptic } from './lib/haptics';
 import { loadPortfolioConfig, loadPortfolioBySlug, savePortfolioConfig } from './lib/firestoreStore';
 import { playXpStartup, playXpShutdown, playXpBalloon, playXpClick, setSoundsEnabled } from './lib/sounds';
