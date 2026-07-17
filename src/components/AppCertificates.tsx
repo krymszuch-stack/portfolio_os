@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Certificate } from '../types';
-import { Award, ShieldCheck, ShieldAlert, Plus, Trash2, Link } from 'lucide-react';
+import { Award, ShieldCheck, ShieldAlert, Plus, Trash2 } from 'lucide-react';
 
 interface AppCertificatesProps {
   certificates: Certificate[];

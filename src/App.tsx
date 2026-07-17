@@ -76,7 +76,7 @@ export default function App() {
           ...defaultOSConfig,
           ...parsed,
         };
-      } catch (e) {
+      } catch {
         return defaultOSConfig;
       }
     }
@@ -102,7 +102,7 @@ export default function App() {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
+      } catch {
         return initialDesktopIcons;
       }
     }
@@ -121,7 +121,7 @@ export default function App() {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
+      } catch {
        // Ignore parse error - use default
       }
     }
@@ -236,7 +236,7 @@ export default function App() {
   }, [config.fontSizeScale]);
 
   const [currentView, setCurrentView] = useState<'portfolio' | 'generator'>('portfolio');
-  const { activeApp, openApps, minimizedApps, zIndices, handleOpenApp: _handleOpenApp, handleCloseApp: _handleCloseApp, handleMinimizeApp, handleFocusApp, handleSystemReset: _handleSystemReset } = useWindowContext();
+  const { activeApp, openApps, minimizedApps, zIndices, handleOpenApp: _handleOpenApp, handleCloseApp: _handleCloseApp, handleMinimizeApp, handleFocusApp } = useWindowContext();
   const [showSpotlight, setShowSpotlight] = useState(false);
   const [isKreatorMode, setIsKreatorMode] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -468,17 +468,6 @@ export default function App() {
   };
 
 
-  const handleSystemReset = () => {
-    if (confirm('Czy na pewno chcesz zresetować system? Spowoduje to przywrócenie domyślnych danych demonstracyjnych.')) {
-      setConfig(defaultOSConfig);
-      setProjects(initialProjects);
-      setCertificates(initialCertificates);
-      setTimeline(initialTimeline);
-      setSprints(initialSprints);
-      setIcons(initialDesktopIcons);
-      _handleSystemReset();
-    }
-  };
 
   // Get active wallpaper object
   const activeWallpaper = wallpaperOptions.find(w => w.id === config.wallpaper) || wallpaperOptions[0];

@@ -7,3 +7,7 @@
 **Vulnerability:** The application was suffering from a zombie window vulnerability due to unsynced logical states (`currentView` vs URL vs window-manager's `openApps`). It left background processes and UI elements hanging.
 **Learning:** Single-Page Applications that blend URL-driven state (`popstate`) and virtual window management must implement bidirectional reconciliation (fail-safes).
 **Prevention:** Introduce a global `useEffect` that continuously monitors all interdependent states (e.g. if I am in view X, then app Y MUST be open), and auto-corrects them when out of sync.
+## 2026-07-17 - [Large JSON Payload Limit DoS]
+**Vulnerability:** The application had a global Express JSON body parser limit of 25mb (`app.use(express.json({ limit: "25mb" }));`).
+**Learning:** Setting large global limits for body parsers to satisfy a single endpoint exposes all other endpoints to Denial of Service (DoS) attacks via memory exhaustion from parsing excessively large payloads.
+**Prevention:** Apply specific, large body parser limits only to the specific routes that require them, and use a small, secure default limit (e.g., 1mb or 2mb) for all other endpoints globally.
