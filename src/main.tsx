@@ -7,6 +7,7 @@ import { msalInstance } from './lib/microsoftAuth';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider } from './contexts/AuthContext';
 import { WindowProvider } from './contexts/WindowContext';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 msalInstance.initialize().then(() => {
   createRoot(document.getElementById('root')!).render(
@@ -16,6 +17,7 @@ msalInstance.initialize().then(() => {
           <AuthProvider>
             <WindowProvider>
               <App />
+              <SpeedInsights />
             </WindowProvider>
           </AuthProvider>
         </MsalProvider>
@@ -31,6 +33,7 @@ msalInstance.initialize().then(() => {
         <AuthProvider>
           <WindowProvider>
             <App />
+            <SpeedInsights />
           </WindowProvider>
         </AuthProvider>
       </ErrorBoundary>
@@ -64,4 +67,3 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
-
