@@ -244,6 +244,14 @@ export default function App() {
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    if (currentView === 'generator' && !openApps['wizard'] && !isPublicView && config.isInitialized) {
+      handleCloseApp('wizard');
+                  setCurrentView('portfolio');
+                  setIsKreatorMode(false);
+    }
+  }, [openApps, currentView, isPublicView, config.isInitialized]);
+
+  useEffect(() => {
     return () => {
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     };
@@ -685,6 +693,7 @@ export default function App() {
                   }
                   setCurrentView('portfolio');
                   setIsKreatorMode(false);
+                  handleCloseApp('wizard');
                 }}
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-white font-sans text-xs md:text-sm font-semibold tracking-wide transition-all uppercase duration-200 cursor-pointer hover:border-purple-500/50"
                 title="Wróć do głównego portfolio"
