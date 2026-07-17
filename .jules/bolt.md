@@ -1,0 +1,3 @@
+## 2024-05-24 - Drag and Drop Optimization with elementsFromPoint
+**Learning:** Using `document.querySelectorAll` followed by `.getBoundingClientRect()` inside a rapid event listener (like drag, scroll, or mousemove) causes significant synchronous layout thrashing and high CPU utilization.
+**Action:** When determining which element is under the cursor during a drag event, prefer `document.elementsFromPoint(x, y)` or `document.elementFromPoint(x, y)` as they are highly optimized native methods that avoid recalculating the layout of all potential target nodes. Note that they rely on CSS `pointer-events`, so the dragged element itself might need `pointer-events: none` or a similar technique (which Framer Motion handles automatically in this case).
