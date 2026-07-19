@@ -259,7 +259,8 @@ export const InboxWidgetComponent: React.FC = () => {
           <div className="flex items-center gap-2 pb-2 border-b border-white/10 shrink-0">
             <button 
               onClick={() => setSelectedMsgId(null)}
-              className="p-1 hover:bg-white/10 rounded-lg text-slate-300 hover:text-white transition-colors cursor-pointer"
+              aria-label="Wstecz do listy wiadomości"
+              className="p-1 hover:bg-white/10 rounded-lg text-slate-300 hover:text-white transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
             >
               <Lucide.ArrowLeft size={16} />
             </button>

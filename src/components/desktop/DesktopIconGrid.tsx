@@ -81,6 +81,7 @@ export const DesktopIconGrid: React.FC<DesktopIconGridProps> = ({
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-50">
                     <button
                       type="button"
+                      aria-label="Przesuń wyżej"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -92,12 +93,13 @@ export const DesktopIconGrid: React.FC<DesktopIconGridProps> = ({
                         }
                       }}
                       disabled={idx === 0}
-                      className={`p-1.5 bg-black/40 hover:bg-black/60 rounded-full text-white backdrop-blur-md border border-white/20 transition-all ${idx === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                      className={`p-1.5 bg-black/40 hover:bg-black/60 rounded-full text-white backdrop-blur-md border border-white/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${idx === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
                     >
                       <Lucide.ChevronUp size={16} />
                     </button>
                     <button
                       type="button"
+                      aria-label="Przesuń niżej"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -109,7 +111,7 @@ export const DesktopIconGrid: React.FC<DesktopIconGridProps> = ({
                         }
                       }}
                       disabled={idx === displayedIcons.length - 1}
-                      className={`p-1.5 bg-black/40 hover:bg-black/60 rounded-full text-white backdrop-blur-md border border-white/20 transition-all ${idx === displayedIcons.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                      className={`p-1.5 bg-black/40 hover:bg-black/60 rounded-full text-white backdrop-blur-md border border-white/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${idx === displayedIcons.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
                     >
                       <Lucide.ChevronDown size={16} />
                     </button>
@@ -148,7 +150,7 @@ export const DesktopIconGrid: React.FC<DesktopIconGridProps> = ({
                         e.stopPropagation();
                         handleOpenAddElement(r, c);
                       }}
-                      className="w-8 h-8 rounded-full bg-purple-500/15 hover:bg-purple-500/30 flex items-center justify-center text-purple-400 hover:text-purple-300 border border-purple-500/20 hover:border-purple-500/40 transition-all opacity-0 group-hover/cell:opacity-100 duration-200"
+                      className="w-8 h-8 rounded-full bg-purple-500/15 hover:bg-purple-500/30 flex items-center justify-center text-purple-400 hover:text-purple-300 border border-purple-500/20 hover:border-purple-500/40 transition-all opacity-0 group-hover/cell:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 duration-200"
                     >
                       <Lucide.Plus size={14} />
                     </button>
