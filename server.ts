@@ -18,6 +18,15 @@ const sanitizeInput = (input: string): string => {
 const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
+  // Security enhancements
+  app.disable('x-powered-by');
+  app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    next();
+  });
+
   // Increase body size limit to support file uploads for OCR (PDF, PNG, etc.)
   app.use("/api/parse-cv", express.json({ limit: "25mb" }));
   app.use(express.json({ limit: "2mb" }));
@@ -172,7 +181,7 @@ const app = express();
       res.json(cleanJson);
     } catch (error: any) {
       console.error("[COMPILER ERROR] Błąd przetwarzania CV:", error);
-      res.status(500).json({ error: error.message || "Błąd wewnętrzny kompilatora CV." });
+      res.status(500).json({ error: "Wystąpił błąd podczas analizy CV." });
     }
   });
 
@@ -248,7 +257,7 @@ const app = express();
       res.json({ reply });
     } catch (error: any) {
       console.error("[ADVISOR ERROR] Błąd doradcy rekrutera:", error);
-      res.status(500).json({ error: error.message || "Błąd wewnętrzny doradcy rekrutera." });
+      res.status(500).json({ error: "Wystąpił błąd podczas przetwarzania zapytania." });
     }
   });
 
