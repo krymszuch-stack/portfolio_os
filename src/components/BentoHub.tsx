@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Project, OSConfig } from '../types';
 
 interface BentoHubProps {
@@ -13,14 +13,17 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
   const websiteScrollRef = useRef<HTMLDivElement>(null);
   const projectScrollRef = useRef<HTMLDivElement>(null);
 
-  // Split projects into Websites and Projects
-  const websiteProjects = projects.filter(p => 
-    p.tags.some(t => ['website', 'web', 'frontend', 'app', 'saas', 'crm', 'osiągnięcie', 'osiagniecie'].includes(t.toLowerCase()))
-  );
-  const otherProjects = projects.filter(p => !websiteProjects.includes(p));
-
-  const displayWebsites = websiteProjects.length > 0 ? websiteProjects : projects.slice(0, Math.ceil(projects.length / 2));
-  const displayProjects = otherProjects.length > 0 ? otherProjects : projects.slice(Math.ceil(projects.length / 2));
+  // ⚡ Bolt Performance: Memoize project splits to prevent redundant O(N*M) filtering on every render
+  const { displayWebsites, displayProjects } = useMemo(() => {
+    const webProjects = projects.filter(p =>
+      p.tags.some(t => ['website', 'web', 'frontend', 'app', 'saas', 'crm', 'osiągnięcie', 'osiagniecie'].includes(t.toLowerCase()))
+    );
+    const others = projects.filter(p => !webProjects.includes(p));
+    return {
+      displayWebsites: webProjects.length > 0 ? webProjects : projects.slice(0, Math.ceil(projects.length / 2)),
+      displayProjects: others.length > 0 ? others : projects.slice(Math.ceil(projects.length / 2))
+    };
+  }, [projects]);
 
   // Custom Cursor Tracker
   useEffect(() => {
@@ -96,9 +99,12 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
   const role = config.portfolioRole || config.professionalRole || 'Senior Full Stack Web Developer';
   const locationText = config.address || '26 lat Kraków, Polska';
 
-  // Dynamic tags for CV card
-  const cvTags = projects.flatMap(p => p.tags).filter((v, i, a) => a.indexOf(v) === i).slice(0, 5);
-  const tagsString = cvTags.length > 0 ? cvTags.join(', ') : 'React, TypeScript, Node.js, Tailwind';
+  // ⚡ Bolt Performance: Memoize cvTags and tagsString to prevent redundant array operations on every render
+  const { cvTags, tagsString } = useMemo(() => {
+    const tags = projects.flatMap(p => p.tags).filter((v, i, a) => a.indexOf(v) === i).slice(0, 5);
+    const str = tags.length > 0 ? tags.join(', ') : 'React, TypeScript, Node.js, Tailwind';
+    return { cvTags: tags, tagsString: str };
+  }, [projects]);
 
   // Helper to map project tags to Material Symbol icons
   const getProjectIcon = (project: Project): string => {
