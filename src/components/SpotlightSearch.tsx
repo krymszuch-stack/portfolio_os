@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { 
   Search, User, Folder, FlaskConical, Award, Settings, Mail, Sparkles, 
@@ -39,7 +39,8 @@ export const SpotlightSearch: React.FC<SpotlightSearchProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const availableApps: SpotlightApp[] = [
+  // ⚡ Bolt: Memoize static app list configuration to prevent recreating this array on every search query change or re-render
+  const availableApps = useMemo<SpotlightApp[]>(() => [
     {
       id: 'app-bio',
       title: 'O mnie (Bio)',
@@ -139,17 +140,18 @@ export const SpotlightSearch: React.FC<SpotlightSearchProps> = ({
       category: 'projects',
       appId: 'planned'
     }
-  ];
+  ], [onLaunchApp, onLaunchWinFixer]);
 
-  // Filter apps based on search query
-  const filteredApps = availableApps.filter(app => {
+  // ⚡ Bolt: Memoize filtered results so we only recalculate when the search query actually changes
+  const filteredApps = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    return (
+    if (!q) return availableApps;
+    return availableApps.filter(app =>
       app.title.toLowerCase().includes(q) ||
       app.description.toLowerCase().includes(q) ||
       app.category.toLowerCase().includes(q)
     );
-  });
+  }, [availableApps, searchQuery]);
 
   // Keep selected index in bounds when results change
   useEffect(() => {
