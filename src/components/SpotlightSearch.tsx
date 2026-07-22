@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { 
   Search, User, Folder, FlaskConical, Award, Settings, Mail, Sparkles, 
@@ -39,7 +39,7 @@ export const SpotlightSearch: React.FC<SpotlightSearchProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const availableApps: SpotlightApp[] = [
+  const availableApps: SpotlightApp[] = useMemo(() => [
     {
       id: 'app-bio',
       title: 'O mnie (Bio)',
@@ -139,17 +139,17 @@ export const SpotlightSearch: React.FC<SpotlightSearchProps> = ({
       category: 'projects',
       appId: 'planned'
     }
-  ];
+  ], [onLaunchWinFixer, onLaunchApp]);
 
-  // Filter apps based on search query
-  const filteredApps = availableApps.filter(app => {
+  // ⚡ Bolt Performance: Memoize filtered apps to prevent recalculation on hover/selection changes
+  const filteredApps = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    return (
+    return availableApps.filter(app => (
       app.title.toLowerCase().includes(q) ||
       app.description.toLowerCase().includes(q) ||
       app.category.toLowerCase().includes(q)
-    );
-  });
+    ));
+  }, [searchQuery, availableApps]);
 
   // Keep selected index in bounds when results change
   useEffect(() => {
