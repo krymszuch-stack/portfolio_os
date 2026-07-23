@@ -483,7 +483,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
                       onClick={() => handleSyncRepo(project.id)}
                       disabled={isSyncingId === project.id}
                       className="p-1 rounded hover:bg-white/5 text-slate-400 hover:text-cyan-400 transition-all"
-                      title="Odśwież z GitHub"
+                      title="Odśwież z GitHub" aria-label="Odśwież z GitHub"
                     >
                       <RefreshCw size={11} className={isSyncingId === project.id ? 'animate-spin text-cyan-400' : ''} />
                     </button>
@@ -492,7 +492,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
                     id={`btn-delete-project-${project.id}`}
                     onClick={() => handleDeleteProject(project.id)}
                     className="p-1 rounded hover:bg-white/5 text-slate-400 hover:text-rose-400 transition-colors"
-                    title="Usuń projekt"
+                    title="Usuń projekt" aria-label="Usuń projekt"
                   >
                     <Trash2 size={12} />
                   </button>
@@ -543,7 +543,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
                     <button
                       onClick={() => setFocusedProject(project)}
                       className="flex items-center gap-1 text-[11px] font-sans font-medium text-slate-400 hover:text-cyan-400 transition-colors"
-                      title="Focus Mode (Space)"
+                      title="Focus Mode (Space)" aria-label="Focus Mode (Space)"
                     >
                       <Maximize2 size={11} />
                     </button>
@@ -588,6 +588,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
             <button 
               onClick={() => setFocusedProject(null)}
               className="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-all"
+              aria-label="Zamknij Focus Mode"
             >
               <X size={16} />
             </button>

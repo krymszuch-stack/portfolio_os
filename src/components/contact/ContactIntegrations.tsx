@@ -121,7 +121,7 @@ export const ContactIntegrations: React.FC<ContactIntegrationsProps> = ({
                     ● {googleUser.displayName || googleUser.email}
                   </span>
                   <button
-                    onClick={onDisconnectGoogle}
+                    onClick={onDisconnectGoogle} aria-label="Odłącz konto Google"
                     className="text-[9px] text-rose-400 hover:text-rose-300 font-mono underline cursor-pointer"
                   >
                     Rozłącz
@@ -129,7 +129,7 @@ export const ContactIntegrations: React.FC<ContactIntegrationsProps> = ({
                 </div>
               ) : (
                 <button
-                  onClick={onConnectGoogle}
+                  onClick={onConnectGoogle} aria-label="Połącz konto Google"
                   className="w-full py-1 text-center bg-blue-600 hover:bg-blue-700 text-[10px] font-sans font-bold text-white rounded cursor-pointer transition-colors"
                 >
                   Połącz z Google
@@ -172,7 +172,7 @@ export const ContactIntegrations: React.FC<ContactIntegrationsProps> = ({
                     ● {msUser.displayName || msUser.email}
                   </span>
                   <button
-                    onClick={onDisconnectMicrosoft}
+                    onClick={onDisconnectMicrosoft} aria-label="Odłącz konto Microsoft"
                     className="text-[9px] text-rose-400 hover:text-rose-300 font-mono underline cursor-pointer"
                   >
                     Rozłącz
@@ -180,7 +180,7 @@ export const ContactIntegrations: React.FC<ContactIntegrationsProps> = ({
                 </div>
               ) : (
                 <button
-                  onClick={onConnectMicrosoft}
+                  onClick={onConnectMicrosoft} aria-label="Połącz konto Microsoft"
                   className="w-full py-1 text-center bg-sky-600 hover:bg-sky-700 text-[10px] font-sans font-bold text-white rounded cursor-pointer transition-colors"
                 >
                   Połącz z Microsoft

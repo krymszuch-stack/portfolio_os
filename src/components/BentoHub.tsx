@@ -295,14 +295,14 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
               <button 
                 onClick={() => openApp('contact')} 
                 className="hover:bg-white/10 backdrop-blur-sm rounded-lg p-2 transition-all duration-300 active:scale-95 cursor-pointer flex items-center justify-center"
-                title="Napisz do mnie"
+                title="Napisz do mnie" aria-label="Napisz do mnie"
               >
                 <span className="material-symbols-outlined text-primary text-xl">mail</span>
               </button>
               <button 
                 onClick={() => openApp('terminal')} 
                 className="hover:bg-white/10 backdrop-blur-sm rounded-lg p-2 transition-all duration-300 active:scale-95 cursor-pointer flex items-center justify-center"
-                title="Uruchom Terminal"
+                title="Uruchom Terminal" aria-label="Uruchom Terminal"
               >
                 <span className="material-symbols-outlined text-primary text-xl">code</span>
               </button>
@@ -345,7 +345,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
                   <button 
                     onClick={(e) => { e.stopPropagation(); openApp('settings'); }}
                     className="absolute top-4 right-4 p-2 rounded-full bg-purple-500/20 hover:bg-purple-500/40 border border-purple-500/30 text-purple-300 transition-all hover:scale-110 cursor-pointer shadow-lg z-20 flex items-center justify-center"
-                    title="Edytuj profil w PortfolioOS"
+                    title="Edytuj profil w PortfolioOS" aria-label="Edytuj profil w PortfolioOS"
                   >
                     <span className="material-symbols-outlined text-sm">edit</span>
                   </button>
@@ -378,7 +378,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
                     <button 
                       onClick={(e) => { e.stopPropagation(); openApp('bio'); }}
                       className="absolute top-3 right-3 p-1.5 rounded-full bg-purple-500/25 hover:bg-purple-500/45 border border-purple-500/30 text-purple-300 transition-all cursor-pointer z-20 flex items-center justify-center"
-                      title="Edytuj dane CV/Biografię"
+                      title="Edytuj dane CV/Biografię" aria-label="Edytuj dane CV/Biografię"
                     >
                       <span className="material-symbols-outlined text-[12px]">edit</span>
                     </button>
@@ -402,7 +402,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
                     <button 
                       onClick={(e) => { e.stopPropagation(); openApp('contact'); }}
                       className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-purple-500/25 hover:bg-purple-500/45 border border-purple-500/30 text-purple-300 transition-all cursor-pointer z-20 flex items-center justify-center"
-                      title="Zarządzaj integracją kontaktu"
+                      title="Zarządzaj integracją kontaktu" aria-label="Zarządzaj integracją kontaktu"
                     >
                       <span className="material-symbols-outlined text-[11px]">edit</span>
                     </button>
@@ -421,7 +421,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
                     <button 
                       onClick={(e) => { e.stopPropagation(); openApp('wizard'); }}
                       className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-purple-500/25 hover:bg-purple-500/45 border border-purple-500/30 text-purple-300 transition-all cursor-pointer z-20 flex items-center justify-center"
-                      title="Otwórz Kreator AI"
+                      title="Otwórz Kreator AI" aria-label="Otwórz Kreator AI"
                     >
                       <span className="material-symbols-outlined text-[11px]">edit</span>
                     </button>
@@ -440,7 +440,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
                     <button 
                       onClick={() => openApp('projects')}
                       className="p-1 rounded bg-purple-500/10 hover:bg-purple-500/35 border border-purple-500/20 text-purple-400 transition-colors cursor-pointer flex items-center justify-center"
-                      title="Zarządzaj osiągnięciami/stronami"
+                      title="Zarządzaj osiągnięciami/stronami" aria-label="Zarządzaj osiągnięciami/stronami"
                     >
                       <span className="material-symbols-outlined text-xs">edit</span>
                     </button>
@@ -502,7 +502,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
                     <button 
                       onClick={() => openApp('projects')}
                       className="p-1 rounded bg-purple-500/10 hover:bg-purple-500/35 border border-purple-500/20 text-purple-400 transition-colors cursor-pointer flex items-center justify-center"
-                      title="Zarządzaj projektami"
+                      title="Zarządzaj projektami" aria-label="Zarządzaj projektami"
                     >
                       <span className="material-symbols-outlined text-xs">edit</span>
                     </button>
@@ -557,7 +557,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(87,140,255,0.4)] shadow-lg group relative cursor-pointer"
-                title="GitHub"
+                title="GitHub" aria-label="GitHub"
               >
                 <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-[0_0_8px_rgba(255,255,255,0.8)] group-hover:shadow-[0_0_12px_rgba(87,140,255,0.8)] transition-all">
                   <svg className="w-7 h-7 fill-black" viewBox="0 0 24 24">
@@ -573,7 +573,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(10,102,194,0.4)] shadow-lg group relative cursor-pointer"
-                title="LinkedIn"
+                title="LinkedIn" aria-label="LinkedIn"
               >
                 <div className="w-10 h-10 bg-[#0a66c2] rounded-lg flex items-center justify-center shadow-md">
                   <svg className="w-6 h-6 fill-white" viewBox="0 0 24 24">
@@ -589,7 +589,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)] shadow-lg group relative cursor-pointer"
-                title="X (Twitter)"
+                title="X (Twitter)" aria-label="X (Twitter)"
               >
                 <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-neutral-800 to-neutral-950 border border-white/10 flex items-center justify-center shadow-[inset_0_1px_2px_rgba(255,255,255,0.2)] group-hover:border-[#b0c6ff]/35 group-hover:shadow-[0_0_12px_rgba(176,198,255,0.3)] transition-all">
                   <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
@@ -605,7 +605,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex flex-col items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(34,139,230,0.4)] shadow-lg group relative cursor-pointer"
-                title="Telegram"
+                title="Telegram" aria-label="Telegram"
               >
                 <div className="w-9 h-9 bg-gradient-to-b from-[#33a8e2] to-[#179cde] rounded-lg flex items-center justify-center shadow-md">
                   <svg className="w-5 h-5 fill-white mr-0.5 mt-0.5" viewBox="0 0 24 24">
@@ -622,7 +622,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(225,48,108,0.4)] shadow-lg group relative cursor-pointer"
-                title="Instagram"
+                title="Instagram" aria-label="Instagram"
               >
                 <div className="w-10 h-10 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] rounded-xl flex items-center justify-center shadow-md">
                   <svg className="w-5 h-5 fill-none stroke-white stroke-[2.2]" viewBox="0 0 24 24">
@@ -640,7 +640,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(88,101,242,0.4)] shadow-lg group relative cursor-pointer"
-                title="Discord"
+                title="Discord" aria-label="Discord"
               >
                 <div className="w-10 h-10 bg-[#5865f2] rounded-lg flex items-center justify-center shadow-md">
                   <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
@@ -654,7 +654,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
               <a 
                 href={`tel:${config.phone}`} 
                 className="w-16 h-16 rounded-2xl bg-black border border-white/5 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(76,175,80,0.4)] shadow-lg group relative cursor-pointer"
-                title="Call Phone"
+                title="Call Phone" aria-label="Call Phone"
               >
                 <div className="w-10 h-10 bg-[#4caf50] rounded-lg flex items-center justify-center shadow-md">
                   <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
@@ -670,7 +670,7 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
             <button 
               onClick={(e) => { e.stopPropagation(); openApp('settings'); }}
               className="p-3.5 rounded-full bg-purple-500/25 hover:bg-purple-500/45 border border-purple-500/30 text-purple-300 transition-all hover:scale-110 cursor-pointer shadow-lg flex items-center justify-center shrink-0"
-              title="Edytuj social media"
+              title="Edytuj social media" aria-label="Edytuj social media"
             >
               <span className="material-symbols-outlined text-sm">settings</span>
             </button>
