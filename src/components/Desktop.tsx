@@ -592,20 +592,6 @@ export const Desktop: React.FC<DesktopProps> = ({
     }
   }
 
-  // Segment icons for mobile thumb heatmap priority groups
-  const highPriorityIds = ['projects', 'bio', 'contact', 'wizard'];
-  const mediumPriorityIds = ['lab', 'certificates', 'gdrive'];
-  const lowPriorityIds = ['calendar', 'settings', 'planned'];
-
-  const getMobileIconsByPriority = () => {
-    const high = icons.filter(i => highPriorityIds.includes(i.appId));
-    const medium = icons.filter(i => mediumPriorityIds.includes(i.appId));
-    const low = icons.filter(i => lowPriorityIds.includes(i.appId));
-    return { high, medium, low };
-  };
-
-  const mobilePriorityGroups = getMobileIconsByPriority();
-
   return (
     <div 
       onClick={() => toggleWiggling(false)}
