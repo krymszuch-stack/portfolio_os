@@ -132,7 +132,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <button
                 onClick={() => handleOpenEditor('githubUsername', config.githubUsername || '')}
                 className="absolute top-1 right-1 p-0.5 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-amber-400 transition-opacity cursor-pointer"
-                title="Edytuj"
+                title="Edytuj" aria-label="Edytuj"
               >
                 <Edit2 size={10} />
               </button>
@@ -170,7 +170,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <button
                 onClick={() => handleOpenEditor('gitlabUsername', config.gitlabUsername || '')}
                 className="absolute top-1 right-1 p-0.5 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-amber-400 transition-opacity cursor-pointer"
-                title="Edytuj"
+                title="Edytuj" aria-label="Edytuj"
               >
                 <Edit2 size={10} />
               </button>
@@ -208,7 +208,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <button
                 onClick={() => handleOpenEditor('linkedinUsername', config.linkedinUsername || '')}
                 className="absolute top-1 right-1 p-0.5 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-amber-400 transition-opacity cursor-pointer"
-                title="Edytuj"
+                title="Edytuj" aria-label="Edytuj"
               >
                 <Edit2 size={10} />
               </button>
@@ -246,7 +246,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <button
                 onClick={() => handleOpenEditor('instagramUsername', config.instagramUsername || '')}
                 className="absolute top-1 right-1 p-0.5 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-amber-400 transition-opacity cursor-pointer"
-                title="Edytuj"
+                title="Edytuj" aria-label="Edytuj"
               >
                 <Edit2 size={10} />
               </button>
@@ -284,7 +284,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <button
                 onClick={() => handleOpenEditor('facebookUsername', config.facebookUsername || '')}
                 className="absolute top-1 right-1 p-0.5 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-amber-400 transition-opacity cursor-pointer"
-                title="Edytuj"
+                title="Edytuj" aria-label="Edytuj"
               >
                 <Edit2 size={10} />
               </button>
@@ -322,7 +322,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <button
                 onClick={() => handleOpenEditor('messengerUsername', config.messengerUsername || '')}
                 className="absolute top-1 right-1 p-0.5 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-amber-400 transition-opacity cursor-pointer"
-                title="Edytuj"
+                title="Edytuj" aria-label="Edytuj"
               >
                 <Edit2 size={10} />
               </button>
@@ -360,7 +360,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <button
                 onClick={() => handleOpenEditor('telegramUsername', config.telegramUsername || '')}
                 className="absolute top-1 right-1 p-0.5 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-amber-400 transition-opacity cursor-pointer"
-                title="Edytuj"
+                title="Edytuj" aria-label="Edytuj"
               >
                 <Edit2 size={10} />
               </button>
@@ -398,7 +398,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <button
                 onClick={() => handleOpenEditor('whatsappPhone', config.whatsappPhone || '')}
                 className="absolute top-1 right-1 p-0.5 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-amber-400 transition-opacity cursor-pointer"
-                title="Edytuj"
+                title="Edytuj" aria-label="Edytuj"
               >
                 <Edit2 size={10} />
               </button>
