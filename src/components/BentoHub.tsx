@@ -128,7 +128,8 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       
       {/* Dynamic Scoped Styles */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style>
+        {`
         .bento-scope {
           background: #000;
           overflow-y: auto;
@@ -247,7 +248,8 @@ export const BentoHub: React.FC<BentoHubProps> = ({ projects, config, openApp, i
           transition: transform 0.1s ease;
           transform: translate(-50%, -50%);
         }
-      ` }} />
+        `}
+      </style>
 
       <div className="bento-scope text-on-surface pb-32">
         {/* Background Layers */}
