@@ -117,7 +117,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <a
                 href={getPlatformLink(config.githubUsername, 'https://github.com/')}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="flex flex-col items-center justify-center w-full"
               >
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/5 text-white/80 group-hover:text-white transition-all">
@@ -155,7 +155,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <a
                 href={getPlatformLink(config.gitlabUsername, 'https://gitlab.com/')}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="flex flex-col items-center justify-center w-full"
               >
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/5 text-[#fc6d26] transition-all">
@@ -193,7 +193,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <a
                 href={getPlatformLink(config.linkedinUsername, 'https://linkedin.com/in/')}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="flex flex-col items-center justify-center w-full"
               >
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/5 text-[#0077b5] transition-all">
@@ -231,7 +231,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <a
                 href={getPlatformLink(config.instagramUsername, 'https://instagram.com/')}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="flex flex-col items-center justify-center w-full"
               >
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/5 text-[#e1306c] transition-all">
@@ -269,7 +269,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <a
                 href={getPlatformLink(config.facebookUsername, 'https://facebook.com/')}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="flex flex-col items-center justify-center w-full"
               >
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/5 text-[#1877f2] transition-all">
@@ -307,7 +307,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <a
                 href={getPlatformLink(config.messengerUsername, 'https://m.me/')}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="flex flex-col items-center justify-center w-full"
               >
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/5 text-[#00B2FF] transition-all">
@@ -345,7 +345,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <a
                 href={getPlatformLink(config.telegramUsername, 'https://t.me/')}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="flex flex-col items-center justify-center w-full"
               >
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/5 text-[#0088cc] transition-all">
@@ -383,7 +383,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
               <a
                 href={getPlatformLink(config.whatsappPhone, 'https://wa.me/')}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="flex flex-col items-center justify-center w-full"
               >
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/5 text-[#25d366] transition-all">
@@ -451,7 +451,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({ config, setConfig }) =
                   <a
                     href={getPlatformLink(config.steamId, 'https://steamcommunity.com/id/')}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="text-[9px] text-[#00adee] font-mono font-bold"
                   >
                     PROFIL ↗
