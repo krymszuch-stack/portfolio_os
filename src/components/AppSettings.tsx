@@ -69,25 +69,25 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
 
   const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle');
   const [slugErrorMsg, setSlugErrorMsg] = useState('');
-  
+
   React.useEffect(() => {
     if (localConfig.customSlug === config.customSlug) {
       setSlugStatus('idle');
       return;
     }
-    
+
     if (!localConfig.customSlug) {
       setSlugStatus('idle');
       return;
     }
-    
+
     const isValid = /^[a-z0-9-]{3,32}$/.test(localConfig.customSlug);
     if (!isValid) {
       setSlugStatus('invalid');
       setSlugErrorMsg('Tylko maĹ‚e litery, cyfry i myĹ›lniki. 3 do 32 znakĂłw.');
       return;
     }
-    
+
     setSlugStatus('checking');
     const timer = setTimeout(async () => {
       const auth = getAuth();
@@ -96,7 +96,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
       setSlugStatus(isAvailable ? 'available' : 'taken');
       if (!isAvailable) setSlugErrorMsg('Ten adres jest juĹĽ zajÄ™ty!');
     }, 500);
-    
+
     return () => clearTimeout(timer);
   }, [localConfig.customSlug, config.customSlug]);
 
@@ -212,7 +212,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
   const handleSave = () => {
     triggerHaptic('success');
     onSave(localConfig);
-    
+
     if (localConfig.systemTheme !== config.systemTheme && setIcons && icons) {
       const themeId = localConfig.systemTheme || 'terraria';
       const iconPack = THEME_ICONS_MAP[themeId];
@@ -225,7 +225,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
         }));
       }
     }
-    
+
     setShowSavedMsg(true);
     setTimeout(() => setShowSavedMsg(false), 2500);
     try {
@@ -259,7 +259,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
         timeline: timeline || [],
         icons: icons || []
       };
-      
+
       const jsonStr = JSON.stringify(backupData, null, 2);
       const blob = new Blob([jsonStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -364,7 +364,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
         const fSkills: string[] = [];
         const bSkills: string[] = [];
         const dSkills: string[] = [];
-        
+
         parsedSkills.forEach((s: any) => {
           const name = s.name;
           const nameLower = name.toLowerCase();
@@ -444,7 +444,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
   const handleForceSyncGitHub = async () => {
     if (!projects || !setProjects) return;
     setGitHubSyncStatus('syncing');
-    
+
     try {
       const githubProjects = projects.filter(p => p.type === 'github');
       if (githubProjects.length === 0) {
@@ -454,26 +454,27 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
       }
 
       const updatedProjects = [...projects];
-      for (let i = 0; i < updatedProjects.length; i++) {
-        const p = updatedProjects[i];
-        if (p.type === 'github' && p.link) {
-          const match = p.link.match(/github\.com\/([^/]+)\/([^/]+)/);
-          if (match) {
-            const owner = match[1];
-            const repo = match[2];
-            try {
-              const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
-              if (res.ok) {
-                const data = await res.json();
-                p.stars = data.stargazers_count;
-                p.lastSync = new Date().toISOString();
+      await Promise.all(
+        updatedProjects.map(async (p) => {
+          if (p.type === 'github' && p.link) {
+            const match = p.link.match(/github\.com\/([^/]+)\/([^/]+)/);
+            if (match) {
+              const owner = match[1];
+              const repo = match[2];
+              try {
+                const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+                if (res.ok) {
+                  const data = await res.json();
+                  p.stars = data.stargazers_count;
+                  p.lastSync = new Date().toISOString();
+                }
+              } catch (err) {
+                console.error(`Failed to sync repo ${owner}/${repo}:`, err);
               }
-            } catch (err) {
-              console.error(`Failed to sync repo ${owner}/${repo}:`, err);
             }
           }
-        }
-      }
+        })
+      );
 
       setProjects(updatedProjects);
       setGitHubSyncStatus('success');
@@ -483,7 +484,8 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
       setGitHubSyncStatus('error');
     }
   };
-
+
+
 
   return (
     <div className="p-4 text-black space-y-6 select-none max-h-full flex flex-col justify-between">
@@ -627,9 +629,9 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
                 exit={{ opacity: 0, y: -10 }}
                 className="flex items-center gap-2"
               >
-                <motion.span 
-                  initial={{ scale: 0 }} 
-                  animate={{ scale: 1, rotate: [0, 15, -10, 0] }} 
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1, rotate: [0, 15, -10, 0] }}
                   transition={{ type: "spring", delay: 0.1 }}
                 >
                   ✅
