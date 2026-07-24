@@ -550,7 +550,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
                     <a
                       href={project.link}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="flex items-center gap-1 text-[11px] font-sans font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
                     >
                       <Link size={11} /> Uruchom demo
@@ -629,7 +629,7 @@ export const AppProjects: React.FC<AppProjectsProps> = ({
               <a 
                 href={focusedProject.link} 
                 target="_blank" 
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl font-bold font-sans transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] hover:-translate-y-0.5"
               >
                 <Link size={16} /> Uruchom Projekt
