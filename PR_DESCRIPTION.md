@@ -1,5 +1,9 @@
-Title: 🔒 Fix large JSON payload limit vulnerability
+🛡️ Sentinel: [medium/low] Trust proxy for rate limiting
 
-🎯 **What:** Reduced the global JSON payload limit from 25mb to 2mb, while preserving the 25mb limit specifically for the OCR endpoint (`/api/parse-cv`).
-⚠️ **Risk:** A global 25mb limit exposes all API endpoints to potential Denial of Service (DoS) attacks via excessively large payloads (memory exhaustion/CPU lockup).
-🛡️ **Solution:** Applied route-specific `express.json` middleware for `/api/parse-cv` with a 25mb limit and established a strict global fallback of 2mb.
+🎯 **What:** Configured Express to trust the reverse proxy.
+⚠️ **Risk:** When deployed behind a reverse proxy, the `express-rate-limit` middleware uses the proxy's IP address instead of the actual client's IP. This could result in either all users being rate-limited together (DoS) or attackers bypassing the limit by spoofing IPs.
+🛡️ **Solution:** Added `app.set('trust proxy', 1)` during Express app initialization in `server.ts` to ensure the `req.ip` correctly reflects the client's IP via the `X-Forwarded-For` header.
+
+✅ **Verification:**
+- Ran `pnpm lint` to ensure no linting errors were introduced.
+- Ran `pnpm test` to verify no functionality was broken.

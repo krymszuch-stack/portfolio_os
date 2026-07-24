@@ -16,6 +16,7 @@ const sanitizeInput = (input: string): string => {
 };
 
 const app = express();
+  app.set('trust proxy', 1);
   const PORT = Number(process.env.PORT) || 3000;
 
   // Increase body size limit to support file uploads for OCR (PDF, PNG, etc.)
