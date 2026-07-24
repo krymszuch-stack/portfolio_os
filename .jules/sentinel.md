@@ -11,3 +11,7 @@
 **Vulnerability:** The application had a global Express JSON body parser limit of 25mb (`app.use(express.json({ limit: "25mb" }));`).
 **Learning:** Setting large global limits for body parsers to satisfy a single endpoint exposes all other endpoints to Denial of Service (DoS) attacks via memory exhaustion from parsing excessively large payloads.
 **Prevention:** Apply specific, large body parser limits only to the specific routes that require them, and use a small, secure default limit (e.g., 1mb or 2mb) for all other endpoints globally.
+## 2025-03-08 - [dangerouslySetInnerHTML for CSS Injection]
+**Vulnerability:** The application used `dangerouslySetInnerHTML` to inject a block of static CSS into a `<style>` tag within the `BentoHub.tsx` component.
+**Learning:** Using `dangerouslySetInnerHTML` for static CSS is an anti-pattern and a potential security risk. It creates an unnecessary attack vector for Cross-Site Scripting (XSS) if the CSS content ever becomes dynamic or includes user-controlled data.
+**Prevention:** Always use standard React children (e.g., `<style>{`...`}</style>`) or a dedicated CSS file/module for static CSS styling instead of `dangerouslySetInnerHTML`.
