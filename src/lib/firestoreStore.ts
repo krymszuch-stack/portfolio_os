@@ -66,7 +66,7 @@ export const savePortfolioConfig = async (
       let isAvailable = false;
       
       while (attempts < 5 && !isAvailable) {
-        const suffix = Math.random().toString(36).substring(2, 6);
+        const suffix = crypto.randomUUID().split("-")[0].substring(0, 4);
         generatedSlug = `${slugBase}-${suffix}`;
         isAvailable = await checkSlugAvailability(generatedSlug, userId);
         attempts++;
