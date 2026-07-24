@@ -1,9 +1,9 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithPopup, GoogleAuthProvider, OAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
+import { initializeApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, signInWithPopup, GoogleAuthProvider, OAuthProvider, onAuthStateChanged, User, type Auth } from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
 
-export let app: any;
-export let auth: any;
+export let app: FirebaseApp | undefined;
+export let auth: Auth;
 
 try {
   // Rzutowanie appId i messagingSenderId na stringi, aby uniknąć błędów notacji naukowej
@@ -22,7 +22,7 @@ try {
     onAuthStateChanged: () => () => {},
     signInWithPopup: async () => { throw new Error("Firebase offline"); },
     signOut: async () => {}
-  } as any;
+  } as unknown as Auth;
 }
 
 const provider = new GoogleAuthProvider();
