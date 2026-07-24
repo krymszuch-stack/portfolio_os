@@ -11,3 +11,10 @@
 **Vulnerability:** The application had a global Express JSON body parser limit of 25mb (`app.use(express.json({ limit: "25mb" }));`).
 **Learning:** Setting large global limits for body parsers to satisfy a single endpoint exposes all other endpoints to Denial of Service (DoS) attacks via memory exhaustion from parsing excessively large payloads.
 **Prevention:** Apply specific, large body parser limits only to the specific routes that require them, and use a small, secure default limit (e.g., 1mb or 2mb) for all other endpoints globally.
+## 2025-02-28 - Missing Trust Proxy Configuration for Rate Limiter
+
+**Vulnerability:** The Express rate limiter was deployed behind a proxy without the `app.set('trust proxy', 1)` configuration. This caused the rate limiter to throttle based on the proxy's IP rather than the actual client IPs. This could lead to a denial-of-service where all users get blocked or allow attackers to bypass limits by spoofing IPs.
+
+**Learning:** When deploying Express apps behind reverse proxies (like Nginx, Heroku, Azure, etc.) that use the `X-Forwarded-For` header, Express needs to be configured to trust the proxy to correctly identify the client IP. Without this, security mechanisms like rate limiting fail to function correctly.
+
+**Prevention:** Always include `app.set('trust proxy', 1)` (or the appropriate trust setting based on the deployment architecture) when configuring rate limiting or any IP-based security controls in Express apps.
