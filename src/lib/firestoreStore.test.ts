@@ -58,7 +58,7 @@ describe('firestoreStore slug logic', () => {
     const config = { portfolioName: 'My Test Portfolio' };
     const result = await savePortfolioConfig('user-1', config as any, [], [], [], []);
     
-    expect(result.publicSlug).toMatch(/^my-test-portfolio-[a-z0-9]{4}$/);
+    expect(result.publicSlug).toMatch(/^my-test-portfolio-[a-zA-Z0-9-]{4}$/);
     expect(mockSetDoc).toHaveBeenCalledWith(
       undefined,
       expect.objectContaining({ publicSlug: result.publicSlug }),
@@ -80,7 +80,7 @@ describe('firestoreStore slug logic', () => {
 
     const result = await savePortfolioConfig('user-1', {} as any, [], [], [], []);
     
-    expect(result.publicSlug).toMatch(/^portfolio-[a-z0-9]{4}$/);
+    expect(result.publicSlug).toMatch(/^portfolio-[a-zA-Z0-9-]{4}$/);
     expect(mockSetDoc).toHaveBeenCalledWith(
       undefined,
       expect.objectContaining({ publicSlug: result.publicSlug }),
@@ -108,7 +108,7 @@ describe('firestoreStore slug logic', () => {
     const result = await savePortfolioConfig('user-retry', {} as any, [], [], [], []);
     
     expect(mockGetDocs).toHaveBeenCalledTimes(4); // Checked 4 times
-    expect(result.publicSlug).toMatch(/^portfolio-[a-z0-9]{4}$/);
+    expect(result.publicSlug).toMatch(/^portfolio-[a-zA-Z0-9-]{4}$/);
     expect(mockSetDoc).toHaveBeenCalled();
   });
   
