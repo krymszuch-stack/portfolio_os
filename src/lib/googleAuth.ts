@@ -1,6 +1,14 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, OAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
-import firebaseConfig from '../../firebase-applet-config.json';
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+};
 
 export let app: any;
 export let auth: any;
@@ -15,7 +23,7 @@ try {
   app = initializeApp(config);
   auth = getAuth(app);
 } catch (error) {
-  console.error("Błąd inicjalizacji Firebase - sprawdź firebase-applet-config.json", error);
+  console.error("Błąd inicjalizacji Firebase - sprawdź konfigurację w pliku .env.local", error);
   // Provide dummy mock to prevent crashes when auth object is imported
   auth = {
     currentUser: null,
