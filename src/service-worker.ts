@@ -1,7 +1,29 @@
 // Serwis roboczy (Service Worker) dla AdrianOS
 // Zapewnia offline caching i instalowalność aplikacji PWA
 
-declare const self: any;
+interface ExtendableEvent extends Event {
+  waitUntil(f: Promise<any>): void;
+}
+
+interface FetchEvent extends Event {
+  request: Request;
+  respondWith(r: Promise<Response> | Response): void;
+}
+
+interface ServiceWorkerGlobalScope extends EventTarget {
+  readonly location: Location;
+  readonly clients: Clients;
+  skipWaiting(): Promise<void>;
+  addEventListener(type: 'install', listener: (event: ExtendableEvent) => void): void;
+  addEventListener(type: 'activate', listener: (event: ExtendableEvent) => void): void;
+  addEventListener(type: 'fetch', listener: (event: FetchEvent) => void): void;
+}
+
+interface Clients {
+  claim(): Promise<void>;
+}
+
+declare const self: ServiceWorkerGlobalScope;
 
 const CACHE_NAME = 'adrianos-cache-v1';
 const ASSETS_TO_CACHE = [
@@ -13,7 +35,7 @@ const ASSETS_TO_CACHE = [
   '/icon-512.png'
 ];
 
-self.addEventListener('install', (event: any) => {
+self.addEventListener('install', (event: ExtendableEvent) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -23,7 +45,7 @@ self.addEventListener('install', (event: any) => {
   );
 });
 
-self.addEventListener('activate', (event: any) => {
+self.addEventListener('activate', (event: ExtendableEvent) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -38,7 +60,7 @@ self.addEventListener('activate', (event: any) => {
   );
 });
 
-self.addEventListener('fetch', (event: any) => {
+self.addEventListener('fetch', (event: FetchEvent) => {
   // Pomijaj żądania inne niż GET oraz te od Firebase auth lub Firestore (realtime)
   if (event.request.method !== 'GET') return;
   
