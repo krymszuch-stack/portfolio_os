@@ -16,6 +16,9 @@ const sanitizeInput = (input: string): string => {
 };
 
 const app = express();
+
+  // Trust proxy for rate limiter to work correctly behind reverse proxies (like Render, Heroku, Nginx)
+  app.set('trust proxy', 1);
   const PORT = Number(process.env.PORT) || 3000;
 
   // Increase body size limit to support file uploads for OCR (PDF, PNG, etc.)
