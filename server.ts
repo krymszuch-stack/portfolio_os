@@ -172,7 +172,7 @@ const app = express();
       res.json(cleanJson);
     } catch (error: any) {
       console.error("[COMPILER ERROR] Błąd przetwarzania CV:", error);
-      res.status(500).json({ error: error.message || "Błąd wewnętrzny kompilatora CV." });
+      res.status(500).json({ error: "Błąd wewnętrzny kompilatora CV." });
     }
   });
 
@@ -248,7 +248,7 @@ const app = express();
       res.json({ reply });
     } catch (error: any) {
       console.error("[ADVISOR ERROR] Błąd doradcy rekrutera:", error);
-      res.status(500).json({ error: error.message || "Błąd wewnętrzny doradcy rekrutera." });
+      res.status(500).json({ error: "Błąd wewnętrzny doradcy rekrutera." });
     }
   });
 
