@@ -454,8 +454,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
       }
 
       const updatedProjects = [...projects];
-      for (let i = 0; i < updatedProjects.length; i++) {
-        const p = updatedProjects[i];
+      await Promise.all(updatedProjects.map(async (p) => {
         if (p.type === 'github' && p.link) {
           const match = p.link.match(/github\.com\/([^/]+)\/([^/]+)/);
           if (match) {
@@ -473,7 +472,7 @@ export const AppSettings: React.FC<AppSettingsProps> = ({
             }
           }
         }
-      }
+      }));
 
       setProjects(updatedProjects);
       setGitHubSyncStatus('success');
