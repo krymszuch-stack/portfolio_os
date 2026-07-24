@@ -16,6 +16,10 @@ const sanitizeInput = (input: string): string => {
 };
 
 const app = express();
+
+  // Trust the first proxy in front of Express. This is critical for the rate limiter
+  // to correctly identify the client IP when deployed behind a load balancer or proxy.
+  app.set("trust proxy", 1);
   const PORT = Number(process.env.PORT) || 3000;
 
   // Increase body size limit to support file uploads for OCR (PDF, PNG, etc.)
