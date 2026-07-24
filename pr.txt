@@ -1,0 +1,5 @@
+PR Title: 🧪 [testing improvement] Add comprehensive tests for findBestProfession utility function
+PR Description:
+🎯 What: Addressed a testing gap by adding tests for the `findBestProfession` function in `src/lib/industryClassification.ts`.
+📊 Coverage: Added tests to ensure proper behavior for empty inputs, exact matches, partial keyword matches (`anyOf`), and complex matches with significant bonuses (`requiredAll`). Also added tests for the helper function `normalizeText`.
+✨ Result: Improved overall test coverage and reliability of the profession matching logic, providing a safety net for future refactoring of the professional dictionary.
