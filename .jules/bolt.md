@@ -1,3 +1,4 @@
-## 2025-02-18 - Avoid array recalculations on hover states
-**Learning:** Found an anti-pattern in `AppProjects.tsx` where hovering over an element triggers a full component re-render, forcing a complete recalculation of an unmemoized derived array (`filteredProjects`). Array filtering includes multiple string manipulations and array operations that execute on every hover interaction needlessly.
-**Action:** Always verify if complex components using `onMouseEnter`/`onMouseLeave` state updates have expensive derived state properly wrapped in `useMemo`.
+## 2024-06-25 - Promise.all Optimization for API calls
+
+**Learning:** When executing multiple independent API calls in a loop (like syncing multiple projects), a sequential `for` loop significantly increases latency.
+**Action:** Use `Promise.all(array.map(async (item) => {...}))` to handle API calls concurrently, which drastically improves performance (e.g., ~10x speedup).
